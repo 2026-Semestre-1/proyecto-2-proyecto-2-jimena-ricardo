@@ -22,7 +22,6 @@ import java.util.*;
  */
 public class OperatingSystem {
 
-    // ── Subsystems ────────────────────────────────────────────────────────────
     private final RAM                  ram;
     private final Disk                 disk;
     private final Scheduler            scheduler;
@@ -33,12 +32,10 @@ public class OperatingSystem {
     private final AsmLoader            asmLoader   = new AsmLoader();
     private       SystemConfig         config;
 
-    // ── Simulation state ──────────────────────────────────────────────────────
     private int     simulatorTime = 0;
     private boolean running       = false;
     private Thread  simulationThread;
 
-    // ── UI callback ───────────────────────────────────────────────────────────
     @FunctionalInterface public interface UICallback {
         void onTick(int time, List<Process> allProcesses, List<CPU> cpus);
     }
@@ -47,7 +44,6 @@ public class OperatingSystem {
     private UICallback      onTick;
     private ConsoleCallback onConsole;
 
-    // ── Constructor ───────────────────────────────────────────────────────────
 
     public OperatingSystem(SystemConfig config,
                            UICallback uiCallback,
@@ -74,7 +70,6 @@ public class OperatingSystem {
         }
     }
 
-    // ── Process loading ───────────────────────────────────────────────────────
 
     /**
      * Load a .asm file. Returns error messages (empty = success).
@@ -97,7 +92,6 @@ public class OperatingSystem {
         return Collections.emptyList();
     }
 
-    // ── Execution ─────────────────────────────────────────────────────────────
 
     /** Auto-run: tick every second until all processes finish. */
     public void runAuto() {
@@ -127,7 +121,6 @@ public class OperatingSystem {
         if (simulationThread != null) simulationThread.interrupt();
     }
 
-    // ── Core tick ─────────────────────────────────────────────────────────────
 
     /**
      * Advance simulation by 1 second.
@@ -161,13 +154,11 @@ public class OperatingSystem {
         }
     }
 
-    // ── Swap algorithm at runtime ─────────────────────────────────────────────
 
     public void setSchedulingAlgorithm(com.so.p2.core.scheduling.ISchedulingAlgorithm alg) {
         dispatchers.forEach(d -> d.setAlgorithm(alg));
     }
 
-    // ── Statistics ────────────────────────────────────────────────────────────
 
     private void recordStats() {
         String algName = dispatchers.isEmpty() ? "N/A"
@@ -177,7 +168,6 @@ public class OperatingSystem {
         }
     }
 
-    // ── Accessors ─────────────────────────────────────────────────────────────
 
     public RAM                 getRam()         { return ram; }
     public Disk                getDisk()        { return disk; }
@@ -189,7 +179,6 @@ public class OperatingSystem {
     public boolean             isRunning()      { return running; }
     public SystemConfig        getConfig()      { return config; }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private String extractName(String path) {
         return path.substring(path.lastIndexOf(java.io.File.separator) + 1)
