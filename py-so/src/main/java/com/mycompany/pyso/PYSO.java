@@ -2,15 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  */
 
-package com.mycompany.proyecto.so;
+package com.mycompany.pyso;
+import com.mycompany.pyso.Interface.UI;
 
-/**
- *
- * @author jimen
- */
-public class ProyectoSo {
-
+public class PYSO {
+    
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        UI ventana = new UI();
+        ventana.setVisible(true);
     }
 }

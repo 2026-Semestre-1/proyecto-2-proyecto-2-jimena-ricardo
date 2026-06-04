@@ -1,0 +1,667 @@
+<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" data-diagram-type="CLASS" height="1640px" preserveAspectRatio="none" style="width:3625px;height:1640px;background:#FFFFFF;" version="1.1" viewBox="0 0 3625 1640" width="3625px" zoomAndPan="magnify">
+    <title>Diagrama de Paquetes — Sistema Operativo Simulado (PYSO)</title>
+    <defs/>
+    <g>
+        <g class="title" data-source-line="2">
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="414.3398" x="1598.4051" y="24.5332">Diagrama de Paquetes — Sistema Operativo Simulado (PYSO)</text>
+        </g>
+        <!--cluster com-->
+        <g class="cluster" data-entity="com" data-source-line="19" data-uid="ent0004" id="cluster_com">
+            <rect fill="#F9F9F9" height="1589" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="3398" x="7" y="45.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="28.7861" x="1691.6069" y="62.1426">com</text>
+        </g>
+        <!--cluster mycompany-->
+        <g class="cluster" data-entity="mycompany" data-source-line="19" data-uid="ent0005" id="cluster_mycompany">
+            <rect fill="#F9F9F9" height="1521" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="3350" x="31" y="89.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="81.6963" x="1665.1519" y="106.1426">mycompany</text>
+        </g>
+        <!--cluster pyso-->
+        <g class="cluster" data-entity="pyso" data-source-line="17" data-uid="ent0002" id="cluster_pyso">
+            <rect fill="#F9F9F9" height="1453" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="3302" x="55" y="133.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="32.6758" x="1689.6621" y="150.1426">pyso</text>
+        </g>
+        <!--cluster Interface-->
+        <g class="cluster" data-entity="Interface" data-source-line="34" data-uid="ent0006" id="cluster_Interface">
+            <rect fill="#F9F9F9" height="153" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="172" x="79" y="590.1094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="58.3584" x="135.8208" y="606.6426">Interface</text>
+        </g>
+        <!--cluster Classes-->
+        <g class="cluster" data-entity="Classes" data-source-line="42" data-uid="ent0008" id="cluster_Classes">
+            <rect fill="#F9F9F9" height="1087" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="3058" x="275" y="475.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="52.9307" x="1777.5347" y="492.1426">Classes</text>
+        </g>
+        <!--cluster Core-->
+        <g class="cluster" data-entity="Core" data-source-line="44" data-uid="ent0009" id="cluster_Core">
+            <rect fill="#F9F9F9" height="276" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="750" x="2559" y="844.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="31.8965" x="2918.0518" y="861.1426">Core</text>
+        </g>
+        <!--cluster Memory-->
+        <g class="cluster" data-entity="Memory" data-source-line="79" data-uid="ent0013" id="cluster_Memory">
+            <rect fill="#F9F9F9" height="368" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="496" x="611" y="1170.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="53.6826" x="832.1587" y="1187.1426">Memory</text>
+        </g>
+        <!--cluster Process-->
+        <g class="cluster" data-entity="Process" data-source-line="102" data-uid="ent0017" id="cluster_Process">
+            <rect fill="#F9F9F9" height="566" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="1447" x="1088" y="519.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="54.4824" x="1784.2588" y="536.1426">Process</text>
+        </g>
+        <!--cluster Interrupts-->
+        <g class="cluster" data-entity="Interrupts" data-source-line="185" data-uid="ent0027" id="cluster_Interrupts">
+            <rect fill="#F9F9F9" height="453" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="288" x="299" y="879.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="65.3379" x="410.3311" y="896.1426">Interrupts</text>
+        </g>
+        <!--cluster FileHandler-->
+        <g class="cluster" data-entity="FileHandler" data-source-line="200" data-uid="ent0030" id="cluster_FileHandler">
+            <rect fill="#F9F9F9" height="188" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.5;" width="453" x="611" y="888.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="76.2412" x="799.3794" y="905.1426">FileHandler</text>
+        </g>
+        <!--class OperatingSystem-->
+        <g class="entity" data-entity="OperatingSystem" data-source-line="19" data-uid="ent0003" id="entity_OperatingSystem">
+            <rect fill="#FFFFFF" height="259.3125" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="239.2197" x="911.5" y="169.6094"/>
+            <ellipse cx="972.7808" cy="185.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M975.5464,181.4844 Q975.7026,181.2656 975.8901,181.1563 Q976.0776,181.0469 976.2964,181.0469 Q976.6714,181.0469 976.9058,181.3125 Q977.1401,181.5625 977.1401,182.1719 L977.1401,183.625 Q977.1401,184.2344 976.9058,184.5 Q976.6714,184.7656 976.2964,184.7656 Q975.9526,184.7656 975.7495,184.5625 Q975.5464,184.375 975.437,183.8594 Q975.3901,183.5 975.2026,183.3125 Q974.8745,182.9375 974.2651,182.7188 Q973.6558,182.5 973.0308,182.5 Q972.2651,182.5 971.6245,182.8281 Q970.9995,183.1563 970.4995,183.9063 Q970.0151,184.6563 970.0151,185.6875 L970.0151,186.7813 Q970.0151,188.0156 970.9058,188.8438 Q971.7964,189.6563 973.3901,189.6563 Q974.3276,189.6563 974.9839,189.4063 Q975.3745,189.25 975.7964,188.8125 Q976.062,188.5469 976.2026,188.4688 Q976.3589,188.3906 976.562,188.3906 Q976.8901,188.3906 977.1401,188.6563 Q977.4058,188.9063 977.4058,189.25 Q977.4058,189.5938 977.062,190 Q976.562,190.5781 975.7651,190.9063 Q974.687,191.3594 973.3901,191.3594 Q971.8745,191.3594 970.6714,190.7344 Q969.687,190.2344 968.9995,189.1719 Q968.312,188.0938 968.312,186.8125 L968.312,185.6563 Q968.312,184.3281 968.9214,183.1875 Q969.5464,182.0313 970.6401,181.4219 Q971.7339,180.7969 972.9683,180.7969 Q973.7026,180.7969 974.3433,180.9688 Q974.9995,181.125 975.5464,181.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="108.1582" x="993.2808" y="191.3379">OperatingSystem</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="912.5" x2="1149.7197" y1="201.6094" y2="201.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="919.5" y="212.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63.7998" x="931.5" y="220.1426">cpu : CPU</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="919.5" y="230.5234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="93.3379" x="931.5" y="237.752">memory : RAM</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="919.5" y="248.1328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63.7861" x="931.5" y="255.3613">disk : Disk</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="919.5" y="265.7422"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135.4131" x="931.5" y="272.9707">scheduler : Scheduler</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="919.5" y="283.3516"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="143.1787" x="931.5" y="290.5801">dispatcher : Dispatcher</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="919.5" y="300.9609"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="213.2197" x="931.5" y="308.1895">interruptHandler : InterruptHandler</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="919.5" y="318.5703"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="44.3516" x="931.5" y="325.7988">gui : UI</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="912.5" x2="1149.7197" y1="332.875" y2="332.875"/>
+            <ellipse cx="922.5" cy="347.1797" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="175.8545" x="931.5" y="351.4082">loadProcess(path) : Process</text>
+            <ellipse cx="922.5" cy="364.7891" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="91.041" x="931.5" y="369.0176">run(stepMode)</text>
+            <ellipse cx="922.5" cy="382.3984" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="35.7861" x="931.5" y="386.627">stop()</text>
+            <ellipse cx="922.5" cy="400.0078" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="118.2412" x="931.5" y="404.2363">reset(memorySize)</text>
+            <ellipse cx="922.5" cy="417.6172" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="66.9033" x="931.5" y="421.8457">cpuCycle()</text>
+        </g>
+        <!--class UI-->
+        <g class="entity" data-entity="UI" data-source-line="35" data-uid="ent0007" id="entity_UI">
+            <rect fill="#FFFFFF" height="100.8281" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="140.3721" x="95" y="626.1094"/>
+            <ellipse cx="153.936" cy="642.1094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M156.7017,637.9844 Q156.8579,637.7656 157.0454,637.6563 Q157.2329,637.5469 157.4517,637.5469 Q157.8267,637.5469 158.061,637.8125 Q158.2954,638.0625 158.2954,638.6719 L158.2954,640.125 Q158.2954,640.7344 158.061,641 Q157.8267,641.2656 157.4517,641.2656 Q157.1079,641.2656 156.9048,641.0625 Q156.7017,640.875 156.5923,640.3594 Q156.5454,640 156.3579,639.8125 Q156.0298,639.4375 155.4204,639.2188 Q154.811,639 154.186,639 Q153.4204,639 152.7798,639.3281 Q152.1548,639.6563 151.6548,640.4063 Q151.1704,641.1563 151.1704,642.1875 L151.1704,643.2813 Q151.1704,644.5156 152.061,645.3438 Q152.9517,646.1563 154.5454,646.1563 Q155.4829,646.1563 156.1392,645.9063 Q156.5298,645.75 156.9517,645.3125 Q157.2173,645.0469 157.3579,644.9688 Q157.5142,644.8906 157.7173,644.8906 Q158.0454,644.8906 158.2954,645.1563 Q158.561,645.4063 158.561,645.75 Q158.561,646.0938 158.2173,646.5 Q157.7173,647.0781 156.9204,647.4063 Q155.8423,647.8594 154.5454,647.8594 Q153.0298,647.8594 151.8267,647.2344 Q150.8423,646.7344 150.1548,645.6719 Q149.4673,644.5938 149.4673,643.3125 L149.4673,642.1563 Q149.4673,640.8281 150.0767,639.6875 Q150.7017,638.5313 151.7954,637.9219 Q152.8892,637.2969 154.1235,637.2969 Q154.8579,637.2969 155.4985,637.4688 Q156.1548,637.625 156.7017,637.9844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="14" x="174.436" y="647.8379">UI</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="96" x2="234.3721" y1="658.1094" y2="658.1094"/>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="96" x2="234.3721" y1="666.1094" y2="666.1094"/>
+            <ellipse cx="106" cy="680.4141" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="114.3721" x="115" y="684.6426">printConsole(msg)</text>
+            <ellipse cx="106" cy="698.0234" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="68.4551" x="115" y="702.252">refreshAll()</text>
+            <ellipse cx="106" cy="715.6328" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="104.2686" x="115" y="719.8613">highlightRow(pc)</text>
+        </g>
+        <!--class CPU-->
+        <g class="entity" data-entity="CPU" data-source-line="45" data-uid="ent0010" id="entity_CPU">
+            <rect fill="#FFFFFF" height="171.2656" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="182.3994" x="2838" y="907.1094"/>
+            <ellipse cx="2910.1704" cy="923.1094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M2912.936,918.9844 Q2913.0923,918.7656 2913.2798,918.6563 Q2913.4673,918.5469 2913.686,918.5469 Q2914.061,918.5469 2914.2954,918.8125 Q2914.5298,919.0625 2914.5298,919.6719 L2914.5298,921.125 Q2914.5298,921.7344 2914.2954,922 Q2914.061,922.2656 2913.686,922.2656 Q2913.3423,922.2656 2913.1392,922.0625 Q2912.936,921.875 2912.8267,921.3594 Q2912.7798,921 2912.5923,920.8125 Q2912.2642,920.4375 2911.6548,920.2188 Q2911.0454,920 2910.4204,920 Q2909.6548,920 2909.0142,920.3281 Q2908.3892,920.6563 2907.8892,921.4063 Q2907.4048,922.1563 2907.4048,923.1875 L2907.4048,924.2813 Q2907.4048,925.5156 2908.2954,926.3438 Q2909.186,927.1563 2910.7798,927.1563 Q2911.7173,927.1563 2912.3735,926.9063 Q2912.7642,926.75 2913.186,926.3125 Q2913.4517,926.0469 2913.5923,925.9688 Q2913.7485,925.8906 2913.9517,925.8906 Q2914.2798,925.8906 2914.5298,926.1563 Q2914.7954,926.4063 2914.7954,926.75 Q2914.7954,927.0938 2914.4517,927.5 Q2913.9517,928.0781 2913.1548,928.4063 Q2912.0767,928.8594 2910.7798,928.8594 Q2909.2642,928.8594 2908.061,928.2344 Q2907.0767,927.7344 2906.3892,926.6719 Q2905.7017,925.5938 2905.7017,924.3125 L2905.7017,923.1563 Q2905.7017,921.8281 2906.311,920.6875 Q2906.936,919.5313 2908.0298,918.9219 Q2909.1235,918.2969 2910.3579,918.2969 Q2911.0923,918.2969 2911.7329,918.4688 Q2912.3892,918.625 2912.936,918.9844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="29.5586" x="2930.6704" y="928.8379">CPU</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="2839" x2="3019.3994" y1="939.1094" y2="939.1094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2846" y="950.4141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="45.9033" x="2858" y="957.6426">AC : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2846" y="968.0234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="45.9033" x="2858" y="975.252">PC : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2846" y="985.6328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="62.2412" x="2858" y="992.8613">IR : String</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2846" y="1003.2422"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="126.041" x="2858" y="1010.4707">AX, BX, CX, DX : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2846" y="1020.8516"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="140.8613" x="2858" y="1028.0801">overflowFlag : boolean</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2846" y="1038.4609"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="122.9854" x="2858" y="1045.6895">equalFlag : boolean</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="2839" x2="3019.3994" y1="1052.7656" y2="1052.7656"/>
+            <ellipse cx="2849" cy="1067.0703" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="156.3994" x="2858" y="1071.2988">execute(inst : Instruction)</text>
+        </g>
+        <!--class Instruction-->
+        <g class="entity" data-entity="Instruction" data-source-line="55" data-uid="ent0011" id="entity_Instruction">
+            <rect fill="#FFFFFF" height="171.2656" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="238.3994" x="3055" y="907.1094"/>
+            <ellipse cx="3137.6567" cy="923.1094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M3140.4224,918.9844 Q3140.5786,918.7656 3140.7661,918.6563 Q3140.9536,918.5469 3141.1724,918.5469 Q3141.5474,918.5469 3141.7817,918.8125 Q3142.0161,919.0625 3142.0161,919.6719 L3142.0161,921.125 Q3142.0161,921.7344 3141.7817,922 Q3141.5474,922.2656 3141.1724,922.2656 Q3140.8286,922.2656 3140.6255,922.0625 Q3140.4224,921.875 3140.313,921.3594 Q3140.2661,921 3140.0786,920.8125 Q3139.7505,920.4375 3139.1411,920.2188 Q3138.5317,920 3137.9067,920 Q3137.1411,920 3136.5005,920.3281 Q3135.8755,920.6563 3135.3755,921.4063 Q3134.8911,922.1563 3134.8911,923.1875 L3134.8911,924.2813 Q3134.8911,925.5156 3135.7817,926.3438 Q3136.6724,927.1563 3138.2661,927.1563 Q3139.2036,927.1563 3139.8599,926.9063 Q3140.2505,926.75 3140.6724,926.3125 Q3140.938,926.0469 3141.0786,925.9688 Q3141.2349,925.8906 3141.438,925.8906 Q3141.7661,925.8906 3142.0161,926.1563 Q3142.2817,926.4063 3142.2817,926.75 Q3142.2817,927.0938 3141.938,927.5 Q3141.438,928.0781 3140.6411,928.4063 Q3139.563,928.8594 3138.2661,928.8594 Q3136.7505,928.8594 3135.5474,928.2344 Q3134.563,927.7344 3133.8755,926.6719 Q3133.188,925.5938 3133.188,924.3125 L3133.188,923.1563 Q3133.188,921.8281 3133.7974,920.6875 Q3134.4224,919.5313 3135.5161,918.9219 Q3136.6099,918.2969 3137.8442,918.2969 Q3138.5786,918.2969 3139.2192,918.4688 Q3139.8755,918.625 3140.4224,918.9844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="64.5859" x="3158.1567" y="928.8379">Instruction</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="3056" x2="3292.3994" y1="939.1094" y2="939.1094"/>
+            <ellipse cx="3066" cy="953.4141" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" text-decoration="underline" textLength="212.3994" x="3075" y="957.6426">TYPE_LOAD, TYPE_MOV, ... : int</text>
+            <ellipse cx="3066" cy="971.0234" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" text-decoration="underline" textLength="167.2822" x="3075" y="975.252">REG_AX, REG_BX, ... : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="3063" y="985.6328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="52.917" x="3075" y="992.8613">type : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="3063" y="1003.2422"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="73.1377" x="3075" y="1010.4707">register : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="3063" y="1020.8516"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="59.9238" x="3075" y="1028.0801">value : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="3063" y="1038.4609"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="133.0684" x="3075" y="1045.6895">interruptCode : String</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="3063" y="1056.0703"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="138.5166" x="3075" y="1063.2988">instruction_bin : String</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="3056" x2="3292.3994" y1="1070.375" y2="1070.375"/>
+        </g>
+        <!--class Scheduler-->
+        <g class="entity" data-entity="Scheduler" data-source-line="65" data-uid="ent0012" id="entity_Scheduler">
+            <rect fill="#FFFFFF" height="224.0938" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="227.5234" x="2575" y="880.6094"/>
+            <ellipse cx="2652.9912" cy="896.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M2655.7568,892.4844 Q2655.9131,892.2656 2656.1006,892.1563 Q2656.2881,892.0469 2656.5068,892.0469 Q2656.8818,892.0469 2657.1162,892.3125 Q2657.3506,892.5625 2657.3506,893.1719 L2657.3506,894.625 Q2657.3506,895.2344 2657.1162,895.5 Q2656.8818,895.7656 2656.5068,895.7656 Q2656.1631,895.7656 2655.96,895.5625 Q2655.7568,895.375 2655.6475,894.8594 Q2655.6006,894.5 2655.4131,894.3125 Q2655.085,893.9375 2654.4756,893.7188 Q2653.8662,893.5 2653.2412,893.5 Q2652.4756,893.5 2651.835,893.8281 Q2651.21,894.1563 2650.71,894.9063 Q2650.2256,895.6563 2650.2256,896.6875 L2650.2256,897.7813 Q2650.2256,899.0156 2651.1162,899.8438 Q2652.0068,900.6563 2653.6006,900.6563 Q2654.5381,900.6563 2655.1943,900.4063 Q2655.585,900.25 2656.0068,899.8125 Q2656.2725,899.5469 2656.4131,899.4688 Q2656.5693,899.3906 2656.7725,899.3906 Q2657.1006,899.3906 2657.3506,899.6563 Q2657.6162,899.9063 2657.6162,900.25 Q2657.6162,900.5938 2657.2725,901 Q2656.7725,901.5781 2655.9756,901.9063 Q2654.8975,902.3594 2653.6006,902.3594 Q2652.085,902.3594 2650.8818,901.7344 Q2649.8975,901.2344 2649.21,900.1719 Q2648.5225,899.0938 2648.5225,897.8125 L2648.5225,896.6563 Q2648.5225,895.3281 2649.1318,894.1875 Q2649.7568,893.0313 2650.8506,892.4219 Q2651.9443,891.7969 2653.1787,891.7969 Q2653.9131,891.7969 2654.5537,891.9688 Q2655.21,892.125 2655.7568,892.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63.041" x="2673.4912" y="902.3379">Scheduler</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="2576" x2="2801.5234" y1="912.6094" y2="912.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2583" y="923.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="136.9922" x="2595" y="931.1426">jobQueue : JobQueue</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2583" y="941.5234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="171.2266" x="2595" y="948.752">readyQueue : ReadyQueue</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2583" y="959.1328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="185.999" x="2595" y="966.3613">waitingQueue : WaitingQueue</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2583" y="976.7422"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="66.8896" x="2595" y="983.9707">ram : RAM</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2583" y="994.3516"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63.7861" x="2595" y="1001.5801">disk : Disk</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="2576" x2="2801.5234" y1="1008.6563" y2="1008.6563"/>
+            <ellipse cx="2586" cy="1022.9609" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="175.8545" x="2595" y="1027.1895">loadProcess(path) : Process</text>
+            <ellipse cx="2586" cy="1040.5703" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="201.5234" x="2595" y="1044.7988">admitToRAM(process) : boolean</text>
+            <ellipse cx="2586" cy="1058.1797" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="140.0479" x="2595" y="1062.4082">nextToRun() : Process</text>
+            <ellipse cx="2586" cy="1075.7891" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="167.2754" x="2595" y="1080.0176">terminateProcess(process)</text>
+            <ellipse cx="2586" cy="1093.3984" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="155.6338" x="2595" y="1097.627">allTerminated() : boolean</text>
+        </g>
+        <!--class RAM-->
+        <g class="entity" data-entity="RAM" data-source-line="80" data-uid="ent0014" id="entity_RAM">
+            <rect fill="#FFFFFF" height="100.8281" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="202.6338" x="627.5" y="1233.1094"/>
+            <ellipse cx="709.0117" cy="1249.1094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M711.7773,1244.9844 Q711.9336,1244.7656 712.1211,1244.6563 Q712.3086,1244.5469 712.5273,1244.5469 Q712.9023,1244.5469 713.1367,1244.8125 Q713.3711,1245.0625 713.3711,1245.6719 L713.3711,1247.125 Q713.3711,1247.7344 713.1367,1248 Q712.9023,1248.2656 712.5273,1248.2656 Q712.1836,1248.2656 711.9805,1248.0625 Q711.7773,1247.875 711.668,1247.3594 Q711.6211,1247 711.4336,1246.8125 Q711.1055,1246.4375 710.4961,1246.2188 Q709.8867,1246 709.2617,1246 Q708.4961,1246 707.8555,1246.3281 Q707.2305,1246.6563 706.7305,1247.4063 Q706.2461,1248.1563 706.2461,1249.1875 L706.2461,1250.2813 Q706.2461,1251.5156 707.1367,1252.3438 Q708.0273,1253.1563 709.6211,1253.1563 Q710.5586,1253.1563 711.2148,1252.9063 Q711.6055,1252.75 712.0273,1252.3125 Q712.293,1252.0469 712.4336,1251.9688 Q712.5898,1251.8906 712.793,1251.8906 Q713.1211,1251.8906 713.3711,1252.1563 Q713.6367,1252.4063 713.6367,1252.75 Q713.6367,1253.0938 713.293,1253.5 Q712.793,1254.0781 711.9961,1254.4063 Q710.918,1254.8594 709.6211,1254.8594 Q708.1055,1254.8594 706.9023,1254.2344 Q705.918,1253.7344 705.2305,1252.6719 Q704.543,1251.5938 704.543,1250.3125 L704.543,1249.1563 Q704.543,1247.8281 705.1523,1246.6875 Q705.7773,1245.5313 706.8711,1244.9219 Q707.9648,1244.2969 709.1992,1244.2969 Q709.9336,1244.2969 710.5742,1244.4688 Q711.2305,1244.625 711.7773,1244.9844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="31.1104" x="729.5117" y="1254.8379">RAM</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="628.5" x2="829.1338" y1="1265.1094" y2="1265.1094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="635.5" y="1276.4141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="106.5791" x="647.5" y="1283.6426">memory : String[]</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="628.5" x2="829.1338" y1="1290.7188" y2="1290.7188"/>
+            <ellipse cx="638.5" cy="1305.0234" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="176.6338" x="647.5" y="1309.252">updateKernelFromBCP(bcp)</text>
+            <ellipse cx="638.5" cy="1322.6328" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135.4063" x="647.5" y="1326.8613">getValue(pos) : String</text>
+        </g>
+        <!--class Disk-->
+        <g class="entity" data-entity="Disk" data-source-line="86" data-uid="ent0015" id="entity_Disk">
+            <rect fill="#FFFFFF" height="153.6563" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="225.1787" x="865.5" y="1206.6094"/>
+            <ellipse cx="960.229" cy="1222.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M962.9946,1218.4844 Q963.1509,1218.2656 963.3384,1218.1563 Q963.5259,1218.0469 963.7446,1218.0469 Q964.1196,1218.0469 964.354,1218.3125 Q964.5884,1218.5625 964.5884,1219.1719 L964.5884,1220.625 Q964.5884,1221.2344 964.354,1221.5 Q964.1196,1221.7656 963.7446,1221.7656 Q963.4009,1221.7656 963.1978,1221.5625 Q962.9946,1221.375 962.8853,1220.8594 Q962.8384,1220.5 962.6509,1220.3125 Q962.3228,1219.9375 961.7134,1219.7188 Q961.104,1219.5 960.479,1219.5 Q959.7134,1219.5 959.0728,1219.8281 Q958.4478,1220.1563 957.9478,1220.9063 Q957.4634,1221.6563 957.4634,1222.6875 L957.4634,1223.7813 Q957.4634,1225.0156 958.354,1225.8438 Q959.2446,1226.6563 960.8384,1226.6563 Q961.7759,1226.6563 962.4321,1226.4063 Q962.8228,1226.25 963.2446,1225.8125 Q963.5103,1225.5469 963.6509,1225.4688 Q963.8071,1225.3906 964.0103,1225.3906 Q964.3384,1225.3906 964.5884,1225.6563 Q964.854,1225.9063 964.854,1226.25 Q964.854,1226.5938 964.5103,1227 Q964.0103,1227.5781 963.2134,1227.9063 Q962.1353,1228.3594 960.8384,1228.3594 Q959.3228,1228.3594 958.1196,1227.7344 Q957.1353,1227.2344 956.4478,1226.1719 Q955.7603,1225.0938 955.7603,1223.8125 L955.7603,1222.6563 Q955.7603,1221.3281 956.3696,1220.1875 Q956.9946,1219.0313 958.0884,1218.4219 Q959.1821,1217.7969 960.4165,1217.7969 Q961.1509,1217.7969 961.7915,1217.9688 Q962.4478,1218.125 962.9946,1218.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="27.2207" x="980.729" y="1228.3379">Disk</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="866.5" x2="1089.6787" y1="1238.6094" y2="1238.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="873.5" y="1249.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="102.7168" x="885.5" y="1257.1426">storage : String[]</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="873.5" y="1267.5234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="91.0479" x="885.5" y="1274.752">fileIndex : Map</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="866.5" x2="1089.6787" y1="1281.8281" y2="1281.8281"/>
+            <ellipse cx="876.5" cy="1296.1328" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="199.1787" x="885.5" y="1300.3613">save(fileName, instructions) : int</text>
+            <ellipse cx="876.5" cy="1313.7422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="182.0615" x="885.5" y="1317.9707">read(startAddress, size) : List</text>
+            <ellipse cx="876.5" cy="1331.3516" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="164.2061" x="885.5" y="1335.5801">delete(fileName) : boolean</text>
+            <ellipse cx="876.5" cy="1348.9609" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="161.8477" x="885.5" y="1353.1895">exists(fileName) : boolean</text>
+        </g>
+        <!--class DiskEntry-->
+        <g class="entity" data-entity="DiskEntry" data-source-line="95" data-uid="ent0016" id="entity_DiskEntry">
+            <rect fill="#FFFFFF" height="100.8281" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="109.2617" x="923.5" y="1421.6094"/>
+            <ellipse cx="946.3144" cy="1437.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M949.08,1433.4844 Q949.2362,1433.2656 949.4237,1433.1563 Q949.6112,1433.0469 949.83,1433.0469 Q950.205,1433.0469 950.4394,1433.3125 Q950.6737,1433.5625 950.6737,1434.1719 L950.6737,1435.625 Q950.6737,1436.2344 950.4394,1436.5 Q950.205,1436.7656 949.83,1436.7656 Q949.4862,1436.7656 949.2831,1436.5625 Q949.08,1436.375 948.9706,1435.8594 Q948.9237,1435.5 948.7362,1435.3125 Q948.4081,1434.9375 947.7987,1434.7188 Q947.1894,1434.5 946.5644,1434.5 Q945.7987,1434.5 945.1581,1434.8281 Q944.5331,1435.1563 944.0331,1435.9063 Q943.5487,1436.6563 943.5487,1437.6875 L943.5487,1438.7813 Q943.5487,1440.0156 944.4394,1440.8438 Q945.33,1441.6563 946.9237,1441.6563 Q947.8612,1441.6563 948.5175,1441.4063 Q948.9081,1441.25 949.33,1440.8125 Q949.5956,1440.5469 949.7362,1440.4688 Q949.8925,1440.3906 950.0956,1440.3906 Q950.4237,1440.3906 950.6737,1440.6563 Q950.9394,1440.9063 950.9394,1441.25 Q950.9394,1441.5938 950.5956,1442 Q950.0956,1442.5781 949.2987,1442.9063 Q948.2206,1443.3594 946.9237,1443.3594 Q945.4081,1443.3594 944.205,1442.7344 Q943.2206,1442.2344 942.5331,1441.1719 Q941.8456,1440.0938 941.8456,1438.8125 L941.8456,1437.6563 Q941.8456,1436.3281 942.455,1435.1875 Q943.08,1434.0313 944.1737,1433.4219 Q945.2675,1432.7969 946.5019,1432.7969 Q947.2362,1432.7969 947.8769,1432.9688 Q948.5331,1433.125 949.08,1433.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="59.8965" x="962.0509" y="1443.3379">DiskEntry</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="924.5" x2="1031.7617" y1="1453.6094" y2="1453.6094"/>
+            <ellipse cx="934.5" cy="1467.9141" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83.2617" x="943.5" y="1472.1426">name : String</text>
+            <ellipse cx="934.5" cy="1485.5234" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="76.2617" x="943.5" y="1489.752">address : int</text>
+            <ellipse cx="934.5" cy="1503.1328" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="51.3516" x="943.5" y="1507.3613">size : int</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="924.5" x2="1031.7617" y1="1514.4375" y2="1514.4375"/>
+        </g>
+        <!--class Process-->
+        <g class="entity" data-entity="Process" data-source-line="103" data-uid="ent0018" id="entity_Process">
+            <rect fill="#FFFFFF" height="171.2656" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="211.1992" x="2307.5" y="591.1094"/>
+            <ellipse cx="2383.5635" cy="607.1094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M2386.3291,602.9844 Q2386.4854,602.7656 2386.6729,602.6563 Q2386.8604,602.5469 2387.0791,602.5469 Q2387.4541,602.5469 2387.6885,602.8125 Q2387.9229,603.0625 2387.9229,603.6719 L2387.9229,605.125 Q2387.9229,605.7344 2387.6885,606 Q2387.4541,606.2656 2387.0791,606.2656 Q2386.7354,606.2656 2386.5322,606.0625 Q2386.3291,605.875 2386.2197,605.3594 Q2386.1729,605 2385.9854,604.8125 Q2385.6572,604.4375 2385.0479,604.2188 Q2384.4385,604 2383.8135,604 Q2383.0479,604 2382.4072,604.3281 Q2381.7822,604.6563 2381.2822,605.4063 Q2380.7979,606.1563 2380.7979,607.1875 L2380.7979,608.2813 Q2380.7979,609.5156 2381.6885,610.3438 Q2382.5791,611.1563 2384.1729,611.1563 Q2385.1104,611.1563 2385.7666,610.9063 Q2386.1572,610.75 2386.5791,610.3125 Q2386.8447,610.0469 2386.9854,609.9688 Q2387.1416,609.8906 2387.3447,609.8906 Q2387.6729,609.8906 2387.9229,610.1563 Q2388.1885,610.4063 2388.1885,610.75 Q2388.1885,611.0938 2387.8447,611.5 Q2387.3447,612.0781 2386.5479,612.4063 Q2385.4697,612.8594 2384.1729,612.8594 Q2382.6572,612.8594 2381.4541,612.2344 Q2380.4697,611.7344 2379.7822,610.6719 Q2379.0947,609.5938 2379.0947,608.3125 L2379.0947,607.1563 Q2379.0947,605.8281 2379.7041,604.6875 Q2380.3291,603.5313 2381.4229,602.9219 Q2382.5166,602.2969 2383.751,602.2969 Q2384.4854,602.2969 2385.126,602.4688 Q2385.7822,602.625 2386.3291,602.9844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="50.5723" x="2404.0635" y="612.8379">Process</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="2308.5" x2="2517.6992" y1="623.1094" y2="623.1094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2315.5" y="634.4141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="49.793" x="2327.5" y="641.6426">PID : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2315.5" y="652.0234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83.2617" x="2327.5" y="659.252">name : String</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2315.5" y="669.6328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="108.1719" x="2327.5" y="676.8613">baseAddress : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2315.5" y="687.2422"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="102.6963" x="2327.5" y="694.4707">limitAddress : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2315.5" y="704.8516"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="102.71" x="2327.5" y="712.0801">diskAddress : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2315.5" y="722.4609"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63.0273" x="2327.5" y="729.6895">bcp : BCP</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2315.5" y="740.0703"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="185.1992" x="2327.5" y="747.2988">instructions : List&lt;Instruction&gt;</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="2308.5" x2="2517.6992" y1="754.375" y2="754.375"/>
+        </g>
+        <!--class BCP-->
+        <g class="entity" data-entity="BCP" data-source-line="113" data-uid="ent0019" id="entity_BCP">
+            <rect fill="#FFFFFF" height="241.7031" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="261.71" x="1736" y="555.6094"/>
+            <ellipse cx="1848.2119" cy="571.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M1850.9775,567.4844 Q1851.1338,567.2656 1851.3213,567.1563 Q1851.5088,567.0469 1851.7275,567.0469 Q1852.1025,567.0469 1852.3369,567.3125 Q1852.5713,567.5625 1852.5713,568.1719 L1852.5713,569.625 Q1852.5713,570.2344 1852.3369,570.5 Q1852.1025,570.7656 1851.7275,570.7656 Q1851.3838,570.7656 1851.1807,570.5625 Q1850.9775,570.375 1850.8682,569.8594 Q1850.8213,569.5 1850.6338,569.3125 Q1850.3057,568.9375 1849.6963,568.7188 Q1849.0869,568.5 1848.4619,568.5 Q1847.6963,568.5 1847.0557,568.8281 Q1846.4307,569.1563 1845.9307,569.9063 Q1845.4463,570.6563 1845.4463,571.6875 L1845.4463,572.7813 Q1845.4463,574.0156 1846.3369,574.8438 Q1847.2275,575.6563 1848.8213,575.6563 Q1849.7588,575.6563 1850.415,575.4063 Q1850.8057,575.25 1851.2275,574.8125 Q1851.4932,574.5469 1851.6338,574.4688 Q1851.79,574.3906 1851.9932,574.3906 Q1852.3213,574.3906 1852.5713,574.6563 Q1852.8369,574.9063 1852.8369,575.25 Q1852.8369,575.5938 1852.4932,576 Q1851.9932,576.5781 1851.1963,576.9063 Q1850.1182,577.3594 1848.8213,577.3594 Q1847.3057,577.3594 1846.1025,576.7344 Q1845.1182,576.2344 1844.4307,575.1719 Q1843.7432,574.0938 1843.7432,572.8125 L1843.7432,571.6563 Q1843.7432,570.3281 1844.3525,569.1875 Q1844.9775,568.0313 1846.0713,567.4219 Q1847.165,566.7969 1848.3994,566.7969 Q1849.1338,566.7969 1849.7744,566.9688 Q1850.4307,567.125 1850.9775,567.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="28.7861" x="1868.7119" y="577.3379">BCP</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1737" x2="1996.71" y1="587.6094" y2="587.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1744" y="598.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="49.793" x="1756" y="606.1426">PID : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1744" y="616.5234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="134.6064" x="1756" y="623.752">processName : String</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1744" y="634.1328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="125.2822" x="1756" y="641.3613">state : ProcessState</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1744" y="651.7422"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="180.4961" x="1756" y="658.9707">PC, AC, AX, BX, CX, DX : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1744" y="669.3516"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="129.9307" x="1756" y="676.5801">stack : ProcessStack</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1744" y="686.9609"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="235.71" x="1756" y="694.1895">arrivalMillis, startMillis, endMillis : long</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1737" x2="1996.71" y1="701.2656" y2="701.2656"/>
+            <ellipse cx="1747" cy="715.5703" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="123.6895" x="1756" y="719.7988">saveFromCPU(cpu)</text>
+            <ellipse cx="1747" cy="733.1797" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="128.3789" x="1756" y="737.4082">restoreIntoCPU(cpu)</text>
+            <ellipse cx="1747" cy="750.7891" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="98.7656" x="1756" y="755.0176">markArrival(ms)</text>
+            <ellipse cx="1747" cy="768.3984" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="104.2344" x="1756" y="772.627">markStarted(ms)</text>
+            <ellipse cx="1747" cy="786.0078" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="129.9033" x="1756" y="790.2363">markTerminated(ms)</text>
+        </g>
+        <!--class ProcessState-->
+        <g class="entity" data-entity="ProcessState" data-source-line="127" data-uid="ent0020" id="entity_ProcessState">
+            <rect fill="#FFFFFF" height="136.0469" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="115.2617" x="1685.5" y="924.6094"/>
+            <ellipse cx="1700.5" cy="940.6094" fill="#EB937F" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M1699.3594,941.4063 L1699.3594,943.9063 L1703.6875,943.9063 L1703.6875,942.9844 Q1703.6875,942.375 1703.9219,942.1094 Q1704.1719,941.8438 1704.5469,941.8438 Q1704.9219,941.8438 1705.1563,942.1094 Q1705.3906,942.375 1705.3906,942.9844 L1705.3906,945.6094 L1697.3906,945.6094 Q1696.7656,945.6094 1696.5,945.375 Q1696.25,945.1406 1696.25,944.75 Q1696.25,944.375 1696.5156,944.1406 Q1696.7813,943.9063 1697.3906,943.9063 L1697.6563,943.9063 L1697.6563,937.25 L1697.3906,937.25 Q1696.7656,937.25 1696.5,937.0156 Q1696.25,936.7813 1696.25,936.3906 Q1696.25,936.0156 1696.5,935.7813 Q1696.7656,935.5469 1697.3906,935.5469 L1705.0156,935.5469 L1705.0156,938.1406 Q1705.0156,938.75 1704.7813,939.0156 Q1704.5625,939.2656 1704.1719,939.2656 Q1703.7969,939.2656 1703.5625,939.0156 Q1703.3281,938.75 1703.3281,938.1406 L1703.3281,937.25 L1699.3594,937.25 L1699.3594,939.7031 L1700.8438,939.7031 Q1700.8438,939.0469 1700.9688,938.8594 Q1701.2344,938.4531 1701.7031,938.4531 Q1702.0781,938.4531 1702.3125,938.7188 Q1702.5469,938.9688 1702.5469,939.5781 L1702.5469,941.5469 Q1702.5469,942.0938 1702.4219,942.2813 Q1702.1563,942.6719 1701.7031,942.6719 Q1701.2344,942.6719 1700.9688,942.2656 Q1700.8438,942.0781 1700.8438,941.4063 L1699.3594,941.4063 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83.2617" x="1714.5" y="946.3379">ProcessState</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1686.5" x2="1799.7617" y1="956.6094" y2="956.6094"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="32.6621" x="1691.5" y="975.1426">NEW</text>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="48.2344" x="1691.5" y="992.752">READY</text>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="65.3311" x="1691.5" y="1010.3613">RUNNING</text>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="59.8828" x="1691.5" y="1027.9707">WAITING</text>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="91" x="1691.5" y="1045.5801">TERMINATED</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1686.5" x2="1799.7617" y1="1052.6563" y2="1052.6563"/>
+        </g>
+        <!--class ProcessStack-->
+        <g class="entity" data-entity="ProcessStack" data-source-line="135" data-uid="ent0021" id="entity_ProcessStack">
+            <rect fill="#FFFFFF" height="153.6563" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="160.6475" x="1835.5" y="915.6094"/>
+            <ellipse cx="1869.8777" cy="931.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M1872.6433,927.4844 Q1872.7996,927.2656 1872.9871,927.1563 Q1873.1746,927.0469 1873.3933,927.0469 Q1873.7683,927.0469 1874.0027,927.3125 Q1874.2371,927.5625 1874.2371,928.1719 L1874.2371,929.625 Q1874.2371,930.2344 1874.0027,930.5 Q1873.7683,930.7656 1873.3933,930.7656 Q1873.0496,930.7656 1872.8464,930.5625 Q1872.6433,930.375 1872.5339,929.8594 Q1872.4871,929.5 1872.2996,929.3125 Q1871.9714,928.9375 1871.3621,928.7188 Q1870.7527,928.5 1870.1277,928.5 Q1869.3621,928.5 1868.7214,928.8281 Q1868.0964,929.1563 1867.5964,929.9063 Q1867.1121,930.6563 1867.1121,931.6875 L1867.1121,932.7813 Q1867.1121,934.0156 1868.0027,934.8438 Q1868.8933,935.6563 1870.4871,935.6563 Q1871.4246,935.6563 1872.0808,935.4063 Q1872.4714,935.25 1872.8933,934.8125 Q1873.1589,934.5469 1873.2996,934.4688 Q1873.4558,934.3906 1873.6589,934.3906 Q1873.9871,934.3906 1874.2371,934.6563 Q1874.5027,934.9063 1874.5027,935.25 Q1874.5027,935.5938 1874.1589,936 Q1873.6589,936.5781 1872.8621,936.9063 Q1871.7839,937.3594 1870.4871,937.3594 Q1868.9714,937.3594 1867.7683,936.7344 Q1866.7839,936.2344 1866.0964,935.1719 Q1865.4089,934.0938 1865.4089,932.8125 L1865.4089,931.6563 Q1865.4089,930.3281 1866.0183,929.1875 Q1866.6433,928.0313 1867.7371,927.4219 Q1868.8308,926.7969 1870.0652,926.7969 Q1870.7996,926.7969 1871.4402,926.9688 Q1872.0964,927.125 1872.6433,927.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="85.5859" x="1888.1838" y="937.3379">ProcessStack</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1836.5" x2="1995.1475" y1="947.6094" y2="947.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1843.5" y="958.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" text-decoration="underline" textLength="112.0342" x="1855.5" y="966.1426">STACK_SIZE : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1843.5" y="976.5234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="66.9102" x="1855.5" y="983.752">stack : int[]</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1843.5" y="994.1328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="103.4893" x="1855.5" y="1001.3613">stackPointer : int</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1836.5" x2="1995.1475" y1="1008.4375" y2="1008.4375"/>
+            <ellipse cx="1846.5" cy="1022.7422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="134.6475" x="1855.5" y="1026.9707">push(value) : boolean</text>
+            <ellipse cx="1846.5" cy="1040.3516" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="59.1377" x="1855.5" y="1044.5801">pop() : int</text>
+            <ellipse cx="1846.5" cy="1057.9609" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="66.1377" x="1855.5" y="1062.1895">peek() : int</text>
+        </g>
+        <!--class Dispatcher-->
+        <g class="entity" data-entity="Dispatcher" data-source-line="144" data-uid="ent0022" id="entity_Dispatcher">
+            <rect fill="#FFFFFF" height="188.875" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="239.2197" x="2033.5" y="582.1094"/>
+            <ellipse cx="2115.4014" cy="598.1094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M2118.167,593.9844 Q2118.3232,593.7656 2118.5107,593.6563 Q2118.6982,593.5469 2118.917,593.5469 Q2119.292,593.5469 2119.5264,593.8125 Q2119.7607,594.0625 2119.7607,594.6719 L2119.7607,596.125 Q2119.7607,596.7344 2119.5264,597 Q2119.292,597.2656 2118.917,597.2656 Q2118.5732,597.2656 2118.3701,597.0625 Q2118.167,596.875 2118.0576,596.3594 Q2118.0107,596 2117.8232,595.8125 Q2117.4951,595.4375 2116.8857,595.2188 Q2116.2764,595 2115.6514,595 Q2114.8857,595 2114.2451,595.3281 Q2113.6201,595.6563 2113.1201,596.4063 Q2112.6357,597.1563 2112.6357,598.1875 L2112.6357,599.2813 Q2112.6357,600.5156 2113.5264,601.3438 Q2114.417,602.1563 2116.0107,602.1563 Q2116.9482,602.1563 2117.6045,601.9063 Q2117.9951,601.75 2118.417,601.3125 Q2118.6826,601.0469 2118.8232,600.9688 Q2118.9795,600.8906 2119.1826,600.8906 Q2119.5107,600.8906 2119.7607,601.1563 Q2120.0264,601.4063 2120.0264,601.75 Q2120.0264,602.0938 2119.6826,602.5 Q2119.1826,603.0781 2118.3857,603.4063 Q2117.3076,603.8594 2116.0107,603.8594 Q2114.4951,603.8594 2113.292,603.2344 Q2112.3076,602.7344 2111.6201,601.6719 Q2110.9326,600.5938 2110.9326,599.3125 L2110.9326,598.1563 Q2110.9326,596.8281 2111.542,595.6875 Q2112.167,594.5313 2113.2607,593.9219 Q2114.3545,593.2969 2115.5889,593.2969 Q2116.3232,593.2969 2116.9639,593.4688 Q2117.6201,593.625 2118.167,593.9844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="66.917" x="2135.9014" y="603.8379">Dispatcher</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="2034.5" x2="2271.7197" y1="614.1094" y2="614.1094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2041.5" y="625.4141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63.7998" x="2053.5" y="632.6426">cpu : CPU</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2041.5" y="643.0234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135.4131" x="2053.5" y="650.252">scheduler : Scheduler</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2041.5" y="660.6328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="213.2197" x="2053.5" y="667.8613">interruptHandler : InterruptHandler</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="2041.5" y="678.2422"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="156.3857" x="2053.5" y="685.4707">currentProcess : Process</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="2034.5" x2="2271.7197" y1="692.5469" y2="692.5469"/>
+            <ellipse cx="2044.5" cy="706.8516" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="126.0342" x="2053.5" y="711.0801">CPUcycle() : Integer</text>
+            <ellipse cx="2044.5" cy="724.4609" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="116.7031" x="2053.5" y="728.6895">terminate(process)</text>
+            <ellipse cx="2044.5" cy="742.0703" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="155.5996" x="2053.5" y="746.2988">moveToWaiting(process)</text>
+            <ellipse cx="2044.5" cy="759.6797" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="153.2686" x="2053.5" y="763.9082">releaseFromWaiting(pid)</text>
+        </g>
+        <!--class IProcessQueue-->
+        <g class="entity" data-entity="IProcessQueue" data-source-line="155" data-uid="ent0023" id="entity_IProcessQueue">
+            <rect fill="#FFFFFF" height="153.6563" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="152.0684" x="1337" y="915.6094"/>
+            <ellipse cx="1362.6075" cy="931.6094" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M1363.5606,928.25 L1363.5606,934.9063 L1365.2794,934.9063 Q1365.8888,934.9063 1366.1544,935.1406 Q1366.42,935.375 1366.42,935.7656 Q1366.42,936.1406 1366.1544,936.375 Q1365.8888,936.6094 1365.2794,936.6094 L1360.1388,936.6094 Q1359.5294,936.6094 1359.2638,936.375 Q1358.9981,936.1406 1358.9981,935.75 Q1358.9981,935.375 1359.2638,935.1406 Q1359.5294,934.9063 1360.1388,934.9063 L1361.8575,934.9063 L1361.8575,928.25 L1360.1388,928.25 Q1359.5294,928.25 1359.2638,928.0156 Q1358.9981,927.7813 1358.9981,927.3906 Q1358.9981,927.0156 1359.2638,926.7813 Q1359.5294,926.5469 1360.1388,926.5469 L1365.2794,926.5469 Q1365.8888,926.5469 1366.1544,926.7813 Q1366.42,927.0156 1366.42,927.3906 Q1366.42,927.7813 1366.1544,928.0156 Q1365.8888,928.25 1365.2794,928.25 L1363.5606,928.25 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="96.4961" x="1378.9647" y="937.3379">IProcessQueue</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1338" x2="1488.0684" y1="947.6094" y2="947.6094"/>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1338" x2="1488.0684" y1="955.6094" y2="955.6094"/>
+            <ellipse cx="1348" cy="969.9141" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="112.8477" x="1357" y="974.1426">enqueue(process)</text>
+            <ellipse cx="1348" cy="987.5234" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="126.0684" x="1357" y="991.752">dequeue() : Process</text>
+            <ellipse cx="1348" cy="1005.1328" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="122.1787" x="1357" y="1009.3613">hasNext() : boolean</text>
+            <ellipse cx="1348" cy="1022.7422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="70.0273" x="1357" y="1026.9707">count() : int</text>
+            <ellipse cx="1348" cy="1040.3516" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="77.7998" x="1357" y="1044.5801">getAll() : List</text>
+            <ellipse cx="1348" cy="1057.9609" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="120.6064" x="1357" y="1062.1895">isEmpty() : boolean</text>
+        </g>
+        <!--class JobQueue-->
+        <g class="entity" data-entity="JobQueue" data-source-line="164" data-uid="ent0024" id="entity_JobQueue">
+            <rect fill="#FFFFFF" height="118.4375" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="175.3857" x="1325.5" y="617.6094"/>
+            <ellipse cx="1376.6396" cy="633.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M1379.4053,629.4844 Q1379.5615,629.2656 1379.749,629.1563 Q1379.9365,629.0469 1380.1553,629.0469 Q1380.5303,629.0469 1380.7646,629.3125 Q1380.999,629.5625 1380.999,630.1719 L1380.999,631.625 Q1380.999,632.2344 1380.7646,632.5 Q1380.5303,632.7656 1380.1553,632.7656 Q1379.8115,632.7656 1379.6084,632.5625 Q1379.4053,632.375 1379.2959,631.8594 Q1379.249,631.5 1379.0615,631.3125 Q1378.7334,630.9375 1378.124,630.7188 Q1377.5146,630.5 1376.8896,630.5 Q1376.124,630.5 1375.4834,630.8281 Q1374.8584,631.1563 1374.3584,631.9063 Q1373.874,632.6563 1373.874,633.6875 L1373.874,634.7813 Q1373.874,636.0156 1374.7646,636.8438 Q1375.6553,637.6563 1377.249,637.6563 Q1378.1865,637.6563 1378.8428,637.4063 Q1379.2334,637.25 1379.6553,636.8125 Q1379.9209,636.5469 1380.0615,636.4688 Q1380.2178,636.3906 1380.4209,636.3906 Q1380.749,636.3906 1380.999,636.6563 Q1381.2646,636.9063 1381.2646,637.25 Q1381.2646,637.5938 1380.9209,638 Q1380.4209,638.5781 1379.624,638.9063 Q1378.5459,639.3594 1377.249,639.3594 Q1375.7334,639.3594 1374.5303,638.7344 Q1373.5459,638.2344 1372.8584,637.1719 Q1372.1709,636.0938 1372.1709,634.8125 L1372.1709,633.6563 Q1372.1709,632.3281 1372.7803,631.1875 Q1373.4053,630.0313 1374.499,629.4219 Q1375.5928,628.7969 1376.8271,628.7969 Q1377.5615,628.7969 1378.2021,628.9688 Q1378.8584,629.125 1379.4053,629.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="64.6064" x="1397.1396" y="639.3379">JobQueue</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1326.5" x2="1499.8857" y1="649.6094" y2="649.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1333.5" y="660.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="126.0615" x="1345.5" y="668.1426">jobs : List&lt;Process&gt;</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1326.5" x2="1499.8857" y1="675.2188" y2="675.2188"/>
+            <ellipse cx="1336.5" cy="689.5234" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="81.7031" x="1345.5" y="693.752">add(process)</text>
+            <ellipse cx="1336.5" cy="707.1328" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="105.0273" x="1345.5" y="711.3613">remove(process)</text>
+            <ellipse cx="1336.5" cy="724.7422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="149.3857" x="1345.5" y="728.9707">getByPID(pid) : Process</text>
+        </g>
+        <!--class ReadyQueue-->
+        <g class="entity" data-entity="ReadyQueue" data-source-line="171" data-uid="ent0025" id="entity_ReadyQueue">
+            <rect fill="#FFFFFF" height="118.4375" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="185.5576" x="1104" y="617.6094"/>
+            <ellipse cx="1151.2773" cy="633.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M1154.043,629.4844 Q1154.1992,629.2656 1154.3867,629.1563 Q1154.5742,629.0469 1154.793,629.0469 Q1155.168,629.0469 1155.4023,629.3125 Q1155.6367,629.5625 1155.6367,630.1719 L1155.6367,631.625 Q1155.6367,632.2344 1155.4023,632.5 Q1155.168,632.7656 1154.793,632.7656 Q1154.4492,632.7656 1154.2461,632.5625 Q1154.043,632.375 1153.9336,631.8594 Q1153.8867,631.5 1153.6992,631.3125 Q1153.3711,630.9375 1152.7617,630.7188 Q1152.1523,630.5 1151.5273,630.5 Q1150.7617,630.5 1150.1211,630.8281 Q1149.4961,631.1563 1148.9961,631.9063 Q1148.5117,632.6563 1148.5117,633.6875 L1148.5117,634.7813 Q1148.5117,636.0156 1149.4023,636.8438 Q1150.293,637.6563 1151.8867,637.6563 Q1152.8242,637.6563 1153.4805,637.4063 Q1153.8711,637.25 1154.293,636.8125 Q1154.5586,636.5469 1154.6992,636.4688 Q1154.8555,636.3906 1155.0586,636.3906 Q1155.3867,636.3906 1155.6367,636.6563 Q1155.9023,636.9063 1155.9023,637.25 Q1155.9023,637.5938 1155.5586,638 Q1155.0586,638.5781 1154.2617,638.9063 Q1153.1836,639.3594 1151.8867,639.3594 Q1150.3711,639.3594 1149.168,638.7344 Q1148.1836,638.2344 1147.4961,637.1719 Q1146.8086,636.0938 1146.8086,634.8125 L1146.8086,633.6563 Q1146.8086,632.3281 1147.418,631.1875 Q1148.043,630.0313 1149.1367,629.4219 Q1150.2305,628.7969 1151.4648,628.7969 Q1152.1992,628.7969 1152.8398,628.9688 Q1153.4961,629.125 1154.043,629.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="82.5029" x="1171.7773" y="639.3379">ReadyQueue</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1105" x2="1288.5576" y1="649.6094" y2="649.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1112" y="660.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="159.5576" x="1124" y="668.1426">queue : Queue&lt;Process&gt;</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1105" x2="1288.5576" y1="675.2188" y2="675.2188"/>
+            <ellipse cx="1115" cy="689.5234" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="112.8477" x="1124" y="693.752">enqueue(process)</text>
+            <ellipse cx="1115" cy="707.1328" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="126.0684" x="1124" y="711.3613">dequeue() : Process</text>
+            <ellipse cx="1115" cy="724.7422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="122.1787" x="1124" y="728.9707">hasNext() : boolean</text>
+        </g>
+        <!--class WaitingQueue-->
+        <g class="entity" data-entity="WaitingQueue" data-source-line="178" data-uid="ent0026" id="entity_WaitingQueue">
+            <rect fill="#FFFFFF" height="100.8281" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="165.3096" x="1535.5" y="626.1094"/>
+            <ellipse cx="1570.5667" cy="642.1094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M1573.3324,637.9844 Q1573.4886,637.7656 1573.6761,637.6563 Q1573.8636,637.5469 1574.0824,637.5469 Q1574.4574,637.5469 1574.6917,637.8125 Q1574.9261,638.0625 1574.9261,638.6719 L1574.9261,640.125 Q1574.9261,640.7344 1574.6917,641 Q1574.4574,641.2656 1574.0824,641.2656 Q1573.7386,641.2656 1573.5355,641.0625 Q1573.3324,640.875 1573.223,640.3594 Q1573.1761,640 1572.9886,639.8125 Q1572.6605,639.4375 1572.0511,639.2188 Q1571.4417,639 1570.8167,639 Q1570.0511,639 1569.4105,639.3281 Q1568.7855,639.6563 1568.2855,640.4063 Q1567.8011,641.1563 1567.8011,642.1875 L1567.8011,643.2813 Q1567.8011,644.5156 1568.6917,645.3438 Q1569.5824,646.1563 1571.1761,646.1563 Q1572.1136,646.1563 1572.7699,645.9063 Q1573.1605,645.75 1573.5824,645.3125 Q1573.848,645.0469 1573.9886,644.9688 Q1574.1449,644.8906 1574.348,644.8906 Q1574.6761,644.8906 1574.9261,645.1563 Q1575.1917,645.4063 1575.1917,645.75 Q1575.1917,646.0938 1574.848,646.5 Q1574.348,647.0781 1573.5511,647.4063 Q1572.473,647.8594 1571.1761,647.8594 Q1569.6605,647.8594 1568.4574,647.2344 Q1567.473,646.7344 1566.7855,645.6719 Q1566.098,644.5938 1566.098,643.3125 L1566.098,642.1563 Q1566.098,640.8281 1566.7074,639.6875 Q1567.3324,638.5313 1568.4261,637.9219 Q1569.5199,637.2969 1570.7542,637.2969 Q1571.4886,637.2969 1572.1292,637.4688 Q1572.7855,637.625 1573.3324,637.9844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="88.7168" x="1589.026" y="647.8379">WaitingQueue</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1536.5" x2="1699.8096" y1="658.1094" y2="658.1094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="1543.5" y="669.4141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="139.3096" x="1555.5" y="676.6426">queue : List&lt;Process&gt;</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="1536.5" x2="1699.8096" y1="683.7188" y2="683.7188"/>
+            <ellipse cx="1546.5" cy="698.0234" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="112.8477" x="1555.5" y="702.252">enqueue(process)</text>
+            <ellipse cx="1546.5" cy="715.6328" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="136.165" x="1555.5" y="719.8613">release(pid) : Process</text>
+        </g>
+        <!--class InterruptHandler-->
+        <g class="entity" data-entity="InterruptHandler" data-source-line="186" data-uid="ent0028" id="entity_InterruptHandler">
+            <rect fill="#FFFFFF" height="153.6563" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="256.3506" x="315" y="915.6094"/>
+            <ellipse cx="388.3428" cy="931.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M391.1084,927.4844 Q391.2646,927.2656 391.4521,927.1563 Q391.6396,927.0469 391.8584,927.0469 Q392.2334,927.0469 392.4678,927.3125 Q392.7021,927.5625 392.7021,928.1719 L392.7021,929.625 Q392.7021,930.2344 392.4678,930.5 Q392.2334,930.7656 391.8584,930.7656 Q391.5146,930.7656 391.3115,930.5625 Q391.1084,930.375 390.999,929.8594 Q390.9521,929.5 390.7646,929.3125 Q390.4365,928.9375 389.8271,928.7188 Q389.2178,928.5 388.5928,928.5 Q387.8271,928.5 387.1865,928.8281 Q386.5615,929.1563 386.0615,929.9063 Q385.5771,930.6563 385.5771,931.6875 L385.5771,932.7813 Q385.5771,934.0156 386.4678,934.8438 Q387.3584,935.6563 388.9521,935.6563 Q389.8896,935.6563 390.5459,935.4063 Q390.9365,935.25 391.3584,934.8125 Q391.624,934.5469 391.7646,934.4688 Q391.9209,934.3906 392.124,934.3906 Q392.4521,934.3906 392.7021,934.6563 Q392.9678,934.9063 392.9678,935.25 Q392.9678,935.5938 392.624,936 Q392.124,936.5781 391.3271,936.9063 Q390.249,937.3594 388.9521,937.3594 Q387.4365,937.3594 386.2334,936.7344 Q385.249,936.2344 384.5615,935.1719 Q383.874,934.0938 383.874,932.8125 L383.874,931.6563 Q383.874,930.3281 384.4834,929.1875 Q385.1084,928.0313 386.2021,927.4219 Q387.2959,926.7969 388.5303,926.7969 Q389.2646,926.7969 389.9053,926.9688 Q390.5615,927.125 391.1084,927.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="101.165" x="408.8428" y="937.3379">InterruptHandler</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="316" x2="570.3506" y1="947.6094" y2="947.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="323" y="958.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63.7998" x="335" y="966.1426">cpu : CPU</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="323" y="976.5234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63.7861" x="335" y="983.752">disk : Disk</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="316" x2="570.3506" y1="990.8281" y2="990.8281"/>
+            <ellipse cx="326" cy="1005.1328" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="202.3232" x="335" y="1009.3613">handle(inst, process, dispatcher)</text>
+            <ellipse cx="326" cy="1022.7422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="230.3506" x="335" y="1026.9707">executePush(inst, process) : boolean</text>
+            <ellipse cx="326" cy="1040.3516" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="223.3506" x="335" y="1044.5801">executePop(inst, process) : boolean</text>
+            <ellipse cx="326" cy="1057.9609" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="178.1787" x="335" y="1062.1895">executeParam(inst, process)</text>
+        </g>
+        <!--class ConsoleCallback-->
+        <g class="entity" data-entity="ConsoleCallback" data-source-line="195" data-uid="ent0029" id="entity_ConsoleCallback">
+            <rect fill="#FFFFFF" height="65.6094" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="137.0547" x="374.5" y="1250.6094"/>
+            <ellipse cx="389.5" cy="1266.6094" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M390.4531,1263.25 L390.4531,1269.9063 L392.1719,1269.9063 Q392.7813,1269.9063 393.0469,1270.1406 Q393.3125,1270.375 393.3125,1270.7656 Q393.3125,1271.1406 393.0469,1271.375 Q392.7813,1271.6094 392.1719,1271.6094 L387.0313,1271.6094 Q386.4219,1271.6094 386.1563,1271.375 Q385.8906,1271.1406 385.8906,1270.75 Q385.8906,1270.375 386.1563,1270.1406 Q386.4219,1269.9063 387.0313,1269.9063 L388.75,1269.9063 L388.75,1263.25 L387.0313,1263.25 Q386.4219,1263.25 386.1563,1263.0156 Q385.8906,1262.7813 385.8906,1262.3906 Q385.8906,1262.0156 386.1563,1261.7813 Q386.4219,1261.5469 387.0313,1261.5469 L392.1719,1261.5469 Q392.7813,1261.5469 393.0469,1261.7813 Q393.3125,1262.0156 393.3125,1262.3906 Q393.3125,1262.7813 393.0469,1263.0156 Q392.7813,1263.25 392.1719,1263.25 L390.4531,1263.25 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="105.0547" x="403.5" y="1272.3379">ConsoleCallback</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="375.5" x2="510.5547" y1="1282.6094" y2="1282.6094"/>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="375.5" x2="510.5547" y1="1290.6094" y2="1290.6094"/>
+            <ellipse cx="385.5" cy="1304.9141" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="70.0273" x="394.5" y="1309.1426">print(value)</text>
+        </g>
+        <!--class LoadASM-->
+        <g class="entity" data-entity="LoadASM" data-source-line="201" data-uid="ent0031" id="entity_LoadASM">
+            <rect fill="#FFFFFF" height="136.0469" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="239.9785" x="808" y="924.6094"/>
+            <ellipse cx="892.998" cy="940.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M895.7637,936.4844 Q895.9199,936.2656 896.1074,936.1563 Q896.2949,936.0469 896.5137,936.0469 Q896.8887,936.0469 897.123,936.3125 Q897.3574,936.5625 897.3574,937.1719 L897.3574,938.625 Q897.3574,939.2344 897.123,939.5 Q896.8887,939.7656 896.5137,939.7656 Q896.1699,939.7656 895.9668,939.5625 Q895.7637,939.375 895.6543,938.8594 Q895.6074,938.5 895.4199,938.3125 Q895.0918,937.9375 894.4824,937.7188 Q893.873,937.5 893.248,937.5 Q892.4824,937.5 891.8418,937.8281 Q891.2168,938.1563 890.7168,938.9063 Q890.2324,939.6563 890.2324,940.6875 L890.2324,941.7813 Q890.2324,943.0156 891.123,943.8438 Q892.0137,944.6563 893.6074,944.6563 Q894.5449,944.6563 895.2012,944.4063 Q895.5918,944.25 896.0137,943.8125 Q896.2793,943.5469 896.4199,943.4688 Q896.5762,943.3906 896.7793,943.3906 Q897.1074,943.3906 897.3574,943.6563 Q897.623,943.9063 897.623,944.25 Q897.623,944.5938 897.2793,945 Q896.7793,945.5781 895.9824,945.9063 Q894.9043,946.3594 893.6074,946.3594 Q892.0918,946.3594 890.8887,945.7344 Q889.9043,945.2344 889.2168,944.1719 Q888.5293,943.0938 888.5293,941.8125 L888.5293,940.6563 Q888.5293,939.3281 889.1387,938.1875 Q889.7637,937.0313 890.8574,936.4219 Q891.9512,935.7969 893.1855,935.7969 Q893.9199,935.7969 894.5605,935.9688 Q895.2168,936.125 895.7637,936.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="61.4824" x="913.498" y="946.3379">LoadASM</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="809" x2="1046.9785" y1="956.6094" y2="956.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="816" y="967.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="185.1992" x="828" y="975.1426">instructions : List&lt;Instruction&gt;</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="816" y="985.5234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="132.2822" x="828" y="992.752">formatError : boolean</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="816" y="1003.1328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="152.5371" x="828" y="1010.3613">extensionError : boolean</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="809" x2="1046.9785" y1="1017.4375" y2="1017.4375"/>
+            <ellipse cx="819" cy="1031.7422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="87.1514" x="828" y="1035.9707">readFile(path)</text>
+            <ellipse cx="819" cy="1049.3516" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="213.9785" x="828" y="1053.5801">createInstruction(line, lineNumber)</text>
+        </g>
+        <!--class LoadXML-->
+        <g class="entity" data-entity="LoadXML" data-source-line="209" data-uid="ent0032" id="entity_LoadXML">
+            <rect fill="#FFFFFF" height="118.4375" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="145.0752" x="627.5" y="933.6094"/>
+            <ellipse cx="666.415" cy="949.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M669.1807,945.4844 Q669.3369,945.2656 669.5244,945.1563 Q669.7119,945.0469 669.9307,945.0469 Q670.3057,945.0469 670.54,945.3125 Q670.7744,945.5625 670.7744,946.1719 L670.7744,947.625 Q670.7744,948.2344 670.54,948.5 Q670.3057,948.7656 669.9307,948.7656 Q669.5869,948.7656 669.3838,948.5625 Q669.1807,948.375 669.0713,947.8594 Q669.0244,947.5 668.8369,947.3125 Q668.5088,946.9375 667.8994,946.7188 Q667.29,946.5 666.665,946.5 Q665.8994,946.5 665.2588,946.8281 Q664.6338,947.1563 664.1338,947.9063 Q663.6494,948.6563 663.6494,949.6875 L663.6494,950.7813 Q663.6494,952.0156 664.54,952.8438 Q665.4307,953.6563 667.0244,953.6563 Q667.9619,953.6563 668.6182,953.4063 Q669.0088,953.25 669.4307,952.8125 Q669.6963,952.5469 669.8369,952.4688 Q669.9932,952.3906 670.1963,952.3906 Q670.5244,952.3906 670.7744,952.6563 Q671.04,952.9063 671.04,953.25 Q671.04,953.5938 670.6963,954 Q670.1963,954.5781 669.3994,954.9063 Q668.3213,955.3594 667.0244,955.3594 Q665.5088,955.3594 664.3057,954.7344 Q663.3213,954.2344 662.6338,953.1719 Q661.9463,952.0938 661.9463,950.8125 L661.9463,949.6563 Q661.9463,948.3281 662.5557,947.1875 Q663.1807,946.0313 664.2744,945.4219 Q665.3682,944.7969 666.6025,944.7969 Q667.3369,944.7969 667.9775,944.9688 Q668.6338,945.125 669.1807,945.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="59.9307" x="685.7295" y="955.3379">LoadXML</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="628.5" x2="771.5752" y1="965.6094" y2="965.6094"/>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="635.5" y="976.9141"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="77.7998" x="647.5" y="984.1426">ramSize : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="635.5" y="994.5234"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="78.5859" x="647.5" y="1001.752">diskSize : int</text>
+            <rect fill="none" height="6" style="stroke:#C82930;stroke-width:1;" width="6" x="635.5" y="1012.1328"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="119.0752" x="647.5" y="1019.3613">loadError : boolean</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="628.5" x2="771.5752" y1="1026.4375" y2="1026.4375"/>
+            <ellipse cx="638.5" cy="1040.7422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="87.1514" x="647.5" y="1044.9707">readFile(path)</text>
+        </g>
+        <!--class Process-->
+        <g class="entity" data-entity="Process" data-source-line="235" data-uid="ent0046" id="entity_Process">
+            <rect fill="#FFFFFF" height="48" rx="2.5" ry="2.5" style="stroke:#666666;stroke-width:0.5;" width="82.5723" x="3421.5" y="968.6094"/>
+            <ellipse cx="3436.5" cy="984.6094" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1;"/>
+            <path d="M3439.2656,980.4844 Q3439.4219,980.2656 3439.6094,980.1563 Q3439.7969,980.0469 3440.0156,980.0469 Q3440.3906,980.0469 3440.625,980.3125 Q3440.8594,980.5625 3440.8594,981.1719 L3440.8594,982.625 Q3440.8594,983.2344 3440.625,983.5 Q3440.3906,983.7656 3440.0156,983.7656 Q3439.6719,983.7656 3439.4688,983.5625 Q3439.2656,983.375 3439.1563,982.8594 Q3439.1094,982.5 3438.9219,982.3125 Q3438.5938,981.9375 3437.9844,981.7188 Q3437.375,981.5 3436.75,981.5 Q3435.9844,981.5 3435.3438,981.8281 Q3434.7188,982.1563 3434.2188,982.9063 Q3433.7344,983.6563 3433.7344,984.6875 L3433.7344,985.7813 Q3433.7344,987.0156 3434.625,987.8438 Q3435.5156,988.6563 3437.1094,988.6563 Q3438.0469,988.6563 3438.7031,988.4063 Q3439.0938,988.25 3439.5156,987.8125 Q3439.7813,987.5469 3439.9219,987.4688 Q3440.0781,987.3906 3440.2813,987.3906 Q3440.6094,987.3906 3440.8594,987.6563 Q3441.125,987.9063 3441.125,988.25 Q3441.125,988.5938 3440.7813,989 Q3440.2813,989.5781 3439.4844,989.9063 Q3438.4063,990.3594 3437.1094,990.3594 Q3435.5938,990.3594 3434.3906,989.7344 Q3433.4063,989.2344 3432.7188,988.1719 Q3432.0313,987.0938 3432.0313,985.8125 L3432.0313,984.6563 Q3432.0313,983.3281 3432.6406,982.1875 Q3433.2656,981.0313 3434.3594,980.4219 Q3435.4531,979.7969 3436.6875,979.7969 Q3437.4219,979.7969 3438.0625,979.9688 Q3438.7188,980.125 3439.2656,980.4844 Z " fill="#000000"/>
+            <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="50.5723" x="3450.5" y="990.3379">Process</text>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="3422.5" x2="3503.0723" y1="1000.6094" y2="1000.6094"/>
+            <line style="stroke:#666666;stroke-width:0.5;" x1="3422.5" x2="3503.0723" y1="1008.6094" y2="1008.6094"/>
+        </g>
+        <!--link OperatingSystem to CPU-->
+        <g class="link" data-entity-1="OperatingSystem" data-entity-2="CPU" data-source-line="221" data-uid="lnk33" id="link_OperatingSystem_CPU">
+            <path codeLine="221" d="M1027.39,428.6694 C1026.78,559.4794 1035.42,749.6394 1088,797.6094 C1105.79,813.8394 2799.78,825.2294 2821,836.6094 C2850.05,852.1894 2869.7497,874.3416 2886.8397,901.6816" fill="none" id="OperatingSystem-to-CPU" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="2890.02,906.7694,2888.6414,897.0175,2887.3697,902.5296,2881.8577,901.2579,2890.02,906.7694" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link OperatingSystem to RAM-->
+        <g class="link" data-entity-1="OperatingSystem" data-entity-2="RAM" data-source-line="222" data-uid="lnk34" id="link_OperatingSystem_RAM">
+            <path codeLine="222" d="M911.12,328.8994 C820.03,354.8194 694.83,399.4594 601,467.6094 C429.53,592.1494 370.26,637.0294 299,836.6094 C255.36,958.8294 212.78,1031.6094 299,1128.6094 C341.81,1176.7794 527.89,1136.9494 587,1162.6094 C623.86,1178.6094 654.1719,1203.2225 679.9919,1228.6125" fill="none" id="OperatingSystem-to-RAM" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="684.27,1232.8194,680.6574,1223.657,680.7049,1229.3137,675.0482,1229.3611,684.27,1232.8194" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link OperatingSystem to Disk-->
+        <g class="link" data-entity-1="OperatingSystem" data-entity-2="Disk" data-source-line="223" data-uid="lnk35" id="link_OperatingSystem_Disk">
+            <path codeLine="223" d="M1150.59,300.0294 C1408.63,302.7494 2034.76,324.9094 2535,467.6094 C2970.02,591.7094 3618.15,798.3594 3309,1128.6094 C3232.32,1210.5194 1552.1174,1265.7215 1096.5674,1279.2315" fill="none" id="OperatingSystem-to-Disk" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="1090.57,1279.4094,1099.6846,1283.1408,1095.5678,1279.2612,1099.4475,1275.1443,1090.57,1279.4094" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link OperatingSystem to Scheduler-->
+        <g class="link" data-entity-1="OperatingSystem" data-entity-2="Scheduler" data-source-line="224" data-uid="lnk36" id="link_OperatingSystem_Scheduler">
+            <path codeLine="224" d="M994.04,428.8294 C967.92,550.3094 953.85,728.3394 1059,828.6094 C1073.84,842.7594 2516.09,828.6794 2535,836.6094 C2559.14,846.7294 2577.0028,858.6317 2596.7228,876.4917" fill="none" id="OperatingSystem-to-Scheduler" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="2601.17,880.5194,2597.1844,871.513,2597.464,877.1629,2591.8141,877.4426,2601.17,880.5194" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link OperatingSystem to Dispatcher-->
+        <g class="link" data-entity-1="OperatingSystem" data-entity-2="Dispatcher" data-source-line="225" data-uid="lnk37" id="link_OperatingSystem_Dispatcher">
+            <path codeLine="225" d="M1150.51,308.6194 C1380.39,326.8894 1873.92,375.8194 2015,467.6094 C2057.23,495.0794 2086.6728,535.2397 2109.3928,576.6297" fill="none" id="OperatingSystem-to-Dispatcher" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="2112.28,581.8894,2111.4557,572.0751,2109.874,577.5063,2104.4428,575.9246,2112.28,581.8894" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link OperatingSystem to InterruptHandler-->
+        <g class="link" data-entity-1="OperatingSystem" data-entity-2="InterruptHandler" data-source-line="226" data-uid="lnk38" id="link_OperatingSystem_InterruptHandler">
+            <path codeLine="226" d="M921.44,428.9594 C799.83,571.9694 611.4867,793.4684 511.7467,910.7684" fill="none" id="OperatingSystem-to-InterruptHandler" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="507.86,915.3394,516.7373,911.0741,511.0989,911.5302,510.6427,905.8918,507.86,915.3394" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link OperatingSystem to UI-->
+        <g class="link" data-entity-1="OperatingSystem" data-entity-2="UI" data-source-line="227" data-uid="lnk39" id="link_OperatingSystem_UI">
+            <path codeLine="227" d="M911.43,310.2994 C714.67,329.4594 334.82,377.2994 239,467.6094 C194.93,509.1394 177.9775,572.7084 170.7675,619.8284" fill="none" id="OperatingSystem-to-UI" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="169.86,625.7594,175.1753,617.4679,170.6163,620.8169,167.2673,616.2579,169.86,625.7594" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Scheduler to RAM-->
+        <g class="link" data-entity-1="Scheduler" data-entity-2="RAM" data-source-line="229" data-uid="lnk40" id="link_Scheduler_RAM">
+            <path codeLine="229" d="M2579.91,1104.7794 C2565.7,1114.3794 2550.62,1122.6794 2535,1128.6094 C2515.47,1136.0194 1051.83,1135.0794 1031,1136.6094 C1025.88,1136.9894 852.59,1160.3094 848,1162.6094 C815.49,1178.9394 790.4097,1203.0056 769.2197,1228.2256" fill="none" id="Scheduler-to-RAM" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="765.36,1232.8194,774.2121,1228.5019,768.5764,1228.9912,768.0871,1223.3556,765.36,1232.8194" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Scheduler to Disk-->
+        <g class="link" data-entity-1="Scheduler" data-entity-2="Disk" data-source-line="230" data-uid="lnk41" id="link_Scheduler_Disk">
+            <path codeLine="230" d="M2579.91,1104.7794 C2565.7,1114.3794 2550.62,1122.6794 2535,1128.6094 C2515.85,1135.8794 1077.65,1126.2094 1060,1136.6094 C1033.7,1152.0994 1017.7447,1174.0251 1005.0447,1200.8851" fill="none" id="Scheduler-to-Disk" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="1002.48,1206.3094,1009.9432,1199.8828,1004.6172,1201.7892,1002.7109,1196.4632,1002.48,1206.3094" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Scheduler to JobQueue-->
+        <g class="link" data-entity-1="Scheduler" data-entity-2="JobQueue" data-source-line="231" data-uid="lnk42" id="link_Scheduler_JobQueue">
+            <path codeLine="231" d="M2600.04,880.3794 C2580.56,862.7694 2558.62,846.9694 2535,836.6094 C2483.22,813.8894 1569.03,821.9594 1518,797.6094 C1489.89,784.1994 1469.8136,764.1967 1452.0936,740.6067" fill="none" id="Scheduler-to-JobQueue" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="1448.49,735.8094,1450.6972,745.4077,1451.493,739.8071,1457.0936,740.603,1448.49,735.8094" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Scheduler to ReadyQueue-->
+        <g class="link" data-entity-1="Scheduler" data-entity-2="ReadyQueue" data-source-line="232" data-uid="lnk43" id="link_Scheduler_ReadyQueue">
+            <path codeLine="232" d="M2600.1,880.2494 C2580.61,862.6594 2558.65,846.8994 2535,836.6094 C2503.73,823.0094 1339.02,811.7694 1308,797.6094 C1278.82,784.2994 1257.5175,764.0531 1238.6375,740.3431" fill="none" id="Scheduler-to-ReadyQueue" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="1234.9,735.6494,1237.3772,745.1816,1238.0146,739.5608,1243.6354,740.1982,1234.9,735.6494" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Scheduler to WaitingQueue-->
+        <g class="link" data-entity-1="Scheduler" data-entity-2="WaitingQueue" data-source-line="233" data-uid="lnk44" id="link_Scheduler_WaitingQueue">
+            <path codeLine="233" d="M2599.96,880.5594 C2580.49,862.9294 2558.57,847.0794 2535,836.6094 C2451.95,799.6994 1799.36,838.1094 1718,797.6094 C1687.41,782.3794 1666.0346,758.0741 1648.8346,732.2341" fill="none" id="Scheduler-to-WaitingQueue" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="1645.51,727.2394,1647.1672,736.9478,1648.2805,731.4016,1653.8267,732.515,1645.51,727.2394" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Scheduler to LoadASM-->
+        <g class="link" data-entity-1="Scheduler" data-entity-2="LoadASM" data-source-line="234" data-uid="lnk45" id="link_Scheduler_LoadASM">
+            <path codeLine="234" d="M2605.44,880.1994 C2580.28,854.6594 2550.48,830.9894 2517.5,817.1094 C2481.35,801.8894 1141.78,802.1994 1105.5,817.1094 C1052.59,838.8494 1010.8089,880.1527 979.1089,919.5927" fill="none" id="Scheduler-to-LoadASM" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="975.35,924.2694,984.1061,919.7603,978.4824,920.3722,977.8705,914.7485,975.35,924.2694" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Scheduler to Process-->
+        <g class="link" data-entity-1="Scheduler" data-entity-2="Process" data-source-line="235" data-uid="lnk47" id="link_Scheduler_Process">
+            <path codeLine="235" d="M2758.8,880.4094 C2780.83,854.6994 2807.61,830.8894 2838.5,817.1094 C2889.34,794.4294 3288.66,794.4294 3339.5,817.1094 C3403.63,845.7294 3438.2369,921.7079 3453.1069,962.7679" fill="none" id="Scheduler-to-Process" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="3455.15,968.4094,3455.8464,958.5852,3453.4474,963.7082,3448.3244,961.3093,3455.15,968.4094" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Dispatcher to CPU-->
+        <g class="link" data-entity-1="Dispatcher" data-entity-2="CPU" data-source-line="237" data-uid="lnk48" id="link_Dispatcher_CPU">
+            <path codeLine="237" d="M2244.47,771.2494 C2258.77,781.6994 2274.1,790.9594 2290,797.6094 C2303.64,803.3194 2808.15,829.2894 2821,836.6094 C2849.36,852.7594 2868.7842,874.6976 2885.8442,901.6876" fill="none" id="Dispatcher-to-CPU" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="2889.05,906.7594,2887.6225,897.0145,2886.3785,902.5329,2880.8601,901.2889,2889.05,906.7594" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Dispatcher to Scheduler-->
+        <g class="link" data-entity-1="Dispatcher" data-entity-2="Scheduler" data-source-line="238" data-uid="lnk49" id="link_Dispatcher_Scheduler">
+            <path codeLine="238" d="M2246.59,771.1794 C2260.35,781.3594 2274.97,790.5594 2290,797.6094 C2389.82,844.4294 2436.86,786.3594 2535,836.6094 C2556.95,847.8494 2573.2286,859.3463 2591.9386,876.2563" fill="none" id="Dispatcher-to-Scheduler" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="2596.39,880.2794,2592.395,871.2771,2592.6805,876.9268,2587.0309,877.2123,2596.39,880.2794" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Dispatcher to InterruptHandler-->
+        <g class="link" data-entity-1="Dispatcher" data-entity-2="InterruptHandler" data-source-line="239" data-uid="lnk50" id="link_Dispatcher_InterruptHandler">
+            <path codeLine="239" d="M2061.82,771.2494 C2047.17,781.8494 2031.39,791.1494 2015,797.6094 C1923.15,833.7994 1225.7,826.1194 1127,828.6094 C1098.34,829.3294 637.62,825.9694 611,836.6094 C569.73,853.1094 536.5398,880.4868 507.6198,910.9668" fill="none" id="Dispatcher-to-InterruptHandler" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="503.49,915.3194,512.5864,911.5437,506.9315,911.6922,506.783,906.0373,503.49,915.3194" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Dispatcher to Process-->
+        <g class="link" data-entity-1="Dispatcher" data-entity-2="Process" data-source-line="240" data-uid="lnk51" id="link_Dispatcher_Process">
+            <path codeLine="240" d="M2243.4,771.3694 C2257.96,781.9494 2273.66,791.2094 2290,797.6094 C2348.12,820.3494 3363.35,789.7994 3413,827.6094 C3456.81,860.9694 3463.361,925.7596 3463.661,962.4596" fill="none" id="Dispatcher-to-Process" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="3463.71,968.4594,3467.6363,959.427,3463.6691,963.4595,3459.6366,959.4924,3463.71,968.4594" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link InterruptHandler to CPU-->
+        <g class="link" data-entity-1="InterruptHandler" data-entity-2="CPU" data-source-line="242" data-uid="lnk52" id="link_InterruptHandler_CPU">
+            <path codeLine="242" d="M500.56,915.5994 C533.4,878.2494 578.04,837.1994 628.5,817.1094 C684.63,794.7594 2748.33,792.4894 2803.5,817.1094 C2842.67,834.5894 2868.9156,866.3343 2889.2756,901.8443" fill="none" id="InterruptHandler-to-CPU" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="2892.26,907.0494,2891.2535,897.2521,2889.773,902.7118,2884.3133,901.2313,2892.26,907.0494" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link InterruptHandler to Disk-->
+        <g class="link" data-entity-1="InterruptHandler" data-entity-2="Disk" data-source-line="243" data-uid="lnk53" id="link_InterruptHandler_Disk">
+            <path codeLine="243" d="M523.73,1069.6094 C549.99,1091.1694 580.32,1112.9994 611,1128.6094 C650.4,1148.6594 663.36,1147.5394 707,1154.6094 C737.98,1159.6294 819.11,1150.3594 848,1162.6094 C871.75,1172.6794 889.4979,1185.0041 908.5479,1202.4741" fill="none" id="InterruptHandler-to-Disk" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="912.97,1206.5294,909.0404,1197.4984,909.285,1203.15,903.6334,1203.3945,912.97,1206.5294" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link InterruptHandler to Process-->
+        <g class="link" data-entity-1="InterruptHandler" data-entity-2="Process" data-source-line="244" data-uid="lnk54" id="link_InterruptHandler_Process">
+            <path codeLine="244" d="M500.56,915.5994 C533.4,878.2494 578.04,837.1994 628.5,817.1094 C663.48,803.1794 3305.12,801.7694 3339.5,817.1094 C3403.63,845.7294 3438.2369,921.7079 3453.1069,962.7679" fill="none" id="InterruptHandler-to-Process" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="3455.15,968.4094,3455.8464,958.5852,3453.4474,963.7082,3448.3244,961.3093,3455.15,968.4094" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link InterruptHandler to ConsoleCallback-->
+        <g class="link" data-entity-1="InterruptHandler" data-entity-2="ConsoleCallback" data-source-line="245" data-uid="lnk55" id="link_InterruptHandler_ConsoleCallback">
+            <path codeLine="245" d="M443,1069.9194 C443,1128.7794 443,1201.2394 443,1244.5294" fill="none" id="InterruptHandler-to-ConsoleCallback" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="443,1250.5294,447,1241.5294,443,1245.5294,439,1241.5294,443,1250.5294" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Process to BCP-->
+        <g class="link" data-entity-1="Process" data-entity-2="BCP" data-source-line="247" data-uid="lnk56" id="link_Process_BCP">
+            <path codeLine="247" d="M3448.5,968.3194 C3424.57,932.3094 3373.03,864.3894 3309,836.6094 C3177.15,779.3994 2150.82,847.4494 2016,797.6094 C2010.08,795.4194 2009.6198,795.5152 2003.8398,792.7152" fill="none" id="Process-to-BCP" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="1998.44,790.0994,2004.7958,797.6229,2002.9398,792.2792,2008.2835,790.4232,1998.44,790.0994" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Process to Instruction-->
+        <g class="link" data-entity-1="Process" data-entity-2="Instruction" data-source-line="248" data-uid="lnk57" id="link_Process_Instruction">
+            <path codeLine="248" d="M3421.19,992.6094 C3378.49,992.6094 3341.8,992.6094 3299.1,992.6094" fill="none" id="Process-to-Instruction" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="3293.1,992.6094,3302.1,996.6094,3298.1,992.6094,3302.1,988.6094,3293.1,992.6094" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link BCP to ProcessState-->
+        <g class="link" data-entity-1="BCP" data-entity-2="ProcessState" data-source-line="249" data-uid="lnk58" id="link_BCP_ProcessState">
+            <path codeLine="249" d="M1819.59,797.6594 C1802.63,840.5994 1786.3328,881.8683 1771.7728,918.7583" fill="none" id="BCP-to-ProcessState" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="1769.57,924.3394,1776.5948,917.4363,1771.4056,919.6885,1769.1535,914.4993,1769.57,924.3394" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link BCP to ProcessStack-->
+        <g class="link" data-entity-1="BCP" data-entity-2="ProcessStack" data-source-line="250" data-uid="lnk59" id="link_BCP_ProcessStack">
+            <path codeLine="250" d="M1885.73,797.6594 C1891.89,837.1394 1897.6449,873.9911 1903.1549,909.3011" fill="none" id="BCP-to-ProcessStack" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="1904.08,915.2294,1906.6445,905.7203,1903.3091,910.2892,1898.7402,906.9537,1904.08,915.2294" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link BCP to CPU-->
+        <g class="link" data-entity-1="BCP" data-entity-2="CPU" data-source-line="251" data-uid="lnk60" id="link_BCP_CPU">
+            <path codeLine="251" d="M1998.04,789.7394 C2003.95,792.6594 2009.95,795.3094 2016,797.6094 C2026.46,801.5894 2811.21,831.1894 2821,836.6094 C2849.7,852.4894 2869.2672,874.5294 2886.3372,901.6894" fill="none" id="BCP-to-CPU" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="2889.53,906.7694,2888.1275,897.0209,2886.8694,902.5361,2881.3542,901.2779,2889.53,906.7694" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link JobQueue to IProcessQueue-->
+        <g class="link" data-entity-1="JobQueue" data-entity-2="IProcessQueue" data-source-line="253" data-uid="lnk61" id="link_JobQueue_IProcessQueue">
+            <path codeLine="253" d="M1413,735.9394 C1413,786.5694 1413,842.2294 1413,897.4994" fill="none" id="JobQueue-to-IProcessQueue" style="stroke:#555555;stroke-width:1;stroke-dasharray:7,7;"/>
+            <polygon fill="none" points="1413,915.4994,1419,897.4994,1407,897.4994,1413,915.4994" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link ReadyQueue to IProcessQueue-->
+        <g class="link" data-entity-1="ReadyQueue" data-entity-2="IProcessQueue" data-source-line="254" data-uid="lnk62" id="link_ReadyQueue_IProcessQueue">
+            <path codeLine="254" d="M1237.12,735.9394 C1271.95,786.5694 1312.4303,845.3981 1350.4403,900.6681" fill="none" id="ReadyQueue-to-IProcessQueue" style="stroke:#555555;stroke-width:1;stroke-dasharray:7,7;"/>
+            <polygon fill="none" points="1360.64,915.4994,1355.3841,897.2682,1345.4966,904.068,1360.64,915.4994" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link WaitingQueue to IProcessQueue-->
+        <g class="link" data-entity-1="WaitingQueue" data-entity-2="IProcessQueue" data-source-line="255" data-uid="lnk63" id="link_WaitingQueue_IProcessQueue">
+            <path codeLine="255" d="M1585.52,727.3594 C1552.49,777.9494 1510.7408,841.9076 1472.5708,900.3676" fill="none" id="WaitingQueue-to-IProcessQueue" style="stroke:#555555;stroke-width:1;stroke-dasharray:7,7;"/>
+            <polygon fill="none" points="1462.73,915.4394,1477.5947,903.6478,1467.5468,897.0873,1462.73,915.4394" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link Disk to DiskEntry-->
+        <g class="link" data-entity-1="Disk" data-entity-2="DiskEntry" data-source-line="257" data-uid="lnk64" id="link_Disk_DiskEntry">
+            <path codeLine="257" d="M978,1360.7394 C978,1381.1794 978,1396.7694 978,1415.3694" fill="none" id="Disk-to-DiskEntry" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="978,1421.3694,982,1412.3694,978,1416.3694,974,1412.3694,978,1421.3694" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link LoadASM to Instruction-->
+        <g class="link" data-entity-1="LoadASM" data-entity-2="Instruction" data-source-line="258" data-uid="lnk65" id="link_LoadASM_Instruction">
+            <path codeLine="258" d="M975.35,924.2694 C1007.05,884.8294 1052.59,838.8494 1105.5,817.1094 C1154.7,796.8894 2971.92,795.4294 3020.5,817.1094 C3062.27,835.7494 3093.4935,867.3118 3119.3435,902.1318" fill="none" id="LoadASM-to-Instruction" style="stroke:#555555;stroke-width:1;"/>
+            <polygon fill="#555555" points="3122.92,906.9494,3120.767,897.3387,3119.9396,902.9348,3114.3436,902.1074,3122.92,906.9494" style="stroke:#555555;stroke-width:1;"/>
+        </g>
+        <!--link LoadXML to RAM-->
+        <g class="link" data-entity-1="LoadXML" data-entity-2="RAM" data-source-line="259" data-uid="lnk66" id="link_LoadXML_RAM">
+            <path codeLine="259" d="M705.83,1051.7494 C711.16,1104.8194 718.3507,1176.4794 723.4007,1226.7894" fill="none" id="LoadXML-to-RAM" style="stroke:#555555;stroke-width:1;stroke-dasharray:7,7;"/>
+            <polygon fill="#555555" points="724,1232.7594,727.0811,1223.4049,723.5006,1227.7844,719.1211,1224.2039,724,1232.7594" style="stroke:#555555;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="53.479" x="717" y="1151.1045">configura</text>
+        </g>
+        <!--link LoadXML to Disk-->
+        <g class="link" data-entity-1="LoadXML" data-entity-2="Disk" data-source-line="260" data-uid="lnk67" id="link_LoadXML_Disk">
+            <path codeLine="260" d="M730.8,1051.7994 C746.25,1077.3894 766.65,1106.5694 790,1128.6094 C811.73,1149.1194 823.99,1144.8194 848,1162.6094 C865.89,1175.8694 879.6152,1187.22 896.4952,1202.45" fill="none" id="LoadXML-to-Disk" style="stroke:#555555;stroke-width:1;stroke-dasharray:7,7;"/>
+            <polygon fill="#555555" points="900.95,1206.4694,896.9474,1197.4705,897.2377,1203.1199,891.5883,1203.4102,900.95,1206.4694" style="stroke:#555555;stroke-width:1;"/>
+            <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="53.479" x="836" y="1151.1045">configura</text>
+        </g>
+        <!--SRC=[lHXRRkCsy5-d4B8VbR6slze2NNG3ABQpTJTsNDlPHuiYe2N6PYE92aabSRS6UeYUi2Vfa7fB51stG1NOiMQ6mtbpXeA80DjZWhOCXSZsiRr03maMcDj___cNlI9SO81VnvWXGHufGC8aG3wrdSNdrNNFilWzYM84g-qOUVTeYrTY3omPzWIAjW6k46o0OCje4laZ6b1cF-s8m6q6zXVBXkU2CX-pbFBLr-f9uGqkhow_atyATqaZaUw_eO5l7IhClG1nhcFzhNewMAkdniTbZ3vbw6_KOrcvu6SU3OVX7hvZ5Es7yPxJCzXIyKxtpmmPRLTxQTbC7laCl3YntzYZnKq92d58sHwWItTMGdt2xm4sXdyba7ixx2S1Pe1PvRzhQs8a0CxIbTbBIK0YWHbBOl43YloKpRG1Aect2G7ypRI0l0ueyXUCUfXp1tZlUe3FtaiYbaGEQ1tFg8zx9PWB6ZkLTuOv5awg-uhyNYK56utsNe0pyaDgsiByIk8xvE6pYc5JmzzCAo35AsQWyuX6d0A_a6zxTJJ3To38pWq2fu7PaUqkW8zOqYSdzahiGIlKIEwFUH48TIHbDM5BWI4G6d1bUdS4bWN1svX59sQwb44XGD-jXk6dldq1dn5ynf-wMD17C6n0dou3j0MQ3GMZeQXDXnyI51mXUesViPS8x9282nLdNB344uH6TKiVB8rTAjGQ-xp-mWNabtUmrvyNazkhQtVSJt_EhZ_qxU5msA5XkN0vUNShZIB_IyDqhnc8VOoxS0nlPV5aNVX752ITYuji746g69n7IcFSRaYafzIQiQWHkY3xZMv-Ih0IxyVifqv1vEzpicNnqYPyGaHMl9pqO-LLmnLARBtU6UlUIGMe84P-ICIQmYvEdDBqJF4QuMT93TNBo1LS5f882Lp8aV7M2104wvpQTxesFrWQ5nQbOwOAfBvuW6OwlnRdIHebl_pQbYo9VP3fFMOH3YuP3Iz62sVZnHeTjbXya37in5IPxwMH9_sd4mwE0IOLCqWtk2C1daO-VWQg6OhRGd7qY1r9DKSXxjkL_50oQZDV1ZASIuW9r_UXvlE-pUMn0_HNaCBj1JuEe4CgjkcPQnsmu4TfEoqrYGHuJ5Fe8k3MNHaWn9KgNJfB1JKuSyHbSQqFkGofy-nYEkugT6Oj1Xl4iMlKP10GoEKZDB9o726160SKHBknoF8i9hwld4Bdnnq9R4-qIrOwvcRpo2CBboLf9LzrZK7VTkNdHISzyFJkQpozThaT8CO8d60p4WH4velCdlm5Htxw4xW4L1USCajbSO4Unu6MhgVBILaE8DS5xIOA4RjtKq6WWUiWM4dHeCXs4bGASPEcuKmS9M7DrXgdpYSVMx3bn1r_RaDlvlFf_5qB_j6ThdNmzMGvcyxTzMHyFE2gpjD5Nj7ihDRkwFtjQlhpv5Wy059NaHLwGLN3qbLiueJl7DNl64jbBCU0JXuOtsknNPKp7tSqshSdhHUEKVzgMYgtJHZ3aSWBfQ6J0D6yTCp966yr_Cf-mz1eXD2uhsdMSXde61nfK6jbKXR4n3Tc0yc7BNkQAP9sU9gp2aSF4cNOtySfXR71sY4-XrRCCKQH1-Exw8uZw5hKIDTvk1C-2MEnTquwgVCkkQEPBewDJBLpxNbjT8zqf840rBhOmtcYlDPXGwtaPUEka_qXwzaLWK7w_yd1MWsgyuH9XoCEEAv2bYDc4vlwfw94TBHGpH9oOkqopaSxnLADt7qxqx5lbzT2lSunVI6hTsrTxmN3_GAA-UcBv0rROzdBIj1PTf4pWibANZEUsOZR3PYkCgbBeEniEi6Jbz3EPqxIk_8Anb5tfHt2Jcedqwc7iX292MEK6UzUdWMEEB0uHgac7gb2EYbhQYWG25mHoWb81EEK_9uduQOPBjgyb2RuDBlIcG2ylD8F84KWc_1orlylEXvQDtQWm5VssxTlxJ6EeNt5aKSWVk2mPXYSdbs80zwocXUuWy6voaOTNDvYwE0gGtM8ikFeM9PVs-hGhGP4HtGpjQpowYSNiWvHujL1nIrGOsrvwrD7rEvuwgWiCnhGl9XQbSujDsq3L1gfWMWPe84lzcZLsNmdBKAPGul96UhvrOkFPULzdqJAERFwNaarImwB5UxfKDS60iiSA4MtYXPaEFpZlDwIMPL3NeEj7Q0QlALkR79Jg0i9AwzlJU7pf1yELMH1WdeqkYFRXA4QRfoULINo7m00]-->
+    </g>
+</svg>

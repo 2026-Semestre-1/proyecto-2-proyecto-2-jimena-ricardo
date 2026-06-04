@@ -1,0 +1,263 @@
+@startuml
+
+title Diagrama de Paquetes — Sistema Operativo Simulado (PYSO)
+
+skinparam packageStyle rectangle
+skinparam backgroundColor white
+skinparam package {
+    BorderColor #444444
+    BackgroundColor #F9F9F9
+    FontStyle bold
+}
+skinparam class {
+    BorderColor #666666
+    BackgroundColor #FFFFFF
+}
+skinparam ArrowColor #555555
+
+package "com.mycompany.pyso" {
+
+    class OperatingSystem {
+        -cpu : CPU
+        -memory : RAM
+        -disk : Disk
+        -scheduler : Scheduler
+        -dispatcher : Dispatcher
+        -interruptHandler : InterruptHandler
+        -gui : UI
+        +loadProcess(path) : Process
+        +run(stepMode)
+        +stop()
+        +reset(memorySize)
+        +cpuCycle()
+    }
+
+    package "Interface" {
+        class UI {
+            +printConsole(msg)
+            +refreshAll()
+            +highlightRow(pc)
+        }
+    }
+
+    package "Classes" {
+
+        package "Core" {
+            class CPU {
+                -AC : int
+                -PC : int
+                -IR : String
+                -AX, BX, CX, DX : int
+                -overflowFlag : boolean
+                -equalFlag : boolean
+                +execute(inst : Instruction)
+            }
+
+            class Instruction {
+                +{static} TYPE_LOAD, TYPE_MOV, ... : int
+                +{static} REG_AX, REG_BX, ... : int
+                -type : int
+                -register : int
+                -value : int
+                -interruptCode : String
+                -instruction_bin : String
+            }
+
+            class Scheduler {
+                -jobQueue : JobQueue
+                -readyQueue : ReadyQueue
+                -waitingQueue : WaitingQueue
+                -ram : RAM
+                -disk : Disk
+                +loadProcess(path) : Process
+                +admitToRAM(process) : boolean
+                +nextToRun() : Process
+                +terminateProcess(process)
+                +allTerminated() : boolean
+            }
+        }
+
+        package "Memory" {
+            class RAM {
+                -memory : String[]
+                +updateKernelFromBCP(bcp)
+                +getValue(pos) : String
+            }
+
+            class Disk {
+                -storage : String[]
+                -fileIndex : Map
+                +save(fileName, instructions) : int
+                +read(startAddress, size) : List
+                +delete(fileName) : boolean
+                +exists(fileName) : boolean
+            }
+
+            class DiskEntry {
+                +name : String
+                +address : int
+                +size : int
+            }
+        }
+
+        package "Process" {
+            class Process {
+                -PID : int
+                -name : String
+                -baseAddress : int
+                -limitAddress : int
+                -diskAddress : int
+                -bcp : BCP
+                -instructions : List<Instruction>
+            }
+
+            class BCP {
+                -PID : int
+                -processName : String
+                -state : ProcessState
+                -PC, AC, AX, BX, CX, DX : int
+                -stack : ProcessStack
+                -arrivalMillis, startMillis, endMillis : long
+                +saveFromCPU(cpu)
+                +restoreIntoCPU(cpu)
+                +markArrival(ms)
+                +markStarted(ms)
+                +markTerminated(ms)
+            }
+
+            enum ProcessState {
+                NEW
+                READY
+                RUNNING
+                WAITING
+                TERMINATED
+            }
+
+            class ProcessStack {
+                -{static} STACK_SIZE : int
+                -stack : int[]
+                -stackPointer : int
+                +push(value) : boolean
+                +pop() : int
+                +peek() : int
+            }
+
+            class Dispatcher {
+                -cpu : CPU
+                -scheduler : Scheduler
+                -interruptHandler : InterruptHandler
+                -currentProcess : Process
+                +CPUcycle() : Integer
+                +terminate(process)
+                +moveToWaiting(process)
+                +releaseFromWaiting(pid)
+            }
+
+            interface IProcessQueue {
+                +enqueue(process)
+                +dequeue() : Process
+                +hasNext() : boolean
+                +count() : int
+                +getAll() : List
+                +isEmpty() : boolean
+            }
+
+            class JobQueue {
+                -jobs : List<Process>
+                +add(process)
+                +remove(process)
+                +getByPID(pid) : Process
+            }
+
+            class ReadyQueue {
+                -queue : Queue<Process>
+                +enqueue(process)
+                +dequeue() : Process
+                +hasNext() : boolean
+            }
+
+            class WaitingQueue {
+                -queue : List<Process>
+                +enqueue(process)
+                +release(pid) : Process
+            }
+        }
+
+        package "Interrupts" {
+            class InterruptHandler {
+                -cpu : CPU
+                -disk : Disk
+                +handle(inst, process, dispatcher)
+                +executePush(inst, process) : boolean
+                +executePop(inst, process) : boolean
+                +executeParam(inst, process)
+            }
+
+            interface "ConsoleCallback" as ConsoleCallback {
+                +print(value)
+            }
+        }
+
+        package "FileHandler" {
+            class LoadASM {
+                -instructions : List<Instruction>
+                -formatError : boolean
+                -extensionError : boolean
+                +readFile(path)
+                +createInstruction(line, lineNumber)
+            }
+
+            class LoadXML {
+                -ramSize : int
+                -diskSize : int
+                -loadError : boolean
+                +readFile(path)
+            }
+        }
+    }
+}
+
+' === Dependencias entre paquetes ===
+
+OperatingSystem --> CPU
+OperatingSystem --> RAM
+OperatingSystem --> Disk
+OperatingSystem --> Scheduler
+OperatingSystem --> Dispatcher
+OperatingSystem --> InterruptHandler
+OperatingSystem --> UI
+
+Scheduler --> RAM
+Scheduler --> Disk
+Scheduler --> JobQueue
+Scheduler --> ReadyQueue
+Scheduler --> WaitingQueue
+Scheduler --> LoadASM
+Scheduler --> Process
+
+Dispatcher --> CPU
+Dispatcher --> Scheduler
+Dispatcher --> InterruptHandler
+Dispatcher --> Process
+
+InterruptHandler --> CPU
+InterruptHandler --> Disk
+InterruptHandler --> Process
+InterruptHandler --> ConsoleCallback
+
+Process --> BCP
+Process --> Instruction
+BCP --> ProcessState
+BCP --> ProcessStack
+BCP --> CPU
+
+JobQueue ..|> IProcessQueue
+ReadyQueue ..|> IProcessQueue
+WaitingQueue ..|> IProcessQueue
+
+Disk --> DiskEntry
+LoadASM --> Instruction
+LoadXML ..> RAM : configura
+LoadXML ..> Disk : configura
+
+@enduml
