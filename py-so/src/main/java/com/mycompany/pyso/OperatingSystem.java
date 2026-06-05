@@ -16,6 +16,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 public class OperatingSystem {
+
     private CPU  cpu;
     private RAM  memory;
     private Disk disk;
@@ -29,26 +30,30 @@ public class OperatingSystem {
 
     public OperatingSystem(UI gui, int memorySize) {
         this.gui = gui;
-        initialize(memorySize,512);
+        initialize(memorySize, 512);
     }
 
     public void reset(int memorySize, int diskSize) {
         stop();
         initialize(memorySize, diskSize);
     }
+
+    public void reset(int memorySize) {
+        stop();
+        initialize(memorySize, 512);
+    }
+
     private void initialize(int memorySize, int diskSize) {
         this.simulatorStartMillis = System.currentTimeMillis();
 
-        this.cpu = new CPU();
+        this.cpu    = new CPU();
         this.memory = new RAM(memorySize);
-        this.disk = new Disk(diskSize);
+        this.disk   = new Disk(diskSize);
 
         this.scheduler = new Scheduler(memory, disk, simulatorStartMillis);
 
         this.interruptHandler = new InterruptHandler(cpu, disk,
-            msg -> {
-                if (gui != null) gui.printConsole(msg);
-            });
+            msg -> { if (gui != null) gui.printConsole(msg); });
 
         this.dispatcher = new Dispatcher(cpu, scheduler, interruptHandler, simulatorStartMillis);
     }
@@ -63,11 +68,11 @@ public class OperatingSystem {
         }
         if (process.getBcp().getState() == com.mycompany.pyso.Classes.Process.ProcessState.NEW) {
             JOptionPane.showMessageDialog(gui,
-                "Proceso '" + process.getName() + "' cargado en cola de trabajo.\n" +
-                "No hay espacio en RAM ahora - esperará hasta que se libere.",
+                "Proceso '" + process.getName() + "' cargado en cola de trabajo.\n"
+                + "No hay espacio en RAM ahora - esperará hasta que se libere.",
                 "En espera de RAM", JOptionPane.INFORMATION_MESSAGE);
         }
-        gui.printConsole(">> Proceso "+ process.getName()+" cargado");
+        gui.printConsole(">> Proceso " + process.getName() + " cargado");
         return process;
     }
 
@@ -83,13 +88,11 @@ public class OperatingSystem {
 
         thread = new Thread(() -> {
             while (isRunning) {
-                
                 scheduler.tryLoadNewProcesses();
                 Integer executedPC = dispatcher.CPUcycle();
 
                 SwingUtilities.invokeLater(() -> {
                     gui.refreshAll();
-
                     if (executedPC != null) {
                         gui.highlightRow(executedPC);
                     } else {
@@ -99,7 +102,6 @@ public class OperatingSystem {
 
                 if (scheduler.allTerminated()) {
                     isRunning = false;
-
                     SwingUtilities.invokeLater(() -> {
                         memory.updateKernelFromBCP(null);
                         gui.refreshAll();
@@ -112,9 +114,9 @@ public class OperatingSystem {
 
                 try {
                     if (stepMode) break;
-                    else Thread.sleep(300);
+                    else Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    thread.interrupt();
+                    Thread.currentThread().interrupt();
                 }
             }
         });
@@ -122,81 +124,34 @@ public class OperatingSystem {
         thread.setDaemon(true);
         thread.start();
     }
-    
+
     public void cpuCycle() {
         if (!scheduler.hasProcessReady()) {
             JOptionPane.showMessageDialog(gui, "No hay procesos en READY");
             return;
         }
-
         Integer executedPC = dispatcher.CPUcycle();
-
         SwingUtilities.invokeLater(() -> {
             gui.refreshAll();
-
-            if (executedPC != null) {
-                gui.highlightRow(executedPC);
-            }
+            if (executedPC != null) gui.highlightRow(executedPC);
         });
-
-        if (scheduler.allTerminated()) {
-            isRunning = false;
-        }
+        if (scheduler.allTerminated()) isRunning = false;
     }
-    
-    
 
     public void stop() {
         isRunning = false;
-        if (thread != null) {
-            thread.interrupt();
-        }
+        if (thread != null) thread.interrupt();
     }
 
-    public void reset(int memorySize) {
-        stop();
-        initialize(memorySize,512);
-    }
-
-    public CPU getCpu() {
-        return cpu;
-    }
-
-    public RAM getMemory() {
-        return memory;
-    }
-
-    public Disk getDisk() {
-        return disk;
-    }
-
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
-
-    public Dispatcher getDispatcher() {
-        return dispatcher;
-    }
-
-    public InterruptHandler getInterruptHandler() {
-        return interruptHandler;
-    }
-
-    public UI getGui() {
-        return gui;
-    }
-
-    public Thread getThread() {
-        return thread;
-    }
-
-    public boolean isIsRunning() {
-        return isRunning;
-    }
-
-    public long getSimulatorStartMillis() {
-        return simulatorStartMillis;
-    }
-
-    
+    // --- Getters ---
+    public CPU getCpu()                         { return cpu; }
+    public RAM getMemory()                      { return memory; }
+    public Disk getDisk()                       { return disk; }
+    public Scheduler getScheduler()             { return scheduler; }
+    public Dispatcher getDispatcher()           { return dispatcher; }
+    public InterruptHandler getInterruptHandler(){ return interruptHandler; }
+    public UI getGui()                          { return gui; }
+    public Thread getThread()                   { return thread; }
+    public boolean isIsRunning()                { return isRunning; }
+    public long getSimulatorStartMillis()       { return simulatorStartMillis; }
 }

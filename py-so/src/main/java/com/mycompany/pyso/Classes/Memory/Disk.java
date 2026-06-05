@@ -18,7 +18,7 @@ public class Disk {
     private String[] storage;
     private int nextFreePosition;
     private final Map<String, DiskEntry> fileIndex;
-    private static final int DEFAULT_SIZE= 512;
+    private static final int DEFAULT_SIZE = 512;
     private int indexReserved;
 
     public Disk() {
@@ -27,12 +27,9 @@ public class Disk {
 
     public Disk(int size) {
         this.storage = new String[size];
-        for (int i = 0; i < size; i++) {
-            storage[i] = "";
-        }
+        for (int i = 0; i < size; i++) storage[i] = "";
 
-        this.indexReserved = Math.max(1, (int) Math.ceil(size * 0.05));
-
+        this.indexReserved = Math.max(3, (int) Math.ceil(size * 0.05));
         this.nextFreePosition = indexReserved;
         this.fileIndex = new LinkedHashMap<>();
         writeIndexToStorage();
@@ -40,23 +37,22 @@ public class Disk {
 
     public int save(String fileName, List<Instruction> instructions) {
         if (!hasSpace(instructions.size())) return -1;
- 
+
         int startAddress = nextFreePosition;
- 
         for (Instruction inst : instructions) {
             storage[nextFreePosition++] = fileName + " - " + inst.getInstruction();
         }
- 
+
         fileIndex.put(fileName, new DiskEntry(fileName, startAddress, instructions.size()));
         writeIndexToStorage();
         return startAddress;
     }
 
-
     public List<String> read(int startAddress, int size) {
         List<String> result = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            result.add(storage[startAddress + i]);
+            if (startAddress + i < storage.length)
+                result.add(storage[startAddress + i]);
         }
         return result;
     }
@@ -68,7 +64,6 @@ public class Disk {
         for (int i = entry.address; i < entry.address + entry.size; i++) {
             storage[i] = "";
         }
-
         fileIndex.remove(fileName);
         writeIndexToStorage();
         return true;
@@ -87,15 +82,16 @@ public class Disk {
     }
 
     private void writeIndexToStorage() {
-        for (int i = 0; i < indexReserved; i++) {
-            storage[i] = "";
-        }
+        for (int i = 0; i < indexReserved; i++) storage[i] = "";
 
-        storage[0] = "FILE INDEX";
+        storage[0] = "=== INDICE DE ARCHIVOS ===";
         int pos = 1;
         for (DiskEntry entry : fileIndex.values()) {
             if (pos >= indexReserved) break;
-            storage[pos++] = "File Name: " + entry.name ;
+            storage[pos++] = entry.name + " | Dir:" + entry.address + " | Size:" + entry.size;
+        }
+        while (pos < indexReserved) {
+            storage[pos++] = "";
         }
     }
 
@@ -107,25 +103,10 @@ public class Disk {
         this.storage = newStorage;
     }
 
-    public String[] getStorage() {
-        return storage;
-    }
-
-    public void setStorage(String[] storage) {
-        this.storage = storage;
-    }
-
-    public int getNextFreePosition() {
-        return nextFreePosition;
-    }
-
-    public void setNextFreePosition(int nextFreePosition) {
-        this.nextFreePosition = nextFreePosition;
-    }
-
-    public int getIndexReserved() {
-        return indexReserved;
-    }
-    
-    
+    public String[] getStorage()                    { return storage; }
+    public void setStorage(String[] storage)        { this.storage = storage; }
+    public int getNextFreePosition()                { return nextFreePosition; }
+    public void setNextFreePosition(int v)          { this.nextFreePosition = v; }
+    public int getIndexReserved()                   { return indexReserved; }
+    public Map<String, DiskEntry> getFileIndex()    { return fileIndex; }
 }

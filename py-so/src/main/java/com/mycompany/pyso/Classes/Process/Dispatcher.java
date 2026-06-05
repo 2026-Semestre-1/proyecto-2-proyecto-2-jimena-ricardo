@@ -12,43 +12,41 @@ import com.mycompany.pyso.Classes.Interrupts.InterruptHandler;
  *
  * @author jimen
  */
+
 public class Dispatcher {
+
     private final CPU cpu;
     private final Scheduler scheduler;
     private final InterruptHandler interruptHandler;
     private final long simulatorStartMillis;
 
-    private Process currentProcess; // The process currently holding the CPU
+    private Process currentProcess;
 
-    public Dispatcher(CPU cpu, Scheduler scheduler, InterruptHandler interruptHandler, long simulatorStartMillis) {
+    public Dispatcher(CPU cpu, Scheduler scheduler,
+                      InterruptHandler interruptHandler, long simulatorStartMillis) {
         this.cpu = cpu;
         this.scheduler = scheduler;
         this.interruptHandler = interruptHandler;
         this.simulatorStartMillis = simulatorStartMillis;
         this.currentProcess = null;
     }
- 
+
     public Integer CPUcycle() {
         if (currentProcess == null) {
-            if (!scheduler.hasProcessReady()) {
-                return null;
-            }
+            if (!scheduler.hasProcessReady()) return null;
 
             currentProcess = scheduler.nextToRun();
             currentProcess.getBcp().markStarted(simulatorStartMillis);
             currentProcess.getBcp().setState(ProcessState.RUNNING);
-
             currentProcess.getBcp().restoreIntoCPU(cpu);
             cpu.setPC(currentProcess.getBcp().getBaseAddress());
         }
 
         Process p = currentProcess;
-
         scheduler.getRam().updateKernelFromBCP(p.getBcp());
 
-        int pc = cpu.getPC(); 
+        int pc    = cpu.getPC();
         int index = pc - p.getBcp().getBaseAddress();
-
         if (index < 0 || index >= p.getInstructions().size()) {
             terminate(p);
             return pc;
@@ -60,7 +58,7 @@ public class Dispatcher {
         switch (inst.getType()) {
 
             case Instruction.TYPE_INT -> {
-                interruptHandler.handle(inst, p, this);
+                interruptHandler.handle(inst, p, this::terminate);
 
                 if (currentProcess != null) {
                     p.getBcp().saveFromCPU(cpu, inst.getInstruction());
@@ -97,36 +95,30 @@ public class Dispatcher {
 
         p.getBcp().saveFromCPU(cpu, inst.getInstruction());
         p.getBcp().setCpuCyclesUsed(p.getBcp().getCpuCyclesUsed() + 1);
-
         scheduler.getRam().updateKernelFromBCP(p.getBcp());
-
         int newIndex = cpu.getPC() - p.getBcp().getBaseAddress();
         if (newIndex >= p.getInstructions().size()) {
             terminate(p);
         }
 
-        return pc; 
+        return pc;
     }
-    
-    private void refreshBCP(Process p) {
-        scheduler.getRam().updateKernelFromBCP(p.getBcp());
-    }
- 
+
     public void terminate(Process process) {
         scheduler.terminateProcess(process);
         currentProcess = null;
     }
- 
+
     public void moveToWaiting(Process process) {
         process.getBcp().saveFromCPU(cpu, cpu.getIR());
         scheduler.moveToWaiting(process);
         currentProcess = null;
     }
- 
+
     public void releaseFromWaiting(int PID) {
         scheduler.releaseFromWaiting(PID);
     }
- 
-    public Process getCurrentProcess() { return currentProcess; }
-    public void setCurrentProcess(Process p) { this.currentProcess = p; }
+
+    public Process getCurrentProcess()      { return currentProcess; }
+    public void setCurrentProcess(Process p){ this.currentProcess = p; }
 }
