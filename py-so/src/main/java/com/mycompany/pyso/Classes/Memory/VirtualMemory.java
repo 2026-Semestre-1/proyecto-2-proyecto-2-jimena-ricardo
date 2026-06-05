@@ -9,7 +9,7 @@ package com.mycompany.pyso.Classes.Memory;
  * @author jimen
  */
 
-import com.mycompany.pyso.Classes.Process.Process;
+import com.mycompany.pyso.Classes.Process.OSProcess;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +40,7 @@ public class VirtualMemory {
     private final List<SwapEntry> swapList = new ArrayList<>();
 
 
-    public void swapOut(Process process) {
+    public void swapOut(OSProcess process) {
         swapList.removeIf(e -> e.pid == process.getPID());
         swapList.add(new SwapEntry(
             process.getPID(),

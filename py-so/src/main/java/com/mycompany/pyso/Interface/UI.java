@@ -1,969 +1,1101 @@
 package com.mycompany.pyso.Interface;
- 
+
 import com.mycompany.pyso.OperatingSystem;
-import com.mycompany.pyso.Classes.Process.Process;
+import com.mycompany.pyso.Classes.Core.CPU;
+import com.mycompany.pyso.Classes.Process.OSProcess;
 import com.mycompany.pyso.Classes.Process.BCP;
 import com.mycompany.pyso.Classes.Process.ProcessState;
-import static com.mycompany.pyso.Classes.Process.ProcessState.READY;
-import static com.mycompany.pyso.Classes.Process.ProcessState.RUNNING;
-import static com.mycompany.pyso.Classes.Process.ProcessState.TERMINATED;
-import static com.mycompany.pyso.Classes.Process.ProcessState.WAITING;
-import com.mycompany.pyso.Classes.FileHandler.LoadXML;
+import com.mycompany.pyso.Scheduler.FCFS;
+import com.mycompany.pyso.Scheduler.RoundRobin;
+import com.mycompany.pyso.Scheduler.SchedulerStrategy;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.border.*;
 import java.awt.*;
 import java.io.File;
 import java.util.*;
 import java.util.List;
- 
-public class UI extends javax.swing.JFrame {
- 
+import java.util.concurrent.CompletableFuture;
+import javax.swing.Timer;
+
+public class UI extends JFrame {
+
     private OperatingSystem os;
     private int highlightedRow = -1;
-    private static final int KERNEL_SIZE = 20;
-    private static final java.util.logging.Logger logger =
-        java.util.logging.Logger.getLogger(UI.class.getName());
-    private final Map<Integer, DefaultTableModel> bcpTableModels = new LinkedHashMap<>();
-    private final Map<Integer, JPanel>            bcpTablePanels = new LinkedHashMap<>();
-    private boolean stepModeActive = false;
- 
-    private CardLayout cardLayout;
-    private JPanel bcpContentPanel;
-    private List<Integer> pidOrder = new ArrayList<>();
-    private int currentIndex = 0;
-    private JButton prevButton = new JButton("<");
-    private JButton nextButton = new JButton(">");
-    private enum RowKind { KERNEL, INSTR, EMPTY }
- 
-    /** Returns the display kind for a RAM row index. */
-    private RowKind rowKind(int row) {
-        if (row < KERNEL_SIZE) return RowKind.KERNEL;
-        String[] mem = os.getMemory().getMemory();
-        if (row >= mem.length) return RowKind.EMPTY;
-        String val = mem[row];
-        if (val == null || val.isBlank()) return RowKind.EMPTY;
-        return RowKind.INSTR;
-    }
+    private static final int KERNEL_SIZE = 150;
+    
+    // Panel principal con pestañas
+    private JTabbedPane tabbedPane;
+    
+    // ==================== PESTAÑA: SISTEMA ====================
+    private JSplitPane systemSplitPane;
+    private JTable ramTable;
+    private DefaultTableModel ramTableModel;
+    private JPanel bcpPanel;
+    private CardLayout bcpCardLayout;
+    private Map<Integer, JPanel> bcpCards;
+    private List<Integer> bcpPidOrder;
+    private int currentBcpIndex;
+    private JLabel bcpNavLabel;
+    
+    // ==================== PESTAÑA: PROCESOS ====================
+    private JTable processTable;
+    private DefaultTableModel processTableModel;
+    
+    // ==================== PESTAÑA: CPUs ====================
+    private JPanel cpusContainer;
+    private List<CPUPanel> cpuPanels;
+    
+    // ==================== PESTAÑA: CONSOLA ====================
+    private JTextPane consoleTextPane;
+    private JTextField consoleInputField;
+    private JButton consoleSendButton;
+    private CompletableFuture<Integer> pendingKeyboardInput;
+    
+    // ==================== PESTAÑA: CONFIGURACION ====================
+    private JComboBox<String> schedulerCombo;
+    private JSpinner quantumSpinner;
+    private JSpinner numCpusSpinner;
+    private JSpinner ramSizeSpinner;
+    private JSpinner diskSizeSpinner;
+    
+    // ==================== BARRA DE HERRAMIENTAS ====================
+    private JToolBar toolBar;
+    private JButton loadButton;
+    private JButton executeButton;
+    private JButton stepButton;
+    private JButton stopButton;
+    private JButton clearButton;
+    private JButton statsButton;
+    private JLabel statusLabel;
+    
+    // Colores para estados de procesos
+    private final Color COLOR_RUNNING = new Color(129, 199, 132);
+    private final Color COLOR_READY = new Color(255, 213, 79);
+    private final Color COLOR_WAITING = new Color(100, 181, 246);
+    private final Color COLOR_TERMINATED = new Color(189, 189, 189);
+    private final Color COLOR_KERNEL = new Color(224, 224, 224);
+    private final Color COLOR_HIGHLIGHT = new Color(76, 175, 80);
     
     public UI() {
-        os = new OperatingSystem(this, 100);
-        initComponents();
-        setupRenderer();
-        initBCPScrollPanel();
-        stepButton.setEnabled(false);
-        setLocationRelativeTo(null);
-        initBCPNavigation();
-        setResizable(false);
-        this.setSize(this.getPreferredSize());
-        this.setMinimumSize(this.getPreferredSize());
-        this.setMaximumSize(this.getPreferredSize());
-        bcpPanel.setPreferredSize(new Dimension(240, 350));
-        bcpPanel.setMinimumSize(new Dimension(240, 350));
-        bcpPanel.setMaximumSize(new Dimension(240, 350));
-        consoleTextPane.setEditable(true);
-        consoleTextPane.requestFocusInWindow();
+        os = new OperatingSystem(this, 512);
+        bcpCards = new LinkedHashMap<>();
+        bcpPidOrder = new ArrayList<>();
+        cpuPanels = new ArrayList<>();
+        pendingKeyboardInput = null;
+        
+        initUI();
+        setupWindow();
+        refreshAll();
     }
     
-    private void initBCPScrollPanel() {
-        bcpPanel.setLayout(new BorderLayout());
-        cardLayout      = new CardLayout();
-        bcpContentPanel = new JPanel(cardLayout);
-        bcpPanel.add(bcpContentPanel, BorderLayout.CENTER);
-        bcpPanel.revalidate();
-        bcpPanel.repaint();
+    private void initUI() {
+        setTitle("Sistema Operativo Simulado - Proyecto #2");
+        setLayout(new BorderLayout());
+        
+        // Barra de herramientas
+        add(createToolBar(), BorderLayout.NORTH);
+        
+        // Panel de pestañas
+        tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        
+        tabbedPane.addTab("Sistema", createSystemPanel());
+        tabbedPane.addTab("Procesos", createProcessesPanel());
+        tabbedPane.addTab("CPUs", createCPUsPanel());
+        tabbedPane.addTab("Consola", createConsolePanel());
+        tabbedPane.addTab("Configuracion", createConfigPanel());
+        
+        add(tabbedPane, BorderLayout.CENTER);
+        
+        // Barra de estado
+        add(createStatusBar(), BorderLayout.SOUTH);
     }
- 
-    private void initBCPNavigation() {
-        prevButton = new JButton("<");
-        nextButton = new JButton(">");
-        prevButton.setFocusable(false);
-        nextButton.setFocusable(false);
-        styleNavButton(prevButton);
-        styleNavButton(nextButton);
- 
-        prevButton.addActionListener(e -> {
-            if (pidOrder.isEmpty()) return;
-            currentIndex = (currentIndex - 1 + pidOrder.size()) % pidOrder.size();
-            showCurrentBCP();
-        });
-        nextButton.addActionListener(e -> {
-            if (pidOrder.isEmpty()) return;
-            currentIndex = (currentIndex + 1) % pidOrder.size();
-            showCurrentBCP();
-        });
- 
-        JPanel navPanel = new JPanel(new BorderLayout());
-        navPanel.setBackground(new Color(60, 60, 60));
-        navPanel.add(prevButton, BorderLayout.WEST);
-        navPanel.add(nextButton, BorderLayout.EAST);
-        bcpPanel.add(navPanel, BorderLayout.SOUTH);
-        bcpPanel.revalidate();
-        bcpPanel.repaint();
+    
+    private JToolBar createToolBar() {
+        toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        toolBar.setBackground(new Color(52, 73, 94));
+        toolBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        
+        loadButton = createToolButton("Cargar ASM", new Color(46, 204, 113));
+        loadButton.addActionListener(e -> loadAsmFiles());
+        
+        executeButton = createToolButton("Ejecutar", new Color(52, 152, 219));
+        executeButton.addActionListener(e -> startExecution());
+        
+        stepButton = createToolButton("Paso a paso", new Color(155, 89, 182));
+        stepButton.addActionListener(e -> stepOnce());
+        
+        stopButton = createToolButton("Detener", new Color(231, 76, 60));
+        stopButton.addActionListener(e -> stopExecution());
+        
+        clearButton = createToolButton("Limpiar", new Color(149, 165, 166));
+        clearButton.addActionListener(e -> clearAll());
+        
+        statsButton = createToolButton("Estadisticas", new Color(241, 196, 15));
+        statsButton.addActionListener(e -> showStatistics());
+        
+        toolBar.add(loadButton);
+        toolBar.add(Box.createHorizontalStrut(10));
+        toolBar.add(executeButton);
+        toolBar.add(stepButton);
+        toolBar.add(stopButton);
+        toolBar.add(Box.createHorizontalStrut(10));
+        toolBar.add(clearButton);
+        toolBar.add(Box.createHorizontalStrut(10));
+        toolBar.add(statsButton);
+        
+        return toolBar;
     }
- 
-    private void styleNavButton(JButton b) {
-        b.setBackground(new Color(82, 176, 176));
-        b.setForeground(Color.WHITE);
-        b.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        b.setBorderPainted(false);
-        b.setFocusPainted(false);
+    
+    private JButton createToolButton(String text, Color color) {
+        JButton button = new JButton(text);
+        button.setBackground(color);
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return button;
     }
- 
-    private void showCurrentBCP() {
-        if (pidOrder.isEmpty()) return;
-        cardLayout.show(bcpContentPanel, String.valueOf(pidOrder.get(currentIndex)));
+    
+    private JPanel createStatusBar() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(236, 240, 241));
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        
+        statusLabel = new JLabel("Listo");
+        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        statusLabel.setForeground(new Color(127, 140, 141));
+        
+        panel.add(statusLabel, BorderLayout.WEST);
+        
+        return panel;
     }
- 
-    public void registerBCPTable(Process process) {
-        int pid = process.getBcp().getPID();
-        if (bcpTableModels.containsKey(pid)) return;
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 3));
-        header.setBackground(new Color(82, 176, 176));
-        header.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
-        JLabel title = new JLabel("PID " + pid + "  —  " + process.getName());
-        title.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        title.setForeground(Color.WHITE);
-        header.add(title);
-
-        DefaultTableModel model = new DefaultTableModel(new String[]{"Campo", "Valor"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+    
+    // ==================== PESTAÑA: SISTEMA (Memoria + BCP) ====================
+    
+    private JPanel createSystemPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Split pane: izquierda memoria, derecha BCP
+        systemSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        systemSplitPane.setDividerLocation(600);
+        systemSplitPane.setResizeWeight(0.6);
+        
+        // Panel izquierdo: Memoria RAM
+        JPanel memoryPanel = new JPanel(new BorderLayout());
+        memoryPanel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199)), 
+            "Memoria RAM", 
+            TitledBorder.LEFT, 
+            TitledBorder.TOP,
+            new Font("Segoe UI", Font.BOLD, 12)
+        ));
+        
+        ramTableModel = new DefaultTableModel(new String[]{"Direccion", "Contenido"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
         };
-        populateBCPModel(model, process.getBcp());
- 
-        JTable table = new JTable(model);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        table.setRowHeight(18);
-        table.getColumnModel().getColumn(0).setPreferredWidth(90);
-        table.getColumnModel().getColumn(0).setMaxWidth(110);
-        table.getColumnModel().getColumn(1).setPreferredWidth(160);
-        table.setShowGrid(true);
-        table.setGridColor(new Color(220, 220, 220));
- 
-        table.setDefaultRenderer(Object.class,
-            new javax.swing.table.DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(
-                        JTable t, Object val, boolean sel, boolean foc, int row, int col) {
-                    Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
-                    c.setForeground(Color.BLACK);
-                    if (row == 2 && col == 1) { // Estado row
-                        String txt = val == null ? "" : val.toString();
-                        c.setBackground(switch (txt) {
-                            case "RUNNING"    -> new Color(123, 245, 184);
-                            case "READY"      -> new Color(255, 255, 180);
-                            case "WAITING"    -> new Color(255, 200, 130);
-                            case "TERMINATED" -> new Color(210, 210, 210);
-                            default           -> Color.WHITE;
-                        });
+        ramTable = new JTable(ramTableModel);
+        ramTable.setFont(new Font("Consolas", Font.PLAIN, 11));
+        ramTable.setRowHeight(18);
+        ramTable.getColumnModel().getColumn(0).setPreferredWidth(80);
+        ramTable.getColumnModel().getColumn(1).setPreferredWidth(400);
+        
+        // Renderer para colorear filas
+        ramTable.setDefaultRenderer(Object.class, new RAMTableCellRenderer());
+        
+        JScrollPane ramScroll = new JScrollPane(ramTable);
+        memoryPanel.add(ramScroll, BorderLayout.CENTER);
+        
+        // Panel derecho: BCP del proceso actual
+        JPanel bcpWrapper = new JPanel(new BorderLayout());
+        bcpWrapper.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199)),
+            "Bloque de Control de Proceso (BCP)",
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            new Font("Segoe UI", Font.BOLD, 12)
+        ));
+        
+        bcpCardLayout = new CardLayout();
+        bcpPanel = new JPanel(bcpCardLayout);
+        bcpPanel.setBackground(Color.WHITE);
+        
+        // Navegación de BCP
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 8));
+        navPanel.setBackground(new Color(236, 240, 241));
+        
+        JButton prevButton = new JButton("< Anterior");
+        JButton nextButton = new JButton("Siguiente >");
+        bcpNavLabel = new JLabel("Proceso 0 / 0");
+        bcpNavLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        
+        prevButton.addActionListener(e -> navigateBCP(-1));
+        nextButton.addActionListener(e -> navigateBCP(1));
+        
+        navPanel.add(prevButton);
+        navPanel.add(bcpNavLabel);
+        navPanel.add(nextButton);
+        
+        bcpWrapper.add(bcpPanel, BorderLayout.CENTER);
+        bcpWrapper.add(navPanel, BorderLayout.SOUTH);
+        
+        systemSplitPane.setLeftComponent(new JScrollPane(memoryPanel));
+        systemSplitPane.setRightComponent(bcpWrapper);
+        
+        panel.add(systemSplitPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private class RAMTableCellRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            
+            if (!isSelected) {
+                if (row == highlightedRow) {
+                    c.setBackground(COLOR_HIGHLIGHT);
+                    c.setForeground(Color.WHITE);
+                    setFont(getFont().deriveFont(Font.BOLD));
+                } else if (row < KERNEL_SIZE) {
+                    c.setBackground(COLOR_KERNEL);
+                    c.setForeground(new Color(52, 73, 94));
+                    setFont(getFont().deriveFont(Font.ITALIC));
+                } else {
+                    // Verificar si hay un proceso ejecutándose en esta dirección
+                    OSProcess runningProcess = getRunningProcess();
+                    if (runningProcess != null && 
+                        row >= runningProcess.getBaseAddress() && 
+                        row < runningProcess.getLimitAddress()) {
+                        c.setBackground(COLOR_RUNNING);
+                        c.setForeground(Color.BLACK);
                     } else {
-                        c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 252));
+                        c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 255));
+                        c.setForeground(Color.BLACK);
                     }
-                    return c;
+                    setFont(getFont().deriveFont(Font.PLAIN));
                 }
-            });
- 
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
- 
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(Color.WHITE);
-        card.add(header, BorderLayout.NORTH);
-        card.add(scroll, BorderLayout.CENTER);
- 
-        bcpTableModels.put(pid, model);
-        bcpTablePanels.put(pid, card);
-        pidOrder.add(pid);
- 
-        bcpContentPanel.add(card, String.valueOf(pid));
-        // Show the newest card automatically
-        currentIndex = pidOrder.size() - 1;
-        showCurrentBCP();
- 
-        bcpPanel.revalidate();
-        bcpPanel.repaint();
-    }
- 
-    private void populateBCPModel(DefaultTableModel model, BCP bcp) {
-        model.setRowCount(0);
-        model.addRow(new Object[]{"PID",        bcp.getPID()});
-        model.addRow(new Object[]{"Nombre",     bcp.getProcessName()});
-        model.addRow(new Object[]{"Estado",     bcp.getState().name()});
-        model.addRow(new Object[]{"PC",         bcp.getPC()});
-        model.addRow(new Object[]{"IR",         bcp.getIR()});
-        model.addRow(new Object[]{"AC",         bcp.getAC()});
-        model.addRow(new Object[]{"AX",         bcp.getAX()});
-        model.addRow(new Object[]{"BX",         bcp.getBX()});
-        model.addRow(new Object[]{"CX",         bcp.getCX()});
-        model.addRow(new Object[]{"DX",         bcp.getDX()});
-        model.addRow(new Object[]{"Base",       bcp.getBaseAddress()});
-        model.addRow(new Object[]{"Límite",     bcp.getLimitAddress()});
-        model.addRow(new Object[]{"Llegada",    bcp.formatElapsed(bcp.getArrivalMillis())});
-        model.addRow(new Object[]{"Inicio CPU", bcp.formatElapsed(bcp.getStartMillis())});
-        model.addRow(new Object[]{"Fin",        bcp.formatElapsed(bcp.getEndMillis())});
-        model.addRow(new Object[]{"Ciclos",     bcp.getCpuCyclesUsed()});
-        model.addRow(new Object[]{"Prioridad",  bcp.getPriority()});
-    }
- 
-    public void refreshAllBCPTables() {
-        for (Process p : os.getScheduler().getJobQueue().getAll()) {
-            DefaultTableModel model = bcpTableModels.get(p.getPID());
-            if (model != null) populateBCPModel(model, p.getBcp());
+            }
+            return c;
         }
     }
- 
-    private void clearBCPTables() {
-        bcpTableModels.clear();
-        bcpTablePanels.clear();
-        pidOrder.clear();
-        currentIndex = 0;
-        bcpPanel.removeAll();
-        initBCPScrollPanel();
-        initBCPNavigation();
-        bcpPanel.revalidate();
-        bcpPanel.repaint();
+    
+    private OSProcess getRunningProcess() {
+        for (CPU cpu : os.getAllCpus()) {
+            if (cpu.getCurrentProcess() != null && 
+                cpu.getCurrentProcess().getState() == ProcessState.RUNNING) {
+                return cpu.getCurrentProcess();
+            }
+        }
+        return null;
     }
     
-    public void loadMemoryTable() {
-        DefaultTableModel model = (DefaultTableModel) MemoryValueTable.getModel();
-        String[] memory = os.getMemory().getMemory();
-        model.setRowCount(0);
-        for (int i = 0; i < memory.length; i++)
-            model.addRow(new Object[]{i, memory[i] != null ? memory[i] : ""});
+    private void createBCPCard(OSProcess process) {
+        int pid = process.getPID();
+        if (bcpCards.containsKey(pid)) return;
+        
+        BCP bcp = process.getBcp();
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(4, 8, 4, 8);
+        
+        // Título del proceso
+        JLabel titleLabel = new JLabel("PID: " + pid + " - " + process.getName());
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        titleLabel.setForeground(new Color(41, 128, 185));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        card.add(titleLabel, gbc);
+        
+        // Separador
+        JSeparator separator = new JSeparator();
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        card.add(separator, gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        
+        // Datos del BCP en dos columnas
+        String[][] fields = {
+            {"Estado", bcp.getState().name()},
+            {"PC", String.valueOf(bcp.getPC())},
+            {"IR", bcp.getIR()},
+            {"AC", String.valueOf(bcp.getAC())},
+            {"AX", String.valueOf(bcp.getAX())},
+            {"BX", String.valueOf(bcp.getBX())},
+            {"CX", String.valueOf(bcp.getCX())},
+            {"DX", String.valueOf(bcp.getDX())},
+            {"Base", String.valueOf(bcp.getBaseAddress())},
+            {"Limite", String.valueOf(bcp.getLimitAddress())},
+            {"Llegada", bcp.formatElapsed(bcp.getArrivalMillis())},
+            {"Inicio CPU", bcp.formatElapsed(bcp.getStartMillis())},
+            {"Ciclos", String.valueOf(bcp.getCpuCyclesUsed())},
+            {"Prioridad", String.valueOf(bcp.getPriority())}
+        };
+        
+        int row = 2;
+        for (int i = 0; i < fields.length; i++) {
+            gbc.gridy = row;
+            gbc.gridx = 0;
+            JLabel label = new JLabel(fields[i][0] + ":");
+            label.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            label.setForeground(new Color(100, 100, 100));
+            card.add(label, gbc);
+            
+            gbc.gridx = 1;
+            JLabel valueLabel = new JLabel(fields[i][1]);
+            valueLabel.setFont(new Font("Consolas", Font.PLAIN, 11));
+            
+            // Colorear según estado
+            if (fields[i][0].equals("Estado")) {
+                valueLabel.setForeground(getStateColor(bcp.getState()));
+                valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            }
+            
+            card.add(valueLabel, gbc);
+            row++;
+            
+            // Dos columnas
+            if (i + 1 < fields.length) {
+                i++;
+                gbc.gridy = row;
+                gbc.gridx = 0;
+                label = new JLabel(fields[i][0] + ":");
+                label.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                label.setForeground(new Color(100, 100, 100));
+                card.add(label, gbc);
+                
+                gbc.gridx = 1;
+                valueLabel = new JLabel(fields[i][1]);
+                valueLabel.setFont(new Font("Consolas", Font.PLAIN, 11));
+                card.add(valueLabel, gbc);
+                row++;
+            }
+        }
+        
+        bcpCards.put(pid, card);
+        bcpPanel.add(card, String.valueOf(pid));
+        bcpPidOrder.add(pid);
+        
+        if (bcpPidOrder.size() == 1) {
+            currentBcpIndex = 0;
+            updateBCPNavigation();
+        }
     }
- 
-    public void loadDiskTable() {
-        DefaultTableModel model = (DefaultTableModel) DiskValueTable.getModel();
-        String[] storage = os.getDisk().getStorage();
-        model.setRowCount(0);
-        for (int i = 0; i < storage.length; i++)
-            model.addRow(new Object[]{i, storage[i] != null ? storage[i] : ""});
+    
+    private void updateBCPCard(OSProcess process) {
+        int pid = process.getPID();
+        JPanel card = bcpCards.get(pid);
+        if (card == null) {
+            createBCPCard(process);
+            return;
+        }
+        
+        BCP bcp = process.getBcp();
+        Component[] components = card.getComponents();
+        int valueIndex = 0;
+        for (Component comp : components) {
+            if (comp instanceof JLabel) {
+                JLabel label = (JLabel) comp;
+                String text = label.getText();
+                if (text != null && text.contains(":")) {
+                    // Es etiqueta de campo, continuar
+                    continue;
+                } else if (text != null && !text.isEmpty() && !text.contains(":")) {
+                    // Es valor
+                    String[] values = {
+                        bcp.getState().name(), String.valueOf(bcp.getPC()), bcp.getIR(),
+                        String.valueOf(bcp.getAC()), String.valueOf(bcp.getAX()), 
+                        String.valueOf(bcp.getBX()), String.valueOf(bcp.getCX()), 
+                        String.valueOf(bcp.getDX()), String.valueOf(bcp.getBaseAddress()),
+                        String.valueOf(bcp.getLimitAddress()), bcp.formatElapsed(bcp.getArrivalMillis()),
+                        bcp.formatElapsed(bcp.getStartMillis()), String.valueOf(bcp.getCpuCyclesUsed()),
+                        String.valueOf(bcp.getPriority())
+                    };
+                    if (valueIndex < values.length) {
+                        label.setText(values[valueIndex]);
+                        if (valueIndex == 0) { // Estado
+                            label.setForeground(getStateColor(bcp.getState()));
+                        }
+                    }
+                    valueIndex++;
+                }
+            }
+        }
     }
- 
-    public void loadProcessTable() {
-        DefaultTableModel model = (DefaultTableModel) ProcessTable.getModel();
-        model.setRowCount(0);
-        for (Process p : os.getScheduler().getJobQueue().getAll())
-            model.addRow(new Object[]{
-                p.getPID() + " - " + p.getName(),
-                p.getBcp().getState().name()});
+    
+    private void navigateBCP(int direction) {
+        if (bcpPidOrder.isEmpty()) return;
+        currentBcpIndex = (currentBcpIndex + direction + bcpPidOrder.size()) % bcpPidOrder.size();
+        bcpCardLayout.show(bcpPanel, String.valueOf(bcpPidOrder.get(currentBcpIndex)));
+        updateBCPNavigation();
     }
- 
-    public void highlightRow(int row) {
-        highlightedRow = row;
-
-        SwingUtilities.invokeLater(() -> {
-            MemoryValueTable.repaint();
-            MemoryValueTable.scrollRectToVisible(
-                MemoryValueTable.getCellRect(row, 0, true)
-            );
+    
+    private void updateBCPNavigation() {
+        if (bcpPidOrder.isEmpty()) {
+            bcpNavLabel.setText("Sin procesos");
+        } else {
+            bcpNavLabel.setText("Proceso " + (currentBcpIndex + 1) + " de " + bcpPidOrder.size());
+        }
+    }
+    
+    private Color getStateColor(ProcessState state) {
+        return switch (state) {
+            case RUNNING -> new Color(46, 204, 113);
+            case READY -> new Color(241, 196, 15);
+            case WAITING -> new Color(52, 152, 219);
+            case TERMINATED -> new Color(149, 165, 166);
+            default -> Color.BLACK;
+        };
+    }
+    
+    // ==================== PESTAÑA: PROCESOS ====================
+    
+    private JPanel createProcessesPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        processTableModel = new DefaultTableModel(new String[]{"PID", "Nombre", "Estado", "Base", "Limite", "Ciclos", "Prioridad"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        processTable = new JTable(processTableModel);
+        processTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        processTable.setRowHeight(24);
+        processTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+        processTable.getColumnModel().getColumn(1).setPreferredWidth(150);
+        processTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+        
+        // Renderer para colorear estado
+        processTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected && column == 2) {
+                    String state = (String) value;
+                    if (state != null) {
+                        switch (state) {
+                            case "RUNNING": c.setBackground(COLOR_RUNNING); break;
+                            case "READY": c.setBackground(COLOR_READY); break;
+                            case "WAITING": c.setBackground(COLOR_WAITING); break;
+                            case "TERMINATED": c.setBackground(COLOR_TERMINATED); break;
+                            default: c.setBackground(Color.WHITE);
+                        }
+                    }
+                } else if (!isSelected) {
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 252));
+                }
+                return c;
+            }
         });
+        
+        JScrollPane scroll = new JScrollPane(processTable);
+        scroll.setBorder(BorderFactory.createTitledBorder("Lista de Procesos"));
+        
+        panel.add(scroll, BorderLayout.CENTER);
+        
+        return panel;
     }
- 
-    public void printConsole(String value) {
-        printConsole(value, Color.WHITE);
+    
+    // ==================== PESTAÑA: CPUs ====================
+    
+    private JPanel createCPUsPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        cpusContainer = new JPanel(new GridLayout(2, 2, 15, 15));
+        cpusContainer.setBackground(new Color(236, 240, 241));
+        
+        JScrollPane scroll = new JScrollPane(cpusContainer);
+        scroll.setBorder(null);
+        
+        panel.add(scroll, BorderLayout.CENTER);
+        
+        return panel;
     }
-    public void printConsole(String value, Color color) {
+    
+    private void rebuildCPUPanels() {
+        cpusContainer.removeAll();
+        cpuPanels.clear();
+        
+        int numCpus = os.getAllCpus().size();
+        int cols = Math.min(2, numCpus);
+        int rows = (int) Math.ceil((double) numCpus / cols);
+        cpusContainer.setLayout(new GridLayout(rows, cols, 15, 15));
+        
+        for (int i = 0; i < numCpus; i++) {
+            CPUPanel cpuPanel = new CPUPanel(i);
+            cpuPanels.add(cpuPanel);
+            cpusContainer.add(cpuPanel);
+        }
+        
+        cpusContainer.revalidate();
+        cpusContainer.repaint();
+    }
+    
+    private void updateCPUPanels() {
+        for (int i = 0; i < cpuPanels.size() && i < os.getAllCpus().size(); i++) {
+            cpuPanels.get(i).update(os.getCpu(i));
+        }
+    }
+    
+    private class CPUPanel extends JPanel {
+        private int cpuId;
+        private JLabel processNameLabel;
+        private JLabel stateLabel;
+        private JLabel pcLabel;
+        private JLabel irLabel;
+        private JLabel acLabel;
+        private JLabel axLabel, bxLabel, cxLabel, dxLabel;
+        private JProgressBar progressBar;
+        
+        CPUPanel(int id) {
+            this.cpuId = id;
+            setBackground(Color.WHITE);
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            ));
+            
+            setLayout(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.insets = new Insets(4, 8, 4, 8);
+            
+            // Título
+            JLabel titleLabel = new JLabel("CPU " + (id + 1));
+            titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            titleLabel.setForeground(new Color(41, 128, 185));
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.gridwidth = 2;
+            add(titleLabel, gbc);
+            
+            // Separador
+            JSeparator sep = new JSeparator();
+            gbc.gridy = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            add(sep, gbc);
+            gbc.fill = GridBagConstraints.NONE;
+            
+            // Datos
+            int row = 2;
+            processNameLabel = addRow(gbc, row++, "Proceso:");
+            stateLabel = addRow(gbc, row++, "Estado:");
+            pcLabel = addRow(gbc, row++, "PC:");
+            irLabel = addRow(gbc, row++, "IR:");
+            acLabel = addRow(gbc, row++, "AC:");
+            axLabel = addRow(gbc, row++, "AX:");
+            bxLabel = addRow(gbc, row++, "BX:");
+            cxLabel = addRow(gbc, row++, "CX:");
+            dxLabel = addRow(gbc, row++, "DX:");
+            
+            // Progress bar
+            gbc.gridy = row;
+            gbc.gridx = 0;
+            add(new JLabel("Progreso:"), gbc);
+            progressBar = new JProgressBar(0, 100);
+            progressBar.setStringPainted(true);
+            progressBar.setPreferredSize(new Dimension(120, 18));
+            gbc.gridx = 1;
+            add(progressBar, gbc);
+        }
+        
+        private JLabel addRow(GridBagConstraints gbc, int row, String labelText) {
+            gbc.gridy = row;
+            gbc.gridx = 0;
+            JLabel label = new JLabel(labelText);
+            label.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            label.setForeground(new Color(100, 100, 100));
+            add(label, gbc);
+            
+            gbc.gridx = 1;
+            JLabel valueLabel = new JLabel("-");
+            valueLabel.setFont(new Font("Consolas", Font.PLAIN, 11));
+            add(valueLabel, gbc);
+            
+            return valueLabel;
+        }
+        
+        void update(CPU cpu) {
+            OSProcess p = cpu.getCurrentProcess();
+            if (p != null) {
+                processNameLabel.setText(p.getName());
+                stateLabel.setText(p.getState().name());
+                stateLabel.setForeground(getStateColor(p.getState()));
+                pcLabel.setText(String.valueOf(cpu.getPC()));
+                irLabel.setText(cpu.getIR());
+                acLabel.setText(String.valueOf(cpu.getAC()));
+                axLabel.setText(String.valueOf(cpu.getAX()));
+                bxLabel.setText(String.valueOf(cpu.getBX()));
+                cxLabel.setText(String.valueOf(cpu.getCX()));
+                dxLabel.setText(String.valueOf(cpu.getDX()));
+                
+                int progress = (cpu.getPC() - p.getBaseAddress()) * 100 / p.getInstructions().size();
+                progressBar.setValue(Math.min(100, Math.max(0, progress)));
+            } else {
+                processNameLabel.setText("(idle)");
+                stateLabel.setText("IDLE");
+                stateLabel.setForeground(new Color(149, 165, 166));
+                pcLabel.setText("-");
+                irLabel.setText("-");
+                acLabel.setText("-");
+                axLabel.setText("-");
+                bxLabel.setText("-");
+                cxLabel.setText("-");
+                dxLabel.setText("-");
+                progressBar.setValue(0);
+            }
+        }
+    }
+    
+    // ==================== PESTAÑA: CONSOLA ====================
+    
+    private JPanel createConsolePanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Área de texto
+        consoleTextPane = new JTextPane();
+        consoleTextPane.setEditable(false);
+        consoleTextPane.setBackground(new Color(30, 30, 35));
+        consoleTextPane.setForeground(new Color(187, 187, 187));
+        consoleTextPane.setFont(new Font("Consolas", Font.PLAIN, 13));
+        
+        JScrollPane scrollPane = new JScrollPane(consoleTextPane);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Salida del Sistema"));
+        
+        // Panel de entrada
+        JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
+        inputPanel.setBorder(BorderFactory.createTitledBorder("Entrada de Usuario (INT 09H)"));
+        
+        consoleInputField = new JTextField();
+        consoleInputField.setFont(new Font("Consolas", Font.PLAIN, 13));
+        consoleInputField.addActionListener(e -> sendConsoleInput());
+        
+        consoleSendButton = new JButton("Enviar");
+        consoleSendButton.setBackground(new Color(52, 152, 219));
+        consoleSendButton.setForeground(Color.WHITE);
+        consoleSendButton.setFocusPainted(false);
+        consoleSendButton.addActionListener(e -> sendConsoleInput());
+        
+        JLabel hintLabel = new JLabel("Ingrese un número entre 0 y 255");
+        hintLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        hintLabel.setForeground(new Color(149, 165, 166));
+        
+        JPanel southPanel = new JPanel(new BorderLayout(5, 5));
+        southPanel.add(inputPanel, BorderLayout.CENTER);
+        southPanel.add(hintLabel, BorderLayout.SOUTH);
+        
+        inputPanel.add(consoleInputField, BorderLayout.CENTER);
+        inputPanel.add(consoleSendButton, BorderLayout.EAST);
+        
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(southPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private void sendConsoleInput() {
+        String text = consoleInputField.getText().trim();
+        if (text.isEmpty()) return;
+        
+        try {
+            int value = Integer.parseInt(text);
+            if (value >= 0 && value <= 255) {
+                if (pendingKeyboardInput != null && !pendingKeyboardInput.isDone()) {
+                    pendingKeyboardInput.complete(value);
+                    pendingKeyboardInput = null;
+                }
+                consoleInputField.setText("");
+                printConsole("[INPUT] Valor recibido: " + value, new Color(46, 204, 113));
+            } else {
+                printConsole("[ERROR] Valor fuera de rango (0-255): " + value, new Color(231, 76, 60));
+            }
+        } catch (NumberFormatException e) {
+            printConsole("[ERROR] Entrada inválida: '" + text + "' - Ingrese un número", new Color(231, 76, 60));
+        }
+    }
+    
+    public void printConsole(String message) {
+        printConsole(message, Color.WHITE);
+    }
+    
+    public void printConsole(String message, Color color) {
         SwingUtilities.invokeLater(() -> {
-            StyledDocument doc = consoleTextPane.getStyledDocument();
-
-            Style style = consoleTextPane.addStyle("Style", null);
-            StyleConstants.setForeground(style, color);
-
             try {
-                doc.insertString(doc.getLength(), value + "\n", style);
+                StyledDocument doc = consoleTextPane.getStyledDocument();
+                Style style = consoleTextPane.addStyle("Style", null);
+                StyleConstants.setForeground(style, color);
+                doc.insertString(doc.getLength(), message + "\n", style);
+                consoleTextPane.setCaretPosition(doc.getLength());
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            consoleTextPane.setCaretPosition(doc.getLength());
         });
     }
- 
-    public void refreshAll() {
-        loadMemoryTable();
-        loadDiskTable();
-        loadProcessTable();
-        refreshAllBCPTables();
+    
+    public int waitForKeyInput() {
+        printConsole("[INT 09H] Esperando entrada de teclado...", new Color(241, 196, 15));
+        try {
+            pendingKeyboardInput = new CompletableFuture<>();
+            int result = pendingKeyboardInput.join();
+            printConsole("[INT 09H] Entrada recibida: " + result, new Color(46, 204, 113));
+            return result;
+        } catch (Exception e) {
+            printConsole("[INT 09H] Error en entrada", new Color(231, 76, 60));
+            return 0;
+        }
+    }
+    
+    // ==================== PESTAÑA: CONFIGURACION ====================
+    
+    private JPanel createConfigPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBackground(new Color(236, 240, 241));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+        
+        // Algoritmo de CPU
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        panel.add(createLabel("Algoritmo de CPU:"), gbc);
+        schedulerCombo = new JComboBox<>(new String[]{"FCFS", "Round Robin"});
+        schedulerCombo.setPreferredSize(new Dimension(150, 25));
+        gbc.gridx = 1;
+        panel.add(schedulerCombo, gbc);
+        
+        // Quantum
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        panel.add(createLabel("Quantum (RR):"), gbc);
+        quantumSpinner = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
+        quantumSpinner.setPreferredSize(new Dimension(80, 25));
+        gbc.gridx = 1;
+        panel.add(quantumSpinner, gbc);
+        
+        // Número de CPUs
+        gbc.gridy = 2;
+        gbc.gridx = 0;
+        panel.add(createLabel("Numero de CPUs:"), gbc);
+        numCpusSpinner = new JSpinner(new SpinnerNumberModel(2, 2, 4, 1));
+        numCpusSpinner.setPreferredSize(new Dimension(80, 25));
+        gbc.gridx = 1;
+        panel.add(numCpusSpinner, gbc);
+        
+        // Tamaño RAM
+        gbc.gridy = 3;
+        gbc.gridx = 0;
+        panel.add(createLabel("Tamaño RAM:"), gbc);
+        ramSizeSpinner = new JSpinner(new SpinnerNumberModel(512, 512, 2048, 64));
+        ramSizeSpinner.setPreferredSize(new Dimension(100, 25));
+        gbc.gridx = 1;
+        panel.add(ramSizeSpinner, gbc);
+        
+        // Tamaño Disco
+        gbc.gridy = 4;
+        gbc.gridx = 0;
+        panel.add(createLabel("Tamaño Disco:"), gbc);
+        diskSizeSpinner = new JSpinner(new SpinnerNumberModel(512, 256, 4096, 128));
+        diskSizeSpinner.setPreferredSize(new Dimension(100, 25));
+        gbc.gridx = 1;
+        panel.add(diskSizeSpinner, gbc);
+        
+        // Botón aplicar
+        gbc.gridy = 5;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        JButton applyButton = new JButton("Aplicar Configuracion");
+        applyButton.setBackground(new Color(46, 204, 113));
+        applyButton.setForeground(Color.WHITE);
+        applyButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        applyButton.setFocusPainted(false);
+        applyButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        applyButton.addActionListener(e -> applyConfiguration());
+        panel.add(applyButton, gbc);
+        
+        return panel;
+    }
+    
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setForeground(new Color(52, 73, 94));
+        return label;
+    }
+    
+    private void applyConfiguration() {
+        int ramSize = (int) ramSizeSpinner.getValue();
+        int diskSize = (int) diskSizeSpinner.getValue();
+        int numCpus = (int) numCpusSpinner.getValue();
+        
+        SchedulerStrategy strategy;
+        if ("Round Robin".equals(schedulerCombo.getSelectedItem())) {
+            strategy = new RoundRobin((int) quantumSpinner.getValue());
+        } else {
+            strategy = new FCFS();
+        }
+        
+        os.stop();
+        os.reset(ramSize, diskSize, numCpus, strategy);
+        
+        // Limpiar BCPs
+        bcpCards.clear();
+        bcpPanel.removeAll();
+        bcpPidOrder.clear();
+        currentBcpIndex = 0;
+        
+        // Reconstruir CPUs
+        rebuildCPUPanels();
+        
+        refreshAll();
+        
+        printConsole("[SISTEMA] Configuracion aplicada: " + numCpus + " CPUs, " + strategy.getName(), new Color(46, 204, 113));
+        JOptionPane.showMessageDialog(this,
+            "Configuracion aplicada:\n" +
+            "RAM: " + ramSize + "\n" +
+            "Disco: " + diskSize + "\n" +
+            "CPUs: " + numCpus + "\n" +
+            "Algoritmo: " + strategy.getName(),
+            "Configuracion", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    // ==================== ACCIONES PRINCIPALES ====================
+    
+    private void loadAsmFiles() {
+        JFileChooser fc = new JFileChooser();
+        fc.setFileFilter(new FileNameExtensionFilter("Archivos ASM (*.asm)", "asm"));
+        fc.setMultiSelectionEnabled(true);
+        
+        if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        
+        int loaded = 0;
+        for (File f : fc.getSelectedFiles()) {
+            OSProcess p = os.loadProcess(f.getAbsolutePath());
+            if (p != null) {
+                createBCPCard(p);
+                loaded++;
+                printConsole("[CARGA] Proceso cargado: " + p.getName(), new Color(52, 152, 219));
+            }
+        }
+        
+        refreshAll();
+        statusLabel.setText("Cargados " + loaded + " archivos");
+        printConsole("[SISTEMA] " + loaded + " proceso(s) cargado(s)", new Color(46, 204, 113));
+    }
+    
+    private void startExecution() {
+        if (os.getScheduler().allTerminated()) {
+            printConsole("[ERROR] No hay procesos activos para ejecutar", new Color(231, 76, 60));
+            JOptionPane.showMessageDialog(this, "No hay procesos activos. Cargue archivos ASM primero.", 
+                "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        executeButton.setEnabled(false);
+        stepButton.setEnabled(false);
+        loadButton.setEnabled(false);
+        clearButton.setEnabled(false);
+        
+        statusLabel.setText("Ejecutando...");
+        printConsole("[SISTEMA] Iniciando ejecucion automatica", new Color(46, 204, 113));
+        
+        Timer timer = new Timer(1000, e -> {
+            // ✅ CORREGIDO: isRunning() en lugar de isIsRunning()
+            if (!os.isRunning()) {
+                ((Timer) e.getSource()).stop();
+                return;
+            }
+            
+            os.run(true);
+            refreshAll();
+            
+            if (os.getScheduler().allTerminated()) {
+                ((Timer) e.getSource()).stop();
+                executeButton.setEnabled(true);
+                stepButton.setEnabled(true);
+                loadButton.setEnabled(true);
+                clearButton.setEnabled(true);
+                statusLabel.setText("Ejecucion finalizada");
+                printConsole("[SISTEMA] Todos los procesos han terminado", new Color(241, 196, 15));
+                showStatistics();
+            }
+        });
+        timer.start();
+    }
+    
+    private void stepOnce() {
+        if (os.getScheduler().allTerminated()) {
+            printConsole("[ERROR] No hay procesos activos", new Color(231, 76, 60));
+            return;
+        }
+        
+        os.run(true);
+        refreshAll();
+        statusLabel.setText("Paso ejecutado - Ciclo: " + os.getGlobalClock());
+        
+        if (os.getScheduler().allTerminated()) {
+            statusLabel.setText("Ejecucion finalizada");
+            printConsole("[SISTEMA] Todos los procesos han terminado", new Color(241, 196, 15));
+            showStatistics();
+        }
+    }
+    
+    private void stopExecution() {
+        os.stop();
+        executeButton.setEnabled(true);
+        stepButton.setEnabled(true);
+        loadButton.setEnabled(true);
+        clearButton.setEnabled(true);
+        statusLabel.setText("Ejecucion detenida");
+        printConsole("[SISTEMA] Ejecucion detenida por el usuario", new Color(241, 196, 15));
+    }
+    
+    private void clearAll() {
+        stopExecution();
+        os.reset(512);
+        
+        bcpCards.clear();
+        bcpPanel.removeAll();
+        bcpPidOrder.clear();
+        currentBcpIndex = 0;
+        
+        refreshAll();
+        statusLabel.setText("Sistema limpiado");
+        printConsole("[SISTEMA] Sistema reiniciado", new Color(46, 204, 113));
     }
     
     private void showStatistics() {
-        List<Process> processes = os.getScheduler().getJobQueue().getAll();
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%-6s %-15s %-12s %-12s %-12s %-10s%n",
-            "PID","Nombre","Llegada","Inicio","Fin","Duración(s)"));
-        sb.append("-".repeat(70)).append("\n");
-        for (Process p : processes) {
+        sb.append("========================================\n");
+        sb.append("        ESTADISTICAS DE EJECUCION       \n");
+        sb.append("========================================\n\n");
+        
+        sb.append(String.format("%-6s %-15s %-12s %-12s %-12s %-10s\n", 
+            "PID", "Nombre", "Llegada", "Inicio", "Fin", "Duracion(s)"));
+        sb.append("------------------------------------------------------------\n");
+        
+        for (OSProcess p : os.getScheduler().getJobQueue().getAll()) {
             BCP bcp = p.getBcp();
-            sb.append(String.format("%-6d %-15s %-12s %-12s %-12s %-10d%n",
+            long duration = bcp.getDurationSeconds();
+            sb.append(String.format("%-6d %-15s %-12s %-12s %-12s %-10d\n",
                 bcp.getPID(), bcp.getProcessName(),
                 bcp.formatElapsed(bcp.getArrivalMillis()),
                 bcp.formatElapsed(bcp.getStartMillis()),
                 bcp.formatElapsed(bcp.getEndMillis()),
-                bcp.getDurationSeconds()));
+                duration));
         }
-        JTextArea ta = new JTextArea(sb.toString());
-        ta.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        ta.setEditable(false);
-        JScrollPane sp = new JScrollPane(ta);
-        sp.setPreferredSize(new Dimension(620, 300));
-        JOptionPane.showMessageDialog(this, sp, "Estadísticas de procesos",
-            JOptionPane.INFORMATION_MESSAGE);
+        
+        JTextArea textArea = new JTextArea(sb.toString());
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        textArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(650, 400));
+        
+        JOptionPane.showMessageDialog(this, scrollPane, "Estadisticas", JOptionPane.INFORMATION_MESSAGE);
     }
     
-    private void setupRenderer() {
-        MemoryValueTable.setDefaultRenderer(Object.class,
-            new javax.swing.table.DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(
-                        JTable table, Object value, boolean isSelected,
-                        boolean hasFocus, int row, int column) {
-                    Component c = super.getTableCellRendererComponent(
-                        table, value, isSelected, hasFocus, row, column);
-                    c.setForeground(Color.BLACK);
- 
-                    if (row == highlightedRow) {
-                        c.setBackground(new Color(80, 220, 140));
-                        c.setForeground(Color.WHITE);
-                        if (c instanceof JLabel l) l.setFont(l.getFont().deriveFont(Font.BOLD));
-                    } else {
-                        switch (rowKind(row)) {
-                            case KERNEL -> c.setBackground(new Color(220, 220, 240));
-                            case INSTR  -> c.setBackground(Color.WHITE); 
-                            default     -> c.setBackground(new Color(250, 250, 250));
-                        }
-                        if (c instanceof JLabel l) l.setFont(l.getFont().deriveFont(Font.PLAIN));
+    // ==================== ACTUALIZACION DE INTERFAZ ====================
+    
+    public void refreshAll() {
+        SwingUtilities.invokeLater(() -> {
+            // Actualizar RAM
+            if (ramTable != null && os.getMemory() != null) {
+                String[] memory = os.getMemory().getMemory();
+                ramTableModel.setRowCount(0);
+                for (int i = 0; i < memory.length; i++) {
+                    String content = memory[i];
+                    if (content == null || content.isEmpty()) {
+                        content = "";
                     }
-                    return c;
+                    ramTableModel.addRow(new Object[]{i, content});
                 }
-            });
- 
-        DiskValueTable.setDefaultRenderer(Object.class,
-            new javax.swing.table.DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(
-                        JTable table, Object value, boolean isSelected,
-                        boolean hasFocus, int row, int column) {
-                    Component c = super.getTableCellRendererComponent(
-                        table, value, isSelected, hasFocus, row, column);
-                    c.setForeground(Color.BLACK);
-                    // Index rows (0-9): light grey; rest: alternating white
-                    if (row < os.getDisk().getIndexReserved()) {
-                        c.setBackground(new Color(230, 230, 230));
-                        if (c instanceof JLabel l) l.setFont(l.getFont().deriveFont(Font.ITALIC));
-                    } else {
-                        c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 255));
-                        if (c instanceof JLabel l) l.setFont(l.getFont().deriveFont(Font.PLAIN));
-                    }
-                    return c;
+                ramTable.repaint();
+            }
+            
+            // Actualizar tabla de procesos
+            if (processTable != null && os.getScheduler() != null) {
+                processTableModel.setRowCount(0);
+                for (OSProcess p : os.getScheduler().getJobQueue().getAll()) {
+                    BCP bcp = p.getBcp();
+                    processTableModel.addRow(new Object[]{
+                        bcp.getPID(),
+                        p.getName(),
+                        bcp.getState().name(),
+                        bcp.getBaseAddress(),
+                        bcp.getLimitAddress(),
+                        bcp.getCpuCyclesUsed(),
+                        bcp.getPriority()
+                    });
                 }
-            });
-        
-        ProcessTable.setDefaultRenderer(Object.class,
-            new javax.swing.table.DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(
-                        JTable table, Object value, boolean isSelected,
-                        boolean hasFocus, int row, int column) {
-                    Component c = super.getTableCellRendererComponent(
-                        table, value, isSelected, hasFocus, row, column);
-                    c.setForeground(Color.BLACK);
-                    List<Process> processes = os.getScheduler().getJobQueue().getAll();
-                    if (row < processes.size()) {
-                        ProcessState state = processes.get(row).getBcp().getState();
-                        c.setBackground(switch (state) {
-                            case RUNNING    -> new Color(123, 245, 184);
-                            case READY      -> new Color(255, 255, 200);
-                            case WAITING    -> new Color(255, 200, 150);
-                            case TERMINATED -> new Color(200, 200, 200);
-                            default         -> Color.WHITE;
-                        });
-                    } else {
-                        c.setBackground(Color.WHITE);
-                    }
-                    return c;
-                }
-            });
+            }
+            
+            // Actualizar BCP cards
+            for (OSProcess p : os.getScheduler().getJobQueue().getAll()) {
+                updateBCPCard(p);
+            }
+            
+            // Actualizar CPUs
+            updateCPUPanels();
+            
+            // Actualizar navegación
+            updateBCPNavigation();
+        });
     }
     
-    /**
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        jDialog1 = new javax.swing.JDialog();
-        menuBar1 = new java.awt.MenuBar();
-        menu1 = new java.awt.Menu();
-        menu2 = new java.awt.Menu();
-        menuBar2 = new java.awt.MenuBar();
-        menu3 = new java.awt.Menu();
-        menu4 = new java.awt.Menu();
-        jPanel1 = new javax.swing.JPanel();
-        ExecuteButton = new javax.swing.JButton();
-        StepbyStepButton = new javax.swing.JButton();
-        CleanButton = new javax.swing.JButton();
-        MemorySizeButton = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        MemoryValueTable = new javax.swing.JTable();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        ProcessTable = new javax.swing.JTable();
-        fileButton = new javax.swing.JButton();
-        nameFileLabel = new javax.swing.JLabel();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        stepButton = new javax.swing.JButton();
-        kernelPanel = new javax.swing.JPanel();
-        jLabel2 = new javax.swing.JLabel();
-        bcpPanel = new javax.swing.JPanel();
-        ramLabel = new javax.swing.JLabel();
-        diskLabel = new javax.swing.JLabel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        DiskValueTable = new javax.swing.JTable();
-        processLabel = new javax.swing.JLabel();
-        cmdLabel = new javax.swing.JLabel();
-        bcpLabel = new javax.swing.JLabel();
-        MemorySizeButton1 = new javax.swing.JButton();
-        jScrollPane5 = new javax.swing.JScrollPane();
-        consoleTextPane = new javax.swing.JTextPane();
-
-        javax.swing.GroupLayout jDialog1Layout = new javax.swing.GroupLayout(jDialog1.getContentPane());
-        jDialog1.getContentPane().setLayout(jDialog1Layout);
-        jDialog1Layout.setHorizontalGroup(
-            jDialog1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
-        );
-        jDialog1Layout.setVerticalGroup(
-            jDialog1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
-        );
-
-        menu1.setLabel("File");
-        menuBar1.add(menu1);
-
-        menu2.setLabel("Edit");
-        menuBar1.add(menu2);
-
-        menu3.setLabel("File");
-        menuBar2.add(menu3);
-
-        menu4.setLabel("Edit");
-        menuBar2.add(menu4);
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(1484, 842));
-
-        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
-        jPanel1.setForeground(new java.awt.Color(51, 51, 51));
-        jPanel1.setMinimumSize(new java.awt.Dimension(1484, 842));
-
-        ExecuteButton.setBackground(new java.awt.Color(82, 176, 176));
-        ExecuteButton.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        ExecuteButton.setForeground(new java.awt.Color(255, 255, 255));
-        ExecuteButton.setText("Ejecutar");
-        ExecuteButton.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        ExecuteButton.setMaximumSize(new java.awt.Dimension(90, 30));
-        ExecuteButton.setMinimumSize(new java.awt.Dimension(90, 30));
-        ExecuteButton.setPreferredSize(new java.awt.Dimension(98, 72));
-        ExecuteButton.addActionListener(this::ExecuteButtonActionPerformed);
-
-        StepbyStepButton.setBackground(new java.awt.Color(82, 176, 176));
-        StepbyStepButton.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        StepbyStepButton.setForeground(new java.awt.Color(255, 255, 255));
-        StepbyStepButton.setText("Paso a paso");
-        StepbyStepButton.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        StepbyStepButton.setMaximumSize(new java.awt.Dimension(90, 30));
-        StepbyStepButton.setMinimumSize(new java.awt.Dimension(90, 30));
-        StepbyStepButton.setPreferredSize(new java.awt.Dimension(98, 72));
-        StepbyStepButton.addActionListener(this::StepbyStepButtonActionPerformed);
-
-        CleanButton.setBackground(new java.awt.Color(82, 176, 176));
-        CleanButton.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        CleanButton.setForeground(new java.awt.Color(255, 255, 255));
-        CleanButton.setText("Limpiar");
-        CleanButton.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        CleanButton.setMaximumSize(new java.awt.Dimension(90, 30));
-        CleanButton.setMinimumSize(new java.awt.Dimension(90, 30));
-        CleanButton.setPreferredSize(new java.awt.Dimension(98, 72));
-        CleanButton.addActionListener(this::CleanButtonActionPerformed);
-
-        MemorySizeButton.setBackground(new java.awt.Color(82, 176, 176));
-        MemorySizeButton.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        MemorySizeButton.setForeground(new java.awt.Color(255, 255, 255));
-        MemorySizeButton.setText("Ajustar tamaño de memoria");
-        MemorySizeButton.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        MemorySizeButton.setMaximumSize(new java.awt.Dimension(90, 30));
-        MemorySizeButton.setMinimumSize(new java.awt.Dimension(90, 30));
-        MemorySizeButton.setPreferredSize(new java.awt.Dimension(98, 72));
-        MemorySizeButton.addActionListener(this::MemorySizeButtonActionPerformed);
-
-        MemoryValueTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
-            },
-            new String [] {
-                "Posición", "Valor en memoria"
+    public void highlightRow(int row) {
+        this.highlightedRow = row;
+        SwingUtilities.invokeLater(() -> {
+            if (ramTable != null) {
+                ramTable.repaint();
+                if (row >= 0) {
+                    ramTable.scrollRectToVisible(ramTable.getCellRect(row, 0, true));
+                }
             }
-        ));
-        jScrollPane1.setViewportView(MemoryValueTable);
-
-        ProcessTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
-            },
-            new String [] {
-                "Procesos", "Estados"
-            }
-        ));
-        jScrollPane2.setViewportView(ProcessTable);
-
-        fileButton.setBackground(new java.awt.Color(153, 153, 153));
-        fileButton.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        fileButton.setForeground(new java.awt.Color(255, 255, 255));
-        fileButton.setText("Cargar archivo");
-        fileButton.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        fileButton.addActionListener(this::fileButtonActionPerformed);
-
-        nameFileLabel.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        nameFileLabel.setForeground(new java.awt.Color(255, 255, 255));
-        nameFileLabel.setText("Nombre del archivo:");
-
-        jPanel2.setBackground(new java.awt.Color(123, 245, 184));
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 23, Short.MAX_VALUE)
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 25, Short.MAX_VALUE)
-        );
-
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel1.setText(":  Espacio del kernel");
-
-        stepButton.setBackground(new java.awt.Color(82, 176, 176));
-        stepButton.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        stepButton.setForeground(new java.awt.Color(255, 255, 255));
-        stepButton.setText("▼");
-        stepButton.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Step", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 0, 12), new java.awt.Color(255, 255, 255))); // NOI18N
-        stepButton.addActionListener(this::stepButtonActionPerformed);
-
-        kernelPanel.setBackground(new java.awt.Color(220, 220, 220));
-
-        javax.swing.GroupLayout kernelPanelLayout = new javax.swing.GroupLayout(kernelPanel);
-        kernelPanel.setLayout(kernelPanelLayout);
-        kernelPanelLayout.setHorizontalGroup(
-            kernelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 23, Short.MAX_VALUE)
-        );
-        kernelPanelLayout.setVerticalGroup(
-            kernelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 25, Short.MAX_VALUE)
-        );
-
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel2.setText(":  Programa ejecutando");
-
-        javax.swing.GroupLayout bcpPanelLayout = new javax.swing.GroupLayout(bcpPanel);
-        bcpPanel.setLayout(bcpPanelLayout);
-        bcpPanelLayout.setHorizontalGroup(
-            bcpPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 272, Short.MAX_VALUE)
-        );
-        bcpPanelLayout.setVerticalGroup(
-            bcpPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-
-        ramLabel.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        ramLabel.setText("RAM");
-
-        diskLabel.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        diskLabel.setText("Disk space");
-
-        DiskValueTable.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
-            },
-            new String [] {
-                "Posición", "Valor en memoria"
-            }
-        ));
-        jScrollPane3.setViewportView(DiskValueTable);
-
-        processLabel.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        processLabel.setText("Procesos");
-
-        cmdLabel.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        cmdLabel.setText("Consola:");
-
-        bcpLabel.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        bcpLabel.setText("BCP");
-
-        MemorySizeButton1.setBackground(new java.awt.Color(82, 176, 176));
-        MemorySizeButton1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        MemorySizeButton1.setForeground(new java.awt.Color(255, 255, 255));
-        MemorySizeButton1.setText("Estadísticas");
-        MemorySizeButton1.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        MemorySizeButton1.setMaximumSize(new java.awt.Dimension(90, 30));
-        MemorySizeButton1.setMinimumSize(new java.awt.Dimension(90, 30));
-        MemorySizeButton1.setPreferredSize(new java.awt.Dimension(98, 72));
-        MemorySizeButton1.addActionListener(this::MemorySizeButton1ActionPerformed);
-
-        consoleTextPane.setBackground(new java.awt.Color(51, 51, 51));
-        consoleTextPane.setFont(new java.awt.Font("Consolas", 0, 14)); // NOI18N
-        consoleTextPane.setForeground(new java.awt.Color(255, 255, 255));
-        jScrollPane5.setViewportView(consoleTextPane);
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(48, 48, 48)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(processLabel)
-                                        .addGap(74, 74, 74)
-                                        .addComponent(nameFileLabel)
-                                        .addGap(0, 0, Short.MAX_VALUE))
-                                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(stepButton, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(ExecuteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(StepbyStepButton, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(CleanButton, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
-                                .addComponent(kernelPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jLabel1))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
-                                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jLabel2)))
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(MemorySizeButton, javax.swing.GroupLayout.PREFERRED_SIZE, 253, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(MemorySizeButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addGap(12, 12, 12)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jScrollPane5)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(ramLabel)
-                                            .addComponent(cmdLabel)
-                                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE))
-                                        .addGap(12, 12, 12)
-                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(diskLabel))
-                                        .addGap(18, 18, 18)
-                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(bcpLabel)
-                                            .addComponent(bcpPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                .addGap(37, 37, 37))))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(fileButton, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(40, 40, 40))))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(125, 125, 125)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(nameFileLabel)
-                            .addComponent(processLabel)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(30, 30, 30)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(MemorySizeButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(CleanButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(StepbyStepButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(ExecuteButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(MemorySizeButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addGap(22, 22, 22)
-                                        .addComponent(fileButton)
-                                        .addGap(25, 25, 25)
-                                        .addComponent(ramLabel))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(diskLabel))))
-                            .addComponent(bcpLabel))))
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 353, Short.MAX_VALUE)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addComponent(bcpPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(19, 19, 19)
-                        .addComponent(cmdLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(116, 116, 116)
-                        .addComponent(stepButton, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(12, 12, 12)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 572, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(kernelPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))))
-                .addContainerGap(19, Short.MAX_VALUE))
-        );
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void fileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileButtonActionPerformed
-        JFileChooser fc = new JFileChooser();
-        fc.setFileFilter(new FileNameExtensionFilter("ASM Files", "asm"));
-        fc.setMultiSelectionEnabled(true);
- 
-        if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
- 
-        File[] files = fc.getSelectedFiles();
-        for (File f : files) {
-            Process p = os.loadProcess(f.getAbsolutePath());
-            if (p != null) {
-                registerBCPTable(p);
-            }
-        }
-        refreshAll();
-        nameFileLabel.setText(files.length == 1
-            ? "Archivo: " + files[0].getName()
-            : files.length + " archivos cargados");
-    }//GEN-LAST:event_fileButtonActionPerformed
-
-    private void MemorySizeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MemorySizeButtonActionPerformed
-        JFileChooser fc = new JFileChooser();
-        fc.setFileFilter(new FileNameExtensionFilter("Config Files (.xml, .json)", "xml", "json"));
-
-        if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
-
-        File file = fc.getSelectedFile();
-
-        LoadXML loader = new LoadXML();
-        loader.readFile(file.getAbsolutePath());
-
-        if (loader.isLoadError()) return;
-
-        int ramSize  = loader.getRamSize();
-        int diskSize = loader.getDiskSize();
-
-        os.reset(ramSize, diskSize);
-
-        clearBCPTables();
-
-        stepButton.setEnabled(false);
-        StepbyStepButton.setEnabled(true);
-        ExecuteButton.setEnabled(true);
-        fileButton.setEnabled(true);
-
-        highlightedRow = -1;
-        refreshAll();
-
-        JOptionPane.showMessageDialog(this,
-            "Configuración cargada:\nRAM: " + ramSize + "\nDisk: " + diskSize,
-            "Configuración aplicada",
-            JOptionPane.INFORMATION_MESSAGE);
-
-    }//GEN-LAST:event_MemorySizeButtonActionPerformed
-
-    private void CleanButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CleanButtonActionPerformed
-        os.stop();
-        os.reset(100);
- 
-        clearBCPTables();
-        stepModeActive = false;
-        stepButton.setEnabled(false);
-        StepbyStepButton.setEnabled(true);
-        ExecuteButton.setEnabled(true);
-        MemorySizeButton.setEnabled(true);
-        fileButton.setEnabled(true);
- 
-        highlightedRow = -1;
-        nameFileLabel.setText("Nombre del archivo:");
-        refreshAll();
-    }//GEN-LAST:event_CleanButtonActionPerformed
-
-    private void StepbyStepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StepbyStepButtonActionPerformed
-         if (!os.getScheduler().hasProcessReady()) {
-            JOptionPane.showMessageDialog(this,
-                "No hay procesos cargados en memoria", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        stepModeActive = true;
-        stepButton.setEnabled(true);
-        ExecuteButton.setEnabled(false);
-        StepbyStepButton.setEnabled(false);
-        MemorySizeButton.setEnabled(false);
-        fileButton.setEnabled(false);
-    }//GEN-LAST:event_StepbyStepButtonActionPerformed
-
-    private void ExecuteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ExecuteButtonActionPerformed
-        if (!os.getScheduler().hasProcessReady()) {
-            JOptionPane.showMessageDialog(this,
-                "No hay procesos cargados en memoria", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        stepModeActive = false;
-        StepbyStepButton.setEnabled(false);
-        ExecuteButton.setEnabled(false);
-        MemorySizeButton.setEnabled(false);
-        fileButton.setEnabled(false);
-        stepButton.setEnabled(false);
-        os.run(false);
-        
-    }//GEN-LAST:event_ExecuteButtonActionPerformed
-
-    private void stepButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stepButtonActionPerformed
-        if (!stepModeActive) return;
-        if (os.getScheduler().allTerminated()) {
-            stepButton.setEnabled(false);
-            return;
-        }
-
-        Integer executedPC = os.getDispatcher().CPUcycle();
-
-        refreshAll();
-
-        if (executedPC != null) {
-            highlightRow(executedPC);
-        }
-
-
-        if (os.getDispatcher().getCurrentProcess() == null) {
-            os.getMemory().updateKernelFromBCP(null);
-            loadMemoryTable();  
-        }
-
-        if (os.getScheduler().allTerminated()) {
-            stepModeActive = false;
-            stepButton.setEnabled(false);
-            os.getMemory().updateKernelFromBCP(null);
-            refreshAll();
-            JOptionPane.showMessageDialog(this,
-                "Todos los procesos terminaron",
-                "Ejecución finalizada", JOptionPane.INFORMATION_MESSAGE);
-            showStatistics();
-        }
-    }//GEN-LAST:event_stepButtonActionPerformed
-
-    private void MemorySizeButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MemorySizeButton1ActionPerformed
-        showStatistics();
-    }//GEN-LAST:event_MemorySizeButton1ActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+        });
+    }
+    
+    private void setupWindow() {
+        setSize(1300, 800);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setMinimumSize(new Dimension(1000, 600));
+    }
+    
+    // ==================== MAIN ====================
+    
+    public static void main(String[] args) {
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new UI().setVisible(true));
+        
+        SwingUtilities.invokeLater(() -> {
+            new UI().setVisible(true);
+        });
     }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton CleanButton;
-    private javax.swing.JTable DiskValueTable;
-    private javax.swing.JButton ExecuteButton;
-    private javax.swing.JButton MemorySizeButton;
-    private javax.swing.JButton MemorySizeButton1;
-    private javax.swing.JTable MemoryValueTable;
-    private javax.swing.JTable ProcessTable;
-    private javax.swing.JButton StepbyStepButton;
-    private javax.swing.JLabel bcpLabel;
-    private javax.swing.JPanel bcpPanel;
-    private javax.swing.JLabel cmdLabel;
-    private javax.swing.JTextPane consoleTextPane;
-    private javax.swing.JLabel diskLabel;
-    private javax.swing.JButton fileButton;
-    private javax.swing.JDialog jDialog1;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JScrollPane jScrollPane5;
-    private javax.swing.JPanel kernelPanel;
-    private java.awt.Menu menu1;
-    private java.awt.Menu menu2;
-    private java.awt.Menu menu3;
-    private java.awt.Menu menu4;
-    private java.awt.MenuBar menuBar1;
-    private java.awt.MenuBar menuBar2;
-    private javax.swing.JLabel nameFileLabel;
-    private javax.swing.JLabel processLabel;
-    private javax.swing.JLabel ramLabel;
-    private javax.swing.JButton stepButton;
-    // End of variables declaration//GEN-END:variables
 }

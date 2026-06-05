@@ -4,12 +4,15 @@
  */
 package com.mycompany.pyso.Classes.Core;
 
+import com.mycompany.pyso.Classes.Process.OSProcess;
+
 /**
  *
  * @author jimen
  */
 public class CPU {
-
+    private int id;
+    private OSProcess currentProcess;
     private int AC; // Accumulator
     private int PC; // Program counter
     private String IR; // Instruction register
@@ -235,5 +238,10 @@ public class CPU {
     public void setEqualFlag(boolean equalFlag) {
         this.equalFlag = equalFlag;
     }
+    
+    public int getId()                        { return id; }
+    public void setId(int id)                 { this.id = id; }
+    public OSProcess getCurrentProcess()        { return currentProcess; }
+    public void setCurrentProcess(OSProcess p) { this.currentProcess = p; }
     
 }

@@ -9,7 +9,7 @@ import com.mycompany.pyso.Classes.Process.WaitingQueue;
 import com.mycompany.pyso.Classes.Memory.Disk;
 import com.mycompany.pyso.Classes.Memory.VirtualMemory;
 import com.mycompany.pyso.Classes.Memory.RAM;
-import com.mycompany.pyso.Classes.Process.Process;
+import com.mycompany.pyso.Classes.Process.OSProcess;
 import com.mycompany.pyso.Classes.Process.ProcessState;
 import com.mycompany.pyso.Classes.FileHandler.LoadASM;
 import java.util.List;
@@ -45,7 +45,7 @@ public class Scheduler {
         this.nextFreeAddress = KERNEL_SIZE;
     }
 
-    public Process loadProcess(String path) {
+    public OSProcess loadProcess(String path) {
         LoadASM loader = new LoadASM();
         loader.readFile(path);
         if (loader.isFormatError() || loader.isExtensionError()) return null;
@@ -60,7 +60,7 @@ public class Scheduler {
         BCP bcp = new BCP(pid, name, -1, -1, 0);
         bcp.markArrival(simulatorStartMillis);
 
-        Process process = new Process();
+        OSProcess process = new OSProcess();
         process.setPID(pid);
         process.setName(name);
         process.setBcp(bcp);
@@ -77,10 +77,10 @@ public class Scheduler {
         return process;
     }
 
-    private void linkBCP(Process newProcess) {
-        List<Process> all = jobQueue.getAll();
+    private void linkBCP(OSProcess newProcess) {
+        List<OSProcess> all = jobQueue.getAll();
         for (int i = all.size() - 2; i >= 0; i--) {
-            Process prev = all.get(i);
+            OSProcess prev = all.get(i);
             if (prev.getBcp().getNextBCP() == null) {
                 prev.getBcp().setNextBCP(newProcess.getBcp());
                 break;
@@ -88,7 +88,7 @@ public class Scheduler {
         }
     }
 
-    public boolean admitToRAM(Process process) {
+    public boolean admitToRAM(OSProcess process) {
         if (process.getBcp().getState() != ProcessState.NEW) return false;
 
         int instrCount = process.getInstructions().size();
@@ -121,7 +121,7 @@ public class Scheduler {
     }
 
 
-    public Process nextToRun() {
+    public OSProcess nextToRun() {
         return readyQueue.dequeue();
     }
 
@@ -134,18 +134,18 @@ public class Scheduler {
         return readyQueue.hasNext();
     }
 
-    public void moveToWaiting(Process process) {
+    public void moveToWaiting(OSProcess process) {
         waitingQueue.enqueue(process);
     }
 
     public void releaseFromWaiting(int PID) {
-        Process process = waitingQueue.release(PID);
+        OSProcess process = waitingQueue.release(PID);
         if (process != null) {
             readyQueue.enqueue(process);
         }
     }
 
-    public void terminateProcess(Process process) {
+    public void terminateProcess(OSProcess process) {
         process.getBcp().markTerminated(simulatorStartMillis);
 
         int base  = process.getBaseAddress();
@@ -167,7 +167,7 @@ public class Scheduler {
         while (!virtualMemory.isEmpty()) {
             VirtualMemory.SwapEntry entry = virtualMemory.swapInNext();
             if (entry == null) break;
-            Process p = jobQueue.getAll().stream()
+            OSProcess p = jobQueue.getAll().stream()
                 .filter(proc -> proc.getPID() == entry.pid)
                 .findFirst().orElse(null);
 
@@ -183,7 +183,7 @@ public class Scheduler {
     }
 
     public void tryLoadNewProcesses() {
-        for (Process p : jobQueue.getAll()) {
+        for (OSProcess p : jobQueue.getAll()) {
             if (p.getBcp().getState() == ProcessState.NEW) {
                 boolean loaded = admitToRAM(p);
                 if (loaded) {

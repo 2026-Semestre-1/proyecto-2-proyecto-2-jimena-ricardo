@@ -3,36 +3,55 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.mycompany.pyso.Classes.Process;
+
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
-/**
- *
- * @author jimen
- */
 
 public class ReadyQueue {
-    private final Queue<Process> queue;
-
-    public ReadyQueue() {
-        this.queue = new LinkedList<>();
-    }
-
-    public void enqueue(Process process) {
-        process.getBcp().setState(ProcessState.READY);
-        queue.add(process);
+    
+    private Queue<OSProcess> queue = new LinkedList<>();
+    
+    public void enqueue(OSProcess process) {
+        if (process != null) {
+            queue.add(process);
+        }
     }
     
-    public Process dequeue() {
+    public OSProcess dequeue() {
         return queue.poll();
     }
-
-    public boolean hasNext(){
-        return !queue.isEmpty(); 
+    
+    public OSProcess peek() {
+        return queue.peek();
     }
-    public int count(){
+    
+    public boolean remove(OSProcess process) {
+        return queue.remove(process);
+    }
+    
+    public List<OSProcess> getAll() {
+        return new ArrayList<>(queue);
+    }
+    
+    public boolean isEmpty() {
+        return queue.isEmpty();
+    }
+
+    public boolean hasNext() {
+        return !queue.isEmpty();
+    }
+    
+    public int size() {
         return queue.size();
     }
-    public Queue<Process> getQueue(){
-        return queue; 
+    
+    public void clear() {
+        queue.clear();
+    }
+    
+    public boolean contains(OSProcess process) {
+        return queue.contains(process);
     }
 }

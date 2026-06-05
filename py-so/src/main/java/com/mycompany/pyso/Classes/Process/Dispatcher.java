@@ -20,7 +20,7 @@ public class Dispatcher {
     private final InterruptHandler interruptHandler;
     private final long simulatorStartMillis;
 
-    private Process currentProcess;
+    private OSProcess currentProcess;
 
     public Dispatcher(CPU cpu, Scheduler scheduler,
                       InterruptHandler interruptHandler, long simulatorStartMillis) {
@@ -42,7 +42,7 @@ public class Dispatcher {
             cpu.setPC(currentProcess.getBcp().getBaseAddress());
         }
 
-        Process p = currentProcess;
+        OSProcess p = currentProcess;
         scheduler.getRam().updateKernelFromBCP(p.getBcp());
 
         int pc    = cpu.getPC();
@@ -104,12 +104,12 @@ public class Dispatcher {
         return pc;
     }
 
-    public void terminate(Process process) {
+    public void terminate(OSProcess process) {
         scheduler.terminateProcess(process);
         currentProcess = null;
     }
 
-    public void moveToWaiting(Process process) {
+    public void moveToWaiting(OSProcess process) {
         process.getBcp().saveFromCPU(cpu, cpu.getIR());
         scheduler.moveToWaiting(process);
         currentProcess = null;
@@ -119,6 +119,6 @@ public class Dispatcher {
         scheduler.releaseFromWaiting(PID);
     }
 
-    public Process getCurrentProcess()      { return currentProcess; }
-    public void setCurrentProcess(Process p){ this.currentProcess = p; }
+    public OSProcess getCurrentProcess()      { return currentProcess; }
+    public void setCurrentProcess(OSProcess p){ this.currentProcess = p; }
 }

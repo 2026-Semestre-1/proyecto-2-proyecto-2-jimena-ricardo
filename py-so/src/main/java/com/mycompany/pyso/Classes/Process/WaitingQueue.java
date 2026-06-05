@@ -11,17 +11,17 @@ import java.util.List;
  */
 
 public class WaitingQueue {
-    private final List<Process> queue;
+    private final List<OSProcess> queue;
 
     public WaitingQueue() {
         this.queue = new LinkedList<>();
     }
-    public void enqueue(Process process) {
+    public void enqueue(OSProcess process) {
         process.getBcp().setState(ProcessState.WAITING);
         queue.add(process);
     }
-    public Process release(int PID) {
-        Process found = queue.stream()
+    public OSProcess release(int PID) {
+        OSProcess found = queue.stream()
                 .filter(p -> p.getBcp().getPID() == PID)
                 .findFirst()
                 .orElse(null);
@@ -36,7 +36,7 @@ public class WaitingQueue {
     public int count(){
         return queue.size(); 
     }
-    public List<Process> getAll(){
+    public List<OSProcess> getAll(){
         return queue; 
     }
 }

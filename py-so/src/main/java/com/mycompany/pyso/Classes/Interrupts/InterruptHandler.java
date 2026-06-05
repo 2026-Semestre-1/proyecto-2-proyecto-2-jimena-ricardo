@@ -8,7 +8,7 @@ import com.mycompany.pyso.Classes.Core.CPU;
 import com.mycompany.pyso.Classes.Core.Instruction;
 import com.mycompany.pyso.Classes.Memory.Disk;
 import com.mycompany.pyso.Classes.Memory.DiskEntry;
-import com.mycompany.pyso.Classes.Process.Process;
+import com.mycompany.pyso.Classes.Process.OSProcess;
 import com.mycompany.pyso.Classes.Process.ProcessStack;
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class InterruptHandler {
     }
 
     public interface TerminationCallback {
-        void terminate(Process process);
+        void terminate(OSProcess process);
     }
 
     public InterruptHandler(CPU cpu, Disk disk, ConsoleCallback console) {
@@ -37,7 +37,7 @@ public class InterruptHandler {
         this.console = console;
     }
 
-    public void handle(Instruction inst, Process process, TerminationCallback onTerminate) {
+    public void handle(Instruction inst, OSProcess process, TerminationCallback onTerminate) {
         String code = inst.getInterruptCode();
         if (code == null) return;
 
@@ -50,11 +50,11 @@ public class InterruptHandler {
         }
     }
 
-    private void handle_INT20H(Process process, TerminationCallback onTerminate) {
+    private void handle_INT20H(OSProcess process, TerminationCallback onTerminate) {
         onTerminate.terminate(process);
     }
 
-    private void handle_INT10H(Process process) {
+    private void handle_INT10H(OSProcess process) {
         int dxValue = cpu.getDX();
         if (console != null) {
             console.print("[PID " + process.getBcp().getPID()
@@ -65,7 +65,7 @@ public class InterruptHandler {
     }
 
 
-    private void handle_INT09H(Process process) {
+    private void handle_INT09H(OSProcess process) {
         if (console != null) {
             console.print("[PID " + process.getBcp().getPID()
                 + "] INT 09H: entrada simulada = 0");
@@ -76,7 +76,7 @@ public class InterruptHandler {
     }
 
 
-    private void handle_INT21H(Process process) {
+    private void handle_INT21H(OSProcess process) {
         int ah= cpu.getAX();  
         int dx= cpu.getDX();   
         String fileName = resolveFileName(process, dx);
@@ -100,7 +100,7 @@ public class InterruptHandler {
         process.getBcp().saveFromCPU(cpu, cpu.getIR());
     }
 
-    private void createFile(Process process, String fileName) {
+    private void createFile(OSProcess process, String fileName) {
         if (disk.exists(fileName)) {
             log(process, "INT 21H 3CH: archivo ya existe — " + fileName);
             return;
@@ -108,7 +108,7 @@ public class InterruptHandler {
         disk.save(fileName, new java.util.ArrayList<>());
         log(process, "INT 21H 3CH: archivo creado — " + fileName);
     }
-    private void openFile(Process process, String fileName) {
+    private void openFile(OSProcess process, String fileName) {
         if (!disk.exists(fileName)) {
             log(process, "INT 21H 3DH: archivo no existe — " + fileName);
             return;
@@ -120,7 +120,7 @@ public class InterruptHandler {
         log(process, "INT 21H 3DH: archivo abierto — " + fileName);
     }
 
-    private void readFile(Process process, String fileName) {
+    private void readFile(OSProcess process, String fileName) {
         DiskEntry entry = disk.getEntry(fileName);
         if (entry == null) {
             log(process, "INT 21H 4DH: archivo no encontrado — " + fileName);
@@ -139,7 +139,7 @@ public class InterruptHandler {
         }
     }
 
-    private void writeFile(Process process, String fileName) {
+    private void writeFile(OSProcess process, String fileName) {
         if (!disk.exists(fileName)) {
             log(process, "INT 21H 40H: archivo no encontrado — " + fileName);
             return;
@@ -149,14 +149,14 @@ public class InterruptHandler {
     }
 
     /** 41h – Eliminar archivo del disco. */
-    private void deleteFile(Process process, String fileName) {
+    private void deleteFile(OSProcess process, String fileName) {
         boolean deleted = disk.delete(fileName);
         log(process, deleted
             ? "INT 21H 41H: archivo eliminado — " + fileName
             : "INT 21H 41H: archivo no encontrado — " + fileName);
     }
 
-    public boolean executePush(Instruction inst, Process process) {
+    public boolean executePush(Instruction inst, OSProcess process) {
         int value = cpu.getRegisterValue(inst.getRegister());
         ProcessStack stack = process.getBcp().getStack();
         boolean ok = stack.push(value);
@@ -166,7 +166,7 @@ public class InterruptHandler {
         return ok;
     }
 
-    public boolean executePop(Instruction inst, Process process) {
+    public boolean executePop(Instruction inst, OSProcess process) {
         ProcessStack stack = process.getBcp().getStack();
         if (stack.isEmpty()) {
             if (console != null) {
@@ -178,7 +178,7 @@ public class InterruptHandler {
         return true;
     }
 
-    public void executeParam(Instruction inst, Process process) {
+    public void executeParam(Instruction inst, OSProcess process) {
         int[] params = inst.getParams();
         if (params == null) return;
         ProcessStack stack = process.getBcp().getStack();
@@ -192,18 +192,18 @@ public class InterruptHandler {
     }
 
 
-    private String resolveFileName(Process process, int dx) {
+    private String resolveFileName(OSProcess process, int dx) {
         List<String> files = process.getBcp().getOpenFiles();
         if (dx >= 0 && dx < files.size()) return files.get(dx);
         return "file_" + process.getBcp().getPID() + "_" + dx;
     }
 
-    private void handleUnknown(String code, Process process) {
+    private void handleUnknown(String code, OSProcess process) {
         log(process, "INT desconocido: " + code);
         cpu.setPC(cpu.getPC() + 1);
     }
 
-    private void log(Process process, String msg) {
+    private void log(OSProcess process, String msg) {
         if (console != null) {
             console.print("[PID " + process.getBcp().getPID() + "] " + msg);
         }

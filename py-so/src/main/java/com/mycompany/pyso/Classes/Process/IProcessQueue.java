@@ -11,15 +11,15 @@ import java.util.List;
 
 public interface IProcessQueue {
 
-    void enqueue(Process process);
+    void enqueue(OSProcess process);
 
-    Process dequeue();
+    OSProcess dequeue();
 
     boolean hasNext();
 
     int count();
 
-    List<Process> getAll();
+    List<OSProcess> getAll();
 
     boolean isEmpty();
 }

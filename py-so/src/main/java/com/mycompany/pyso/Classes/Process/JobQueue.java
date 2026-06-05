@@ -11,26 +11,26 @@ import java.util.List;
  */
 
 public class JobQueue {
-    private final List<Process> jobs;
+    private final List<OSProcess> jobs;
 
     public JobQueue() {
         this.jobs = new ArrayList<>();
     }
-    public void add(Process process) {
+    public void add(OSProcess process) {
         jobs.add(process);
     }
-    public void remove(Process process) {
+    public void remove(OSProcess process) {
         jobs.remove(process);
     }
 
-    public Process getByPID(int PID) {
+    public OSProcess getByPID(int PID) {
         return jobs.stream()
                 .filter(p -> p.getBcp().getPID() == PID)
                 .findFirst()
                 .orElse(null);
     }
 
-    public List<Process> getAll(){
+    public List<OSProcess> getAll(){
         return jobs; 
     }
     public int count(){

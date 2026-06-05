@@ -123,6 +123,16 @@ public class BCP {
     public int getPID() {
         return PID;
     }
+    
+    public void setLimit(int limit) {
+        this.limitAddress = limit;
+    }
+    public int getProgramCounter() {
+        return this.PC;
+    }
+    public String getInstructionRegister() {
+        return this.IR;
+    }
 
     public void setPID(int PID) {
         this.PID = PID;
@@ -142,6 +152,22 @@ public class BCP {
 
     public void setState(ProcessState state) {
         this.state = state;
+    }
+    
+    public void setStartTime(long startTime) {
+        this.startMillis = startTime;
+    }
+
+    public long getStartTime() {
+        return startMillis;
+    }
+    
+    public void setEndTime(long endTime) {
+        this.endMillis = endTime;
+    }
+
+    public long getEndTime() {
+        return endMillis;
     }
 
     public int getPC() {
