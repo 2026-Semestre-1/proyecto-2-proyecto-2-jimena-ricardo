@@ -34,32 +34,19 @@ public class RAM {
         this.positionUser = positionUser;
     }
 
-    /**
-     * Escribe TODOS los atributos del BCP en el espacio del kernel (posiciones 0-19).
-     * Si bcp es null, limpia el kernel.
-     *
-     * CORRECCIÓN: nextBCP ahora muestra la dirección BASE en memoria del siguiente
-     * proceso, no su PID. Esto cumple con el enunciado que pide un enlace a la
-     * dirección de memoria donde está almacenado el siguiente BCP.
-     *
-     * CORRECCIÓN: Se agregan los atributos faltantes (prioridad, tiempos, ciclos CPU,
-     * pila y archivos abiertos) en las posiciones 14-19.
-     */
+    public static final int KERNEL_SIZE = 150;
+
     public void updateKernelFromBCP(BCP bcp) {
-        memory[0] = "[ KERNEL SPACE ]";
+        memory[0] = "=== KERNEL SPACE (0-149) ===";
 
         if (bcp == null) {
-            memory[1] = "KERNEL SPACE";
-            for (int i = 2; i < 20; i++) memory[i] = "";
+            for (int i = 1; i < KERNEL_SIZE; i++) memory[i] = "";
             return;
         }
 
-        // --- Identificación ---
         memory[1]  = "PID        : " + bcp.getPID();
         memory[2]  = "Nombre     : " + bcp.getProcessName();
         memory[3]  = "Estado     : " + bcp.getState().name();
-
-        // --- Registros de CPU ---
         memory[4]  = "PC         : " + bcp.getPC();
         memory[5]  = "IR         : " + bcp.getIR();
         memory[6]  = "AC         : " + bcp.getAC();
@@ -67,26 +54,21 @@ public class RAM {
         memory[8]  = "BX         : " + bcp.getBX();
         memory[9]  = "CX         : " + bcp.getCX();
         memory[10] = "DX         : " + bcp.getDX();
-
-        // --- Información de memoria ---
         memory[11] = "Base       : " + bcp.getBaseAddress();
         memory[12] = "Limite     : " + bcp.getLimitAddress();
-
-        // CORRECCIÓN: apunta a la DIRECCIÓN DE MEMORIA del siguiente BCP, no al PID
         memory[13] = "Sig. BCP   : " + (bcp.getNextBCP() != null
                 ? "Addr[" + bcp.getNextBCP().getBaseAddress() + "]"
                 : "(ninguno)");
-
-        // --- Atributos adicionales del BCP (antes faltaban) ---
         memory[14] = "Prioridad  : " + bcp.getPriority();
         memory[15] = "T.Llegada  : " + bcp.formatElapsed(bcp.getArrivalMillis());
         memory[16] = "T.Inicio   : " + bcp.formatElapsed(bcp.getStartMillis());
         memory[17] = "Ciclos CPU : " + bcp.getCpuCyclesUsed();
         memory[18] = "Pila       : " + buildStackString(bcp);
         memory[19] = "Archivos   : " + buildFilesString(bcp);
+
+        for (int i = 20; i < KERNEL_SIZE; i++) memory[i] = "";
     }
 
-    /** Convierte el contenido visible de la pila a un string legible. */
     private String buildStackString(BCP bcp) {
         if (bcp.getStack() == null || bcp.getStack().isEmpty()) return "[]";
         int[] vals = bcp.getStack().getValues();
@@ -98,7 +80,6 @@ public class RAM {
         return sb.append("]").toString();
     }
 
-    /** Convierte la lista de archivos abiertos a string. */
     private String buildFilesString(BCP bcp) {
         if (bcp.getOpenFiles() == null || bcp.getOpenFiles().isEmpty()) return "(ninguno)";
         return String.join(", ", bcp.getOpenFiles());

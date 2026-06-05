@@ -7,6 +7,7 @@ import com.mycompany.pyso.Classes.Process.JobQueue;
 import com.mycompany.pyso.Classes.Process.ReadyQueue;
 import com.mycompany.pyso.Classes.Process.WaitingQueue;
 import com.mycompany.pyso.Classes.Memory.Disk;
+import com.mycompany.pyso.Classes.Memory.VirtualMemory;
 import com.mycompany.pyso.Classes.Memory.RAM;
 import com.mycompany.pyso.Classes.Process.Process;
 import com.mycompany.pyso.Classes.Process.ProcessState;
@@ -26,15 +27,17 @@ public class Scheduler {
     private final WaitingQueue waitingQueue;
     private final RAM  ram;
     private final Disk disk;
+    private final VirtualMemory virtualMemory;
     private final long simulatorStartMillis;
     private int pidCounter = 0;
     private int nextFreeAddress;
 
-    private static final int KERNEL_SIZE = 20;
+    private static final int KERNEL_SIZE = 150;
 
     public Scheduler(RAM ram, Disk disk, long simulatorStartMillis) {
         this.ram  = ram;
         this.disk = disk;
+        this.virtualMemory = new VirtualMemory();
         this.simulatorStartMillis = simulatorStartMillis;
         this.jobQueue    = new JobQueue();
         this.readyQueue  = new ReadyQueue();
@@ -91,7 +94,11 @@ public class Scheduler {
         int instrCount = process.getInstructions().size();
         int base = findFreeBlock(instrCount);
 
-        if (base == -1) return false;
+        if (base == -1) {
+            virtualMemory.swapOut(process);
+            process.getBcp().setState(ProcessState.WAITING);
+            return false;
+        }
 
         int limit = base + instrCount;
         nextFreeAddress = limit;
@@ -112,6 +119,7 @@ public class Scheduler {
         readyQueue.enqueue(process);
         return true;
     }
+
 
     public Process nextToRun() {
         return readyQueue.dequeue();
@@ -150,7 +158,28 @@ public class Scheduler {
             nextFreeAddress = base;
         }
 
+        // Intenta cargar el siguiente proceso en swap a RAM
+        tryLoadFromSwap();
         tryLoadNewProcesses();
+    }
+    
+    public void tryLoadFromSwap() {
+        while (!virtualMemory.isEmpty()) {
+            VirtualMemory.SwapEntry entry = virtualMemory.swapInNext();
+            if (entry == null) break;
+            Process p = jobQueue.getAll().stream()
+                .filter(proc -> proc.getPID() == entry.pid)
+                .findFirst().orElse(null);
+
+            if (p == null) continue;
+
+            p.getBcp().setState(ProcessState.NEW); 
+            boolean loaded = admitToRAM(p);
+            if (!loaded) {
+                virtualMemory.swapOut(p);
+                break; 
+            }
+        }
     }
 
     public void tryLoadNewProcesses() {
@@ -202,6 +231,7 @@ public class Scheduler {
     public WaitingQueue getWaitingQueue()       { return waitingQueue; }
     public RAM getRam()                         { return ram; }
     public Disk getDisk()                       { return disk; }
+    public VirtualMemory getVirtualMemory() { return virtualMemory; }
     public long getSimulatorStartMillis()       { return simulatorStartMillis; }
     public static int getKERNEL_SIZE()          { return KERNEL_SIZE; }
 }
