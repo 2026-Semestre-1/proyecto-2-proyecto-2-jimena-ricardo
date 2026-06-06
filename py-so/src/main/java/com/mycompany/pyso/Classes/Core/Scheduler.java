@@ -27,7 +27,6 @@ public class Scheduler {
     private final WaitingQueue waitingQueue;
     private final RAM  ram;
     private final Disk disk;
-    private final VirtualMemory virtualMemory;
     private final long simulatorStartMillis;
     private int pidCounter = 0;
     private int nextFreeAddress;
@@ -37,7 +36,6 @@ public class Scheduler {
     public Scheduler(RAM ram, Disk disk, long simulatorStartMillis) {
         this.ram  = ram;
         this.disk = disk;
-        this.virtualMemory = new VirtualMemory();
         this.simulatorStartMillis = simulatorStartMillis;
         this.jobQueue    = new JobQueue();
         this.readyQueue  = new ReadyQueue();
@@ -64,10 +62,10 @@ public class Scheduler {
         process.setPID(pid);
         process.setName(name);
         process.setBcp(bcp);
+        process.setState(ProcessState.NEW);
         process.setInstructions(instructions);
         process.setDiskAddress(diskAddress);
         process.setDiskSize(instructions.size());
-        process.getBcp().setState(ProcessState.NEW);
 
         jobQueue.add(process);
 
@@ -95,8 +93,9 @@ public class Scheduler {
         int base = findFreeBlock(instrCount);
 
         if (base == -1) {
-            virtualMemory.swapOut(process);
+            disk.swapOut(process);
             process.getBcp().setState(ProcessState.WAITING);
+            process.setState(ProcessState.WAITING);
             return false;
         }
 
@@ -115,7 +114,7 @@ public class Scheduler {
             ram.getMemory()[base + i] = name + " - " + instr;
         }
 
-        process.getBcp().setState(ProcessState.READY);
+        process.setState(ProcessState.READY);
         readyQueue.enqueue(process);
         return true;
     }
@@ -147,6 +146,7 @@ public class Scheduler {
 
     public void terminateProcess(OSProcess process) {
         process.getBcp().markTerminated(simulatorStartMillis);
+        process.setState(ProcessState.TERMINATED);
 
         int base  = process.getBaseAddress();
         int limit = process.getLimitAddress();
@@ -158,36 +158,33 @@ public class Scheduler {
             nextFreeAddress = base;
         }
 
-        // Intenta cargar el siguiente proceso en swap a RAM
         tryLoadFromSwap();
         tryLoadNewProcesses();
     }
     
     public void tryLoadFromSwap() {
-        while (!virtualMemory.isEmpty()) {
-            VirtualMemory.SwapEntry entry = virtualMemory.swapInNext();
+        while (!disk.isSwapEmpty()) {
+            VirtualMemory.SwapEntry entry = disk.swapInNext();
             if (entry == null) break;
             OSProcess p = jobQueue.getAll().stream()
                 .filter(proc -> proc.getPID() == entry.pid)
                 .findFirst().orElse(null);
-
             if (p == null) continue;
-
-            p.getBcp().setState(ProcessState.NEW); 
+            p.setState(ProcessState.NEW);
             boolean loaded = admitToRAM(p);
             if (!loaded) {
-                virtualMemory.swapOut(p);
-                break; 
+                disk.swapOut(p);
+                break;
             }
         }
-    }
+}
 
     public void tryLoadNewProcesses() {
         for (OSProcess p : jobQueue.getAll()) {
             if (p.getBcp().getState() == ProcessState.NEW) {
                 boolean loaded = admitToRAM(p);
                 if (loaded) {
-                    p.getBcp().setState(ProcessState.READY);
+                    p.setState(ProcessState.READY);
                 }
             }
         }
@@ -231,7 +228,6 @@ public class Scheduler {
     public WaitingQueue getWaitingQueue()       { return waitingQueue; }
     public RAM getRam()                         { return ram; }
     public Disk getDisk()                       { return disk; }
-    public VirtualMemory getVirtualMemory() { return virtualMemory; }
     public long getSimulatorStartMillis()       { return simulatorStartMillis; }
     public static int getKERNEL_SIZE()          { return KERNEL_SIZE; }
 }
