@@ -1,0 +1,668 @@
+@startuml
+' ============================================
+' CONFIGURACIÓN
+' ============================================
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #F5F5F5
+    BorderColor #2C3E50
+    ArrowColor #3498DB
+}
+
+left to right direction
+
+' ============================================
+' PAQUETE: com.mycompany.pyso
+' ============================================
+package "com.mycompany.pyso" #E8F4FD {
+    
+    class OperatingSystem {
+        - cpus: List<CPU>
+        - dispatchers: List<Dispatcher>
+        - memory: RAM
+        - disk: Disk
+        - scheduler: Scheduler
+        - strategy: SchedulerStrategy
+        - interruptHandlers: List<InterruptHandler>
+        - swingTimer: Timer
+        - isRunning: boolean
+        - globalClock: int
+        - simulatorStartMillis: long
+        - gui: UI
+        --
+        + OperatingSystem(UI, int)
+        + reset(int, int, int, SchedulerStrategy): void
+        + loadProcess(String): OSProcess
+        + run(boolean): void
+        + cpuCycle(): void
+        + stop(): void
+        - tick(): void
+        - preempt(Dispatcher, CPU): void
+        - refreshKernel(): void
+        + getCpu(): CPU
+        + getAllCpus(): List<CPU>
+        + getMemory(): RAM
+        + getDisk(): Disk
+        + getScheduler(): Scheduler
+        + isRunning(): boolean
+        + getGlobalClock(): int
+    }
+    
+    class PYSO {
+        + main(String[]): void
+    }
+}
+
+' ============================================
+' PAQUETE: com.mycompany.pyso.Classes.Core
+' ============================================
+package "com.mycompany.pyso.Classes.Core" #FFF3E0 {
+    
+    class CPU {
+        - id: int
+        - currentProcess: OSProcess
+        - AC: int
+        - PC: int
+        - IR: String
+        - AX: int
+        - BX: int
+        - CX: int
+        - DX: int
+        - overflowFlag: boolean
+        - equalFlag: boolean
+        --
+        + CPU()
+        + execute(Instruction): void
+        + getRegisterValue(int): int
+        + setRegisterValue(int, int): void
+        + getAC(): int
+        + getPC(): int
+        + setPC(int): void
+        + getIR(): String
+        + setIR(String): void
+        + getAX(): int
+        + getBX(): int
+        + getCX(): int
+        + getDX(): int
+        + getId(): int
+        + setId(int): void
+        + getCurrentProcess(): OSProcess
+        + setCurrentProcess(OSProcess): void
+    }
+    
+    class Instruction {
+        + {static} TYPE_LOAD: int
+        + {static} TYPE_STORE: int
+        + {static} TYPE_MOV: int
+        + {static} TYPE_SUB: int
+        + {static} TYPE_ADD: int
+        + {static} TYPE_INC: int
+        + {static} TYPE_DEC: int
+        + {static} TYPE_SWAP: int
+        + {static} TYPE_INT: int
+        + {static} TYPE_JMP: int
+        + {static} TYPE_CMP: int
+        + {static} TYPE_JE: int
+        + {static} TYPE_JNE: int
+        + {static} TYPE_PUSH: int
+        + {static} TYPE_POP: int
+        + {static} TYPE_PARAM: int
+        + {static} REG_AX: int
+        + {static} REG_BX: int
+        + {static} REG_CX: int
+        + {static} REG_DX: int
+        + {static} REG_NONE: int
+        - type: int
+        - register: int
+        - register2: int
+        - isRegToReg: boolean
+        - value: int
+        - params: int[]
+        - interruptCode: String
+        - instruction: String
+        - instruction_bin: String
+        --
+        + Instruction(int, int, String, int)
+        + Instruction(int, int, String)
+        + Instruction(int, int, int, String)
+        + Instruction(int, String)
+        + Instruction(int, int, String, boolean)
+        + Instruction(int, String, String, boolean)
+        + Instruction(int, int[], String)
+        + getType(): int
+        + getRegister(): int
+        + getRegister2(): int
+        + isIsRegToReg(): boolean
+        + getValue(): int
+        + getParams(): int[]
+        + getInterruptCode(): String
+        + getInstruction(): String
+        + getInstruction_bin(): String
+        + static intTo8Bits(int): String
+    }
+    
+    class Scheduler {
+        - jobQueue: JobQueue
+        - readyQueue: ReadyQueue
+        - waitingQueue: WaitingQueue
+        - ram: RAM
+        - disk: Disk
+        - virtualMemory: VirtualMemory
+        - simulatorStartMillis: long
+        - pidCounter: int
+        - nextFreeAddress: int
+        --
+        + Scheduler(RAM, Disk, long)
+        + loadProcess(String): OSProcess
+        - linkBCP(OSProcess): void
+        + admitToRAM(OSProcess): boolean
+        + nextToRun(): OSProcess
+        + hasNewProcesses(): boolean
+        + hasProcessReady(): boolean
+        + moveToWaiting(OSProcess): void
+        + releaseFromWaiting(int): void
+        + terminateProcess(OSProcess): void
+        + tryLoadFromSwap(): void
+        + tryLoadNewProcesses(): void
+        + allTerminated(): boolean
+        - findFreeBlock(int): int
+        - extractName(String): String
+        + getReadyQueue(): ReadyQueue
+        + getJobQueue(): JobQueue
+        + getWaitingQueue(): WaitingQueue
+        + getRam(): RAM
+        + getVirtualMemory(): VirtualMemory
+    }
+}
+
+' ============================================
+' PAQUETE: com.mycompany.pyso.Classes.Process
+' ============================================
+package "com.mycompany.pyso.Classes.Process" #E8F5E9 {
+    
+    interface IProcessQueue {
+        + enqueue(OSProcess): void
+        + dequeue(): OSProcess
+        + hasNext(): boolean
+        + count(): int
+        + getAll(): List<OSProcess>
+        + isEmpty(): boolean
+    }
+    
+    class OSProcess {
+        - PID: int
+        - name: String
+        - state: ProcessState
+        - baseAddress: int
+        - limitAddress: int
+        - diskAddress: int
+        - diskSize: int
+        - bcp: BCP
+        - instructions: List<Instruction>
+        - startTime: long
+        - endTime: long
+        - cpuCyclesUsed: int
+        - openFiles: List<String>
+        --
+        + OSProcess()
+        + markStarted(long): void
+        + restoreIntoCPU(CPU): void
+        + saveFromCPU(CPU, String): void
+        + getProcessState(): ProcessState
+        + getProgramCounter(): int
+        + getInstructionRegister(): String
+        + getAC(): int
+        + getAX(): int
+        + getBX(): int
+        + getCX(): int
+        + getDX(): int
+        + isTerminated(): boolean
+        + markEnded(): void
+        + getTurnaroundTime(): long
+        + getBurstTime(): int
+        + getPID(): int
+        + getName(): String
+        + getState(): ProcessState
+        + setState(ProcessState): void
+        + getBaseAddress(): int
+        + setBaseAddress(int): void
+        + getLimitAddress(): int
+        + setLimitAddress(int): void
+        + getBcp(): BCP
+        + setBcp(BCP): void
+        + getInstructions(): List<Instruction>
+    }
+    
+    class BCP {
+        - PID: int
+        - processName: String
+        - state: ProcessState
+        - PC: int
+        - memory_limit: int
+        - IR: String
+        - AC: int
+        - AX: int
+        - BX: int
+        - CX: int
+        - DX: int
+        - baseAddress: int
+        - limitAddress: int
+        - stack: ProcessStack
+        - stackPointer: int
+        - arrivalMillis: long
+        - startMillis: long
+        - endMillis: long
+        - cpuCyclesUsed: int
+        - openFiles: List<String>
+        - priority: int
+        - nextBCP: BCP
+        --
+        + BCP(int, String, int, int, int)
+        + saveFromCPU(CPU, String): void
+        + restoreIntoCPU(CPU): void
+        + start(): void
+        + markArrival(long): void
+        + markStarted(long): void
+        + markTerminated(long): void
+        + getDurationSeconds(): long
+        + formatElapsed(long): String
+        + setLimit(int): void
+        + getProgramCounter(): int
+        + getInstructionRegister(): String
+        + setStartTime(long): void
+        + getStartTime(): long
+        + setEndTime(long): void
+        + getEndTime(): long
+        + getPID(): int
+        + getProcessName(): String
+        + getState(): ProcessState
+        + setState(ProcessState): void
+        + getPC(): int
+        + getIR(): String
+        + getAC(): int
+        + getAX(): int
+        + getBX(): int
+        + getCX(): int
+        + getDX(): int
+        + getBaseAddress(): int
+        + getLimitAddress(): int
+        + getStack(): ProcessStack
+        + getCpuCyclesUsed(): int
+        + getPriority(): int
+        + getNextBCP(): BCP
+        + setNextBCP(BCP): void
+    }
+    
+    enum ProcessState {
+        NEW
+        READY
+        RUNNING
+        WAITING
+        TERMINATED
+    }
+    
+    class ProcessStack {
+        - stack: int[]
+        - stackPointer: int
+        - ownerPID: int
+        --
+        + ProcessStack(int)
+        + push(int): boolean
+        + pop(): int
+        + peek(): int
+        + getValues(): int[]
+        + isOverflow(): boolean
+        + isEmpty(): boolean
+        + size(): int
+        + clear(): void
+        + getOwnerPID(): int
+    }
+    
+    class Dispatcher {
+        - cpu: CPU
+        - scheduler: Scheduler
+        - interruptHandler: InterruptHandler
+        - simulatorStartMillis: long
+        - currentProcess: OSProcess
+        --
+        + Dispatcher(CPU, Scheduler, InterruptHandler, long)
+        + CPUcycle(): Integer
+        + terminate(OSProcess): void
+        + moveToWaiting(OSProcess): void
+        + releaseFromWaiting(int): void
+        + getCurrentProcess(): OSProcess
+        + setCurrentProcess(OSProcess): void
+        + getCpu(): CPU
+    }
+    
+    class ReadyQueue implements IProcessQueue {
+        - queue: Queue<OSProcess>
+        --
+        + enqueue(OSProcess): void
+        + dequeue(): OSProcess
+        + peek(): OSProcess
+        + remove(OSProcess): boolean
+        + getAll(): List<OSProcess>
+        + isEmpty(): boolean
+        + hasNext(): boolean
+        + size(): int
+        + clear(): void
+        + contains(OSProcess): boolean
+    }
+    
+    class JobQueue {
+        - jobs: List<OSProcess>
+        --
+        + JobQueue()
+        + add(OSProcess): void
+        + remove(OSProcess): void
+        + getByPID(int): OSProcess
+        + getAll(): List<OSProcess>
+        + count(): int
+        + isEmpty(): boolean
+    }
+    
+    class WaitingQueue {
+        - queue: List<OSProcess>
+        --
+        + WaitingQueue()
+        + enqueue(OSProcess): void
+        + release(int): OSProcess
+        + isEmpty(): boolean
+        + count(): int
+        + getAll(): List<OSProcess>
+    }
+}
+
+' ============================================
+' PAQUETE: com.mycompany.pyso.Classes.Memory
+' ============================================
+package "com.mycompany.pyso.Classes.Memory" #FFEBEE {
+    
+    interface MemoryManager {
+        + allocate(OSProcess, String[]): int
+        + free(OSProcess, String[]): void
+        + getStrategyName(): String
+    }
+    
+    class RAM {
+        - memory: String[]
+        - positionUser: int
+        --
+        + {static} KERNEL_SIZE: int
+        + {static} KERNEL_HEADER: int
+        + RAM(int)
+        + updateKernelFromBCP(BCP): void
+        + updateAllBCPsInKernel(List<BCP>): void
+        - writeBCPSlot(BCP, int): void
+        - safeWrite(int, String): void
+        - buildStackString(BCP): String
+        - buildFilesString(BCP): String
+        + saveInstruction(String): void
+        + getValue(int): String
+        + getMemory(): String[]
+        + setMemory(String[]): void
+        + getPositionUser(): int
+        + setPositionUser(int): void
+    }
+    
+    class Disk {
+        - storage: String[]
+        - nextFreePosition: int
+        - fileIndex: Map<String, DiskEntry>
+        - indexReserved: int
+        - swapList: List<SwapEntry>
+        --
+        + Disk()
+        + Disk(int)
+        + save(String, List<Instruction>): int
+        + read(int, int): List<String>
+        + delete(String): boolean
+        + exists(String): boolean
+        + getEntry(String): DiskEntry
+        + hasSpace(int): boolean
+        + resize(int): void
+        + swapOut(OSProcess): void
+        + swapIn(int): SwapEntry
+        + swapInNext(): SwapEntry
+        + isInSwap(int): boolean
+        + getSwapList(): List<SwapEntry>
+        + isSwapEmpty(): boolean
+        + getSwapSize(): int
+        - writeIndexToStorage(): void
+        - updateSwapIndex(): void
+        + getStorage(): String[]
+        + getIndexReserved(): int
+    }
+    
+    class DiskEntry {
+        + name: String
+        + address: int
+        + size: int
+        --
+        + DiskEntry(String, int, int)
+        + toString(): String
+    }
+    
+    class SwapEntry {
+        + pid: int
+        + processName: String
+        + instructionCount: int
+        + diskAddress: int
+        --
+        + SwapEntry(int, String, int, int)
+        + toString(): String
+    }
+    
+    class VirtualMemory {
+        -- Esta clase ya no se usa directamente --
+    }
+}
+
+' ============================================
+' PAQUETE: com.mycompany.pyso.Classes.Interrupts
+' ============================================
+package "com.mycompany.pyso.Classes.Interrupts" #FFF8E1 {
+    
+    class InterruptHandler {
+        - cpu: CPU
+        - disk: Disk
+        - consoleCallback: Consumer<String>
+        --
+        + InterruptHandler(CPU, Disk, Consumer)
+        + handle(Instruction, OSProcess, Consumer): void
+        + executePush(Instruction, OSProcess): void
+        + executePop(Instruction, OSProcess): void
+        + executeParam(Instruction, OSProcess): void
+    }
+}
+
+' ============================================
+' PAQUETE: com.mycompany.pyso.Classes.FileHandler
+' ============================================
+package "com.mycompany.pyso.Classes.FileHandler" #E0F2F1 {
+    
+    class LoadASM {
+        - instructions: List<Instruction>
+        - extensionError: boolean
+        - formatError: boolean
+        --
+        + LoadASM()
+        + readFile(String): void
+        - parseLine(String): Instruction
+        - parseMOV(String): Instruction
+        - parseINT(String): Instruction
+        - parsePARAM(String): Instruction
+        - parseJMP(String): Instruction
+        - parseCMP(String): Instruction
+        - parseSWAP(String): Instruction
+        + getInstructions(): List<Instruction>
+        + isExtensionError(): boolean
+        + isFormatError(): boolean
+    }
+    
+    class LoadXML {
+        - ramSize: int
+        - diskSize: int
+        - loadError: boolean
+        --
+        + LoadXML()
+        + readFile(String): void
+        + getRamSize(): int
+        + getDiskSize(): int
+        + isLoadError(): boolean
+    }
+}
+
+' ============================================
+' PAQUETE: com.mycompany.pyso.Scheduler
+' ============================================
+package "com.mycompany.pyso.Scheduler" #F3E5F5 {
+    
+    interface SchedulerStrategy {
+        + selectNext(List<OSProcess>): OSProcess
+        + onTick(OSProcess, List<OSProcess>): void
+        + shouldPreempt(OSProcess, List<OSProcess>): boolean
+        + getName(): String
+    }
+    
+    class FCFS implements SchedulerStrategy {
+        + selectNext(List<OSProcess>): OSProcess
+        + onTick(OSProcess, List<OSProcess>): void
+        + shouldPreempt(OSProcess, List<OSProcess>): boolean
+        + getName(): String
+    }
+    
+    class RoundRobin implements SchedulerStrategy {
+        - quantum: int
+        - ticksUsed: int
+        --
+        + RoundRobin(int)
+        + selectNext(List<OSProcess>): OSProcess
+        + onTick(OSProcess, List<OSProcess>): void
+        + shouldPreempt(OSProcess, List<OSProcess>): boolean
+        + getName(): String
+        + resetTicks(): void
+        + getTicksUsed(): int
+    }
+}
+
+' ============================================
+' PAQUETE: com.mycompany.pyso.Interface
+' ============================================
+package "com.mycompany.pyso.Interface" #FCE4EC {
+    
+    class UI extends JFrame {
+        - os: OperatingSystem
+        - highlightedRow: int
+        - stepModeActive: boolean
+        - autoExecutionTimer: Timer
+        - tabbedPane: JTabbedPane
+        - tblProcess: JTable
+        - tblRAM: JTable
+        - tblDisk: JTable
+        - consoleOutput: JTextPane
+        - consoleInput: JTextField
+        - bcpModels: Map<Integer, DefaultTableModel>
+        - cpuCards: List<JPanel>
+        - cpuModels: List<DefaultTableModel>
+        --
+        + UI()
+        + refreshAll(): void
+        + refreshProcessTable(): void
+        + refreshRAMTable(): void
+        + refreshDiskTable(): void
+        + refreshCPUCards(): void
+        + refreshBCPCards(): void
+        + printConsole(String): void
+        + printConsole(String, Color): void
+        + highlightRow(int): void
+        + registerBCPCard(OSProcess): void
+        + rebuildCPUCards(int): void
+        - buildFrame(): void
+        - buildToolBar(): JPanel
+        - buildTabbedPane(): JTabbedPane
+        - buildSistemaTab(): JPanel
+        - buildCPUsTab(): JPanel
+        - buildAlgoritmosTab(): JPanel
+        - buildConsolaTab(): JPanel
+        - buildConfigTab(): JPanel
+        - doLoad(): void
+        - doRun(): void
+        - doEnterStepMode(): void
+        - doStepOnce(): void
+        - doClear(): void
+        - doConsoleSend(): void
+        - doApplyConfig(): void
+        - showStatistics(): void
+    }
+    
+    class CPUPanel extends JPanel {
+        - cpuId: int
+        - processNameLabel: JLabel
+        - stateLabel: JLabel
+        - pcLabel: JLabel
+        - irLabel: JLabel
+        - acLabel: JLabel
+        - axLabel: JLabel
+        - bxLabel: JLabel
+        - cxLabel: JLabel
+        - dxLabel: JLabel
+        - progressBar: JProgressBar
+        --
+        + CPUPanel(int)
+        + update(CPU): void
+    }
+}
+
+' ============================================
+' RELACIONES ENTRE PAQUETES
+' ============================================
+
+UI --> OperatingSystem : usa
+
+OperatingSystem *-- "1..4" CPU
+OperatingSystem *-- "1..4" Dispatcher
+OperatingSystem *-- RAM
+OperatingSystem *-- Disk
+OperatingSystem *-- Scheduler
+OperatingSystem --> SchedulerStrategy : usa
+OperatingSystem --> UI
+
+Dispatcher *-- CPU
+Dispatcher --> Scheduler
+Dispatcher --> InterruptHandler
+Dispatcher --> OSProcess
+
+Scheduler *-- JobQueue
+Scheduler *-- ReadyQueue
+Scheduler *-- WaitingQueue
+Scheduler --> RAM
+Scheduler --> Disk
+
+ReadyQueue ..|> IProcessQueue
+
+FCFS ..|> SchedulerStrategy
+RoundRobin ..|> SchedulerStrategy
+
+CPU --> OSProcess : ejecuta
+
+OSProcess *-- BCP
+OSProcess *-- Instruction
+
+BCP *-- ProcessStack
+BCP --> BCP : nextBCP
+
+Disk *-- DiskEntry
+Disk *-- SwapEntry
+
+LoadASM ..> Instruction : crea
+
+InterruptHandler --> CPU
+InterruptHandler --> Disk
+
+CPUPanel --> CPU : actualiza
+
+@enduml
