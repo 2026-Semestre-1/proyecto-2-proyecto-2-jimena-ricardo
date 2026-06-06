@@ -12,7 +12,6 @@ import com.mycompany.pyso.Classes.Interrupts.InterruptHandler;
  *
  * @author jimen
  */
-
 public class Dispatcher {
 
     private final CPU cpu;
@@ -23,30 +22,24 @@ public class Dispatcher {
     private OSProcess currentProcess;
 
     public Dispatcher(CPU cpu, Scheduler scheduler,
-                      InterruptHandler interruptHandler, long simulatorStartMillis) {
-        this.cpu = cpu;
-        this.scheduler = scheduler;
-        this.interruptHandler = interruptHandler;
+                      InterruptHandler interruptHandler,
+                      long simulatorStartMillis) {
+        this.cpu                  = cpu;
+        this.scheduler            = scheduler;
+        this.interruptHandler     = interruptHandler;
         this.simulatorStartMillis = simulatorStartMillis;
-        this.currentProcess = null;
+        this.currentProcess       = null;
     }
 
     public Integer CPUcycle() {
-        if (currentProcess == null) {
-            if (!scheduler.hasProcessReady()) return null;
-
-            currentProcess = scheduler.nextToRun();
-            currentProcess.getBcp().markStarted(simulatorStartMillis);
-            currentProcess.getBcp().setState(ProcessState.RUNNING);
-            currentProcess.getBcp().restoreIntoCPU(cpu);
-            cpu.setPC(currentProcess.getBcp().getBaseAddress());
-        }
+        if (currentProcess == null) return null;
 
         OSProcess p = currentProcess;
         scheduler.getRam().updateKernelFromBCP(p.getBcp());
 
         int pc    = cpu.getPC();
         int index = pc - p.getBcp().getBaseAddress();
+
         if (index < 0 || index >= p.getInstructions().size()) {
             terminate(p);
             return pc;
@@ -59,7 +52,6 @@ public class Dispatcher {
 
             case Instruction.TYPE_INT -> {
                 interruptHandler.handle(inst, p, this::terminate);
-
                 if (currentProcess != null) {
                     p.getBcp().saveFromCPU(cpu, inst.getInstruction());
                     p.getBcp().setCpuCyclesUsed(p.getBcp().getCpuCyclesUsed() + 1);
@@ -68,20 +60,9 @@ public class Dispatcher {
                 return pc;
             }
 
-            case Instruction.TYPE_PUSH -> {
-                interruptHandler.executePush(inst, p);
-                cpu.setPC(pc + 1);
-            }
-
-            case Instruction.TYPE_POP -> {
-                interruptHandler.executePop(inst, p);
-                cpu.setPC(pc + 1);
-            }
-
-            case Instruction.TYPE_PARAM -> {
-                interruptHandler.executeParam(inst, p);
-                cpu.setPC(pc + 1);
-            }
+            case Instruction.TYPE_PUSH  -> { interruptHandler.executePush(inst, p);  cpu.setPC(pc + 1); }
+            case Instruction.TYPE_POP   -> { interruptHandler.executePop(inst, p);   cpu.setPC(pc + 1); }
+            case Instruction.TYPE_PARAM -> { interruptHandler.executeParam(inst, p); cpu.setPC(pc + 1); }
 
             default -> {
                 cpu.execute(inst);
@@ -96,6 +77,7 @@ public class Dispatcher {
         p.getBcp().saveFromCPU(cpu, inst.getInstruction());
         p.getBcp().setCpuCyclesUsed(p.getBcp().getCpuCyclesUsed() + 1);
         scheduler.getRam().updateKernelFromBCP(p.getBcp());
+
         int newIndex = cpu.getPC() - p.getBcp().getBaseAddress();
         if (newIndex >= p.getInstructions().size()) {
             terminate(p);
@@ -103,7 +85,7 @@ public class Dispatcher {
 
         return pc;
     }
-
+    
     public void terminate(OSProcess process) {
         scheduler.terminateProcess(process);
         currentProcess = null;
@@ -115,10 +97,11 @@ public class Dispatcher {
         currentProcess = null;
     }
 
-    public void releaseFromWaiting(int PID) {
-        scheduler.releaseFromWaiting(PID);
+    public void releaseFromWaiting(int pid) {
+        scheduler.releaseFromWaiting(pid);
     }
 
-    public OSProcess getCurrentProcess()      { return currentProcess; }
-    public void setCurrentProcess(OSProcess p){ this.currentProcess = p; }
+    public OSProcess getCurrentProcess()        { return currentProcess; }
+    public void setCurrentProcess(OSProcess p)  { this.currentProcess = p; }
+    public CPU getCpu()                         { return cpu; }
 }

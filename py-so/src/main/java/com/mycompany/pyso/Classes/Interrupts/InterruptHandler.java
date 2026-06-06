@@ -16,7 +16,6 @@ import java.util.List;
  *
  * @author jimen
  */
-
 public class InterruptHandler {
 
     private final CPU  cpu;
@@ -37,7 +36,8 @@ public class InterruptHandler {
         this.console = console;
     }
 
-    public void handle(Instruction inst, OSProcess process, TerminationCallback onTerminate) {
+    public void handle(Instruction inst, OSProcess process,
+                       TerminationCallback onTerminate) {
         String code = inst.getInterruptCode();
         if (code == null) return;
 
@@ -50,50 +50,42 @@ public class InterruptHandler {
         }
     }
 
+
     private void handle_INT20H(OSProcess process, TerminationCallback onTerminate) {
         onTerminate.terminate(process);
     }
 
+
     private void handle_INT10H(OSProcess process) {
         int dxValue = cpu.getDX();
-        if (console != null) {
-            console.print("[PID " + process.getBcp().getPID()
-                + " | " + process.getName() + "] DX = " + dxValue);
-        }
+        log(process, "DX = " + dxValue);
         cpu.setPC(cpu.getPC() + 1);
         process.getBcp().saveFromCPU(cpu, cpu.getIR());
     }
 
 
     private void handle_INT09H(OSProcess process) {
-        if (console != null) {
-            console.print("[PID " + process.getBcp().getPID()
-                + "] INT 09H: entrada simulada = 0");
-        }
         cpu.setDX(0);
+        log(process, "INT 09H: entrada simulada = 0");
         cpu.setPC(cpu.getPC() + 1);
         process.getBcp().saveFromCPU(cpu, cpu.getIR());
     }
 
 
     private void handle_INT21H(OSProcess process) {
-        int ah= cpu.getAX();  
-        int dx= cpu.getDX();   
+        int ah       = cpu.getAX(); 
+        int dx       = cpu.getDX(); 
         String fileName = resolveFileName(process, dx);
 
         switch (ah) {
             case 0x3C -> createFile(process, fileName);
-            case 0x3D -> openFile(process, fileName); 
-            case 0x4D -> readFile(process, fileName); 
-            case 0x40 -> writeFile(process, fileName);  
-            case 0x41 -> deleteFile(process, fileName);  
-            default -> {
-                if (console != null) {
-                    console.print("INT 21H: código AH desconocido: "
-                        + Integer.toHexString(ah).toUpperCase() + "H"
-                        + " [PID " + process.getBcp().getPID() + "]");
-                }
-            }
+            case 0x3D -> openFile  (process, fileName);
+            case 0x4D -> readFile  (process, fileName); 
+            case 0x40 -> writeFile (process, fileName); 
+            case 0x41 -> deleteFile(process, fileName);
+            default   -> log(process,
+                "INT 21H: código AH desconocido: "
+                + Integer.toHexString(ah).toUpperCase() + "H");
         }
 
         cpu.setPC(cpu.getPC() + 1);
@@ -108,15 +100,14 @@ public class InterruptHandler {
         disk.save(fileName, new java.util.ArrayList<>());
         log(process, "INT 21H 3CH: archivo creado — " + fileName);
     }
+
     private void openFile(OSProcess process, String fileName) {
         if (!disk.exists(fileName)) {
             log(process, "INT 21H 3DH: archivo no existe — " + fileName);
             return;
         }
         List<String> openFiles = process.getBcp().getOpenFiles();
-        if (!openFiles.contains(fileName)) {
-            openFiles.add(fileName);
-        }
+        if (!openFiles.contains(fileName)) openFiles.add(fileName);
         log(process, "INT 21H 3DH: archivo abierto — " + fileName);
     }
 
@@ -129,10 +120,8 @@ public class InterruptHandler {
         }
         List<String> content = disk.read(entry.address, Math.min(1, entry.size));
         if (!content.isEmpty() && content.get(0) != null) {
-            // Guardamos el hash del contenido como valor simulado en AL (AC)
-            int simVal = content.get(0).hashCode() & 0xFF;
-            cpu.setAC(simVal);
-            log(process, "INT 21H 4DH: leído de '" + fileName + "' → " + content.get(0));
+            cpu.setAC(content.get(0).hashCode() & 0xFF);
+            log(process, "INT 21H 4DH: leído → " + content.get(0));
         } else {
             cpu.setAC(0);
             log(process, "INT 21H 4DH: archivo vacío — " + fileName);
@@ -144,34 +133,29 @@ public class InterruptHandler {
             log(process, "INT 21H 40H: archivo no encontrado — " + fileName);
             return;
         }
-        int al = cpu.getAC();
-        log(process, "INT 21H 40H: escrito en '" + fileName + "' valor=" + al);
+        log(process, "INT 21H 40H: escrito en '" + fileName + "' valor=" + cpu.getAC());
     }
 
-    /** 41h – Eliminar archivo del disco. */
     private void deleteFile(OSProcess process, String fileName) {
-        boolean deleted = disk.delete(fileName);
-        log(process, deleted
+        boolean ok = disk.delete(fileName);
+        log(process, ok
             ? "INT 21H 41H: archivo eliminado — " + fileName
             : "INT 21H 41H: archivo no encontrado — " + fileName);
     }
+
 
     public boolean executePush(Instruction inst, OSProcess process) {
         int value = cpu.getRegisterValue(inst.getRegister());
         ProcessStack stack = process.getBcp().getStack();
         boolean ok = stack.push(value);
-        if (!ok && console != null) {
-            console.print("PUSH: stack overflow en PID=" + process.getBcp().getPID());
-        }
+        if (!ok) log(process, "PUSH: stack overflow");
         return ok;
     }
 
     public boolean executePop(Instruction inst, OSProcess process) {
         ProcessStack stack = process.getBcp().getStack();
         if (stack.isEmpty()) {
-            if (console != null) {
-                console.print("POP: stack underflow en PID=" + process.getBcp().getPID());
-            }
+            log(process, "POP: stack underflow");
             return false;
         }
         cpu.setRegisterValue(inst.getRegister(), stack.pop());
@@ -183,14 +167,12 @@ public class InterruptHandler {
         if (params == null) return;
         ProcessStack stack = process.getBcp().getStack();
         for (int value : params) {
-            boolean ok = stack.push(value);
-            if (!ok && console != null) {
-                console.print("PARAM: stack overflow en PID=" + process.getBcp().getPID());
+            if (!stack.push(value)) {
+                log(process, "PARAM: stack overflow");
                 break;
             }
         }
     }
-
 
     private String resolveFileName(OSProcess process, int dx) {
         List<String> files = process.getBcp().getOpenFiles();
@@ -204,11 +186,11 @@ public class InterruptHandler {
     }
 
     private void log(OSProcess process, String msg) {
-        if (console != null) {
-            console.print("[PID " + process.getBcp().getPID() + "] " + msg);
-        }
+        if (console != null)
+            console.print("[PID " + process.getBcp().getPID()
+                + " | " + process.getName() + "] " + msg);
     }
 
-    public void setConsole(ConsoleCallback console) { this.console = console; }
-    public ConsoleCallback getConsole()             { return console; }
+    public void setConsole(ConsoleCallback c) { this.console = c; }
+    public ConsoleCallback getConsole()       { return console; }
 }

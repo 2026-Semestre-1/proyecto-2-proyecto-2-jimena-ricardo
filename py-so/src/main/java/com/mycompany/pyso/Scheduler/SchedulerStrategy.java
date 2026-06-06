@@ -8,6 +8,7 @@ import com.mycompany.pyso.Classes.Process.OSProcess;
 import java.util.List;
 
 public interface SchedulerStrategy {
+
     OSProcess selectNext(List<OSProcess> readyQueue);
     void onTick(OSProcess running, List<OSProcess> readyQueue);
     boolean shouldPreempt(OSProcess running, List<OSProcess> readyQueue);

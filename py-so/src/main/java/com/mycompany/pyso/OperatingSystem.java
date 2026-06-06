@@ -19,30 +19,24 @@ import javax.swing.Timer;
 
 public class OperatingSystem {
 
-    // ── Hardware ──────────────────────────────────────────────────────────
-    private final List<CPU>         cpus        = new ArrayList<>();
-    private final List<Dispatcher>  dispatchers = new ArrayList<>();
-    private RAM    memory;
-    private Disk   disk;
+    private final List<CPU>        cpus        = new ArrayList<>();
+    private final List<Dispatcher> dispatchers = new ArrayList<>();
+    private RAM  memory;
+    private Disk disk;
 
-    // ── Software ──────────────────────────────────────────────────────────
-    private Scheduler      scheduler;
-    private VirtualMemory  virtualMemory;
+    private Scheduler         scheduler;
+    private VirtualMemory     virtualMemory;
     private SchedulerStrategy strategy;
 
-    // ── Interrupciones ────────────────────────────────────────────────────
-    private List<InterruptHandler> interruptHandlers = new ArrayList<>();
+    private final List<InterruptHandler> interruptHandlers = new ArrayList<>();
 
-    // ── Simulación ────────────────────────────────────────────────────────
     private Timer   swingTimer;
     private boolean isRunning   = false;
     private int     globalClock = 0;
     private long    simulatorStartMillis;
 
-    // ── UI ────────────────────────────────────────────────────────────────
     private final UI gui;
-
-    // ─────────────────────────────────────────────────────────────────────
+    
     public OperatingSystem(UI gui, int memorySize) {
         this.gui = gui;
         initialize(memorySize, 512, 2, new FCFS());
@@ -57,27 +51,28 @@ public class OperatingSystem {
     public void reset(int memorySize, int diskSize) {
         reset(memorySize, diskSize, 2, new FCFS());
     }
-    
+
     public void reset(int memorySize) {
         reset(memorySize, 512, 2, new FCFS());
     }
 
-    // ─────────────────────────────────────────────────────────────────────
     private void initialize(int memorySize, int diskSize,
                             int numCpus, SchedulerStrategy strat) {
         this.simulatorStartMillis = System.currentTimeMillis();
-        this.strategy = strat;
+        this.strategy      = strat;
+        this.globalClock   = 0;
         this.virtualMemory = new VirtualMemory();
-
-        this.memory = new RAM(memorySize);
-        this.disk = new Disk(diskSize);
-        this.scheduler = new Scheduler(memory, disk, simulatorStartMillis);
+        this.memory        = new RAM(memorySize);
+        this.disk          = new Disk(diskSize);
+        this.scheduler     = new Scheduler(memory, disk, simulatorStartMillis);
 
         cpus.clear();
         dispatchers.clear();
         interruptHandlers.clear();
 
-        for (int i = 0; i < numCpus; i++) {
+        int clampedCpus = Math.max(2, Math.min(4, numCpus));
+
+        for (int i = 0; i < clampedCpus; i++) {
             CPU cpu = new CPU();
             cpu.setId(i + 1);
 
@@ -92,7 +87,6 @@ public class OperatingSystem {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────
     public OSProcess loadProcess(String path) {
         OSProcess process = scheduler.loadProcess(path);
         if (process == null) {
@@ -109,7 +103,6 @@ public class OperatingSystem {
         return process;
     }
 
-    // ─────────────────────────────────────────────────────────────────────
     public void run(boolean stepMode) {
         if (!scheduler.hasProcessReady() && !scheduler.hasNewProcesses()) {
             JOptionPane.showMessageDialog(gui,
@@ -125,161 +118,105 @@ public class OperatingSystem {
 
         isRunning = true;
         swingTimer = new Timer(1000, e -> {
-            if (!isRunning) { 
-                swingTimer.stop(); 
-                return; 
-            }
+            if (!isRunning) { swingTimer.stop(); return; }
             tick();
         });
+        swingTimer.setInitialDelay(0);
         swingTimer.start();
     }
 
-    public void cpuCycle() {
-        run(true);
-    }
+    public void cpuCycle() { run(true); }
 
     public void stop() {
         isRunning = false;
-        if (swingTimer != null) {
-            swingTimer.stop();
-        }
+        if (swingTimer != null) swingTimer.stop();
     }
 
-    // ─────────────────────────────────────────────────────────────────────
     private void tick() {
         globalClock++;
         scheduler.tryLoadNewProcesses();
 
+
         List<Integer> executedPCs = new ArrayList<>();
 
         for (int i = 0; i < dispatchers.size(); i++) {
-            Dispatcher d = dispatchers.get(i);
-            CPU cpu = cpus.get(i);
+            Dispatcher  d   = dispatchers.get(i);
+            CPU         cpu = cpus.get(i);
 
-            // Asignar nuevo proceso si la CPU está libre y hay procesos listos
             if (d.getCurrentProcess() == null && scheduler.hasProcessReady()) {
-                List<OSProcess> readyList = new ArrayList<>(scheduler.getReadyQueue().getAll());
-                OSProcess next = strategy.selectNext(readyList);
+                List<OSProcess> readySnapshot = new ArrayList<>(scheduler.getReadyQueue().getAll());
+                OSProcess next = strategy.selectNext(readySnapshot);
+
                 if (next != null) {
                     scheduler.getReadyQueue().remove(next);
-                    d.setCurrentProcess(next);
+
                     next.setState(ProcessState.RUNNING);
+                    next.getBcp().setState(ProcessState.RUNNING);
                     next.markStarted(simulatorStartMillis);
                     next.restoreIntoCPU(cpu);
                     cpu.setPC(next.getBaseAddress());
+                    d.setCurrentProcess(next);
                 }
             }
 
-            // Ejecutar 1 instrucción
             Integer pc = d.CPUcycle();
-            if (pc != null) {
-                executedPCs.add(pc);
-            }
+            if (pc != null) executedPCs.add(pc);
 
-            // Notificar preemption al algoritmo
             if (d.getCurrentProcess() != null) {
-                List<OSProcess> readyList = new ArrayList<>(scheduler.getReadyQueue().getAll());
-                strategy.onTick(d.getCurrentProcess(), readyList);
-                if (strategy.shouldPreempt(d.getCurrentProcess(), readyList)) {
+                List<OSProcess> readySnapshot = new ArrayList<>(scheduler.getReadyQueue().getAll());
+                strategy.onTick(d.getCurrentProcess(), readySnapshot);
+
+                if (strategy.shouldPreempt(d.getCurrentProcess(), readySnapshot)) {
                     preempt(d, cpu);
                 }
             }
         }
 
-        // Actualizar UI
         if (gui != null) {
             gui.refreshAll();
-            if (!executedPCs.isEmpty()) {
-                gui.highlightRow(executedPCs.get(0));
-            }
+            if (!executedPCs.isEmpty()) gui.highlightRow(executedPCs.get(0));
         }
 
-        // Actualizar kernel en memoria
+        OSProcess cpu0proc = dispatchers.isEmpty() ? null : dispatchers.get(0).getCurrentProcess();
         if (memory != null) {
-            OSProcess currentProc = dispatchers.isEmpty() ? null : dispatchers.get(0).getCurrentProcess();
-            memory.updateKernelFromBCP(currentProc != null ? currentProc.getBcp() : null);
+            memory.updateKernelFromBCP(cpu0proc != null ? cpu0proc.getBcp() : null);
         }
 
-        // Verificar si todos los procesos terminaron
         if (scheduler.allTerminated()) {
             stop();
-            if (memory != null) {
-                memory.updateKernelFromBCP(null);
-            }
+            if (memory != null) memory.updateKernelFromBCP(null);
             if (gui != null) {
                 gui.refreshAll();
+                JOptionPane.showMessageDialog(gui,
+                    "Todos los procesos terminaron.\nCiclos de reloj: " + globalClock,
+                    "Ejecución finalizada", JOptionPane.INFORMATION_MESSAGE);
             }
-            JOptionPane.showMessageDialog(gui,
-                "Todos los procesos terminaron. Ciclos: " + globalClock,
-                "Ejecución finalizada", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void preempt(Dispatcher d, CPU cpu) {
         OSProcess p = d.getCurrentProcess();
         if (p == null) return;
-        
-        p.saveFromCPU(cpu, cpu.getIR());
+
+        p.getBcp().saveFromCPU(cpu, cpu.getIR());
         p.setState(ProcessState.READY);
+        p.getBcp().setState(ProcessState.READY);
         scheduler.getReadyQueue().enqueue(p);
         d.setCurrentProcess(null);
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Getters
-    public CPU getCpu() {
-        return cpus.isEmpty() ? null : cpus.get(0);
-    }
-    
-    public CPU getCpu(int index) {
-        return (index >= 0 && index < cpus.size()) ? cpus.get(index) : null;
-    }
-    
-    public List<CPU> getAllCpus() {
-        return cpus;
-    }
-    
-    public List<Dispatcher> getDispatchers() {
-        return dispatchers;
-    }
-    
-    public RAM getMemory() {
-        return memory;
-    }
-    
-    public Disk getDisk() {
-        return disk;
-    }
-    
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
-    
-    public VirtualMemory getVirtualMemory() {
-        return virtualMemory;
-    }
-    
-    public SchedulerStrategy getStrategy() {
-        return strategy;
-    }
-    
-    public boolean isRunning() {
-        return isRunning;
-    }
-    
-    public int getGlobalClock() {
-        return globalClock;
-    }
-    
-    public long getSimulatorStartMillis() {
-        return simulatorStartMillis;
-    }
-    
-    public InterruptHandler getInterruptHandler() {
-        return interruptHandlers.isEmpty() ? null : interruptHandlers.get(0);
-    }
-    
-    public InterruptHandler getInterruptHandler(int i) {
-        return (i >= 0 && i < interruptHandlers.size()) ? interruptHandlers.get(i) : null;
-    }
+    public CPU getCpu()                       { return cpus.isEmpty() ? null : cpus.get(0); }
+    public CPU getCpu(int i)                  { return (i >= 0 && i < cpus.size()) ? cpus.get(i) : null; }
+    public List<CPU> getAllCpus()             { return cpus; }
+    public List<Dispatcher> getDispatchers()  { return dispatchers; }
+    public RAM getMemory()                    { return memory; }
+    public Disk getDisk()                     { return disk; }
+    public Scheduler getScheduler()           { return scheduler; }
+    public VirtualMemory getVirtualMemory()   { return virtualMemory; }
+    public SchedulerStrategy getStrategy()    { return strategy; }
+    public boolean isRunning()                { return isRunning; }
+    public int getGlobalClock()               { return globalClock; }
+    public long getSimulatorStartMillis()     { return simulatorStartMillis; }
+    public InterruptHandler getInterruptHandler()    { return interruptHandlers.isEmpty() ? null : interruptHandlers.get(0); }
+    public InterruptHandler getInterruptHandler(int i) { return (i >= 0 && i < interruptHandlers.size()) ? interruptHandlers.get(i) : null; }
 }
