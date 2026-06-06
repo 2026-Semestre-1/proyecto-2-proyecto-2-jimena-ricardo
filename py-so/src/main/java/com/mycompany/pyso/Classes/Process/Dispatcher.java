@@ -1,17 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.pyso.Classes.Process;
+
 import com.mycompany.pyso.Classes.Core.CPU;
 import com.mycompany.pyso.Classes.Core.Instruction;
 import com.mycompany.pyso.Classes.Core.Scheduler;
 import com.mycompany.pyso.Classes.Interrupts.InterruptHandler;
 
-/**
- *
- * @author jimen
- */
 public class Dispatcher {
 
     private final CPU cpu;
@@ -24,11 +17,11 @@ public class Dispatcher {
     public Dispatcher(CPU cpu, Scheduler scheduler,
                       InterruptHandler interruptHandler,
                       long simulatorStartMillis) {
-        this.cpu                  = cpu;
-        this.scheduler            = scheduler;
-        this.interruptHandler     = interruptHandler;
+        this.cpu = cpu;
+        this.scheduler = scheduler;
+        this.interruptHandler = interruptHandler;
         this.simulatorStartMillis = simulatorStartMillis;
-        this.currentProcess       = null;
+        this.currentProcess = null;
     }
 
     public Integer CPUcycle() {
@@ -37,10 +30,12 @@ public class Dispatcher {
         OSProcess p = currentProcess;
         scheduler.getRam().updateKernelFromBCP(p.getBcp());
 
-        int pc    = cpu.getPC();
+        int pc = cpu.getPC();
         int index = pc - p.getBcp().getBaseAddress();
 
+        // Verificar si el proceso ya terminó su ejecución
         if (index < 0 || index >= p.getInstructions().size()) {
+            System.out.println("[DISPATCHER] Proceso " + p.getName() + " terminó (fin de instrucciones)");
             terminate(p);
             return pc;
         }
@@ -60,9 +55,18 @@ public class Dispatcher {
                 return pc;
             }
 
-            case Instruction.TYPE_PUSH  -> { interruptHandler.executePush(inst, p);  cpu.setPC(pc + 1); }
-            case Instruction.TYPE_POP   -> { interruptHandler.executePop(inst, p);   cpu.setPC(pc + 1); }
-            case Instruction.TYPE_PARAM -> { interruptHandler.executeParam(inst, p); cpu.setPC(pc + 1); }
+            case Instruction.TYPE_PUSH -> { 
+                interruptHandler.executePush(inst, p);  
+                cpu.setPC(pc + 1); 
+            }
+            case Instruction.TYPE_POP -> { 
+                interruptHandler.executePop(inst, p);   
+                cpu.setPC(pc + 1); 
+            }
+            case Instruction.TYPE_PARAM -> { 
+                interruptHandler.executeParam(inst, p); 
+                cpu.setPC(pc + 1); 
+            }
 
             default -> {
                 cpu.execute(inst);
@@ -80,6 +84,7 @@ public class Dispatcher {
 
         int newIndex = cpu.getPC() - p.getBcp().getBaseAddress();
         if (newIndex >= p.getInstructions().size()) {
+            System.out.println("[DISPATCHER] Proceso " + p.getName() + " terminó después de ejecutar instrucción");
             terminate(p);
         }
 
@@ -87,6 +92,7 @@ public class Dispatcher {
     }
     
     public void terminate(OSProcess process) {
+        System.out.println("[DISPATCHER] Terminando proceso " + process.getName());
         scheduler.terminateProcess(process);
         currentProcess = null;
     }
@@ -101,7 +107,7 @@ public class Dispatcher {
         scheduler.releaseFromWaiting(pid);
     }
 
-    public OSProcess getCurrentProcess()        { return currentProcess; }
-    public void setCurrentProcess(OSProcess p)  { this.currentProcess = p; }
-    public CPU getCpu()                         { return cpu; }
+    public OSProcess getCurrentProcess() { return currentProcess; }
+    public void setCurrentProcess(OSProcess p) { this.currentProcess = p; }
+    public CPU getCpu() { return cpu; }
 }
