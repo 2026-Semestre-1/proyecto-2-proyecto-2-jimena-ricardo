@@ -1,0 +1,33 @@
+<program>       ::= <instruction> | <instruction> <newline> <program>
+
+<instruction>   ::= <load> | <store> | <mov> | <add> | <sub> | <inc> | <dec> | <swap> | <int> | <jmp> | <cmp> | <je> | <jne> | <param> | <push> | <pop> | <empty>
+
+<register>      ::= "AX" | "BX" | "CX" | "DX" | "AC" | "PC" | "IR"
+
+<value>         ::= ["-" | "+"] <digit> { <digit> }
+
+<interrupt>     ::= "10H"
+
+<newline>       ::= "\n"
+
+<comma>         ::= ","
+
+<digit>         ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+<load>          ::= "LOAD" <register>
+<store>         ::= "STORE" <register>
+<mov>           ::= "MOV" <register> <comma> (<register> | <value>)
+<add>           ::= "ADD" <register>
+<sub>           ::= "SUB" <register>
+<inc>           ::= "INC" [<register>]
+<dec>           ::= "DEC" [<register>]
+<swap>          ::= "SWAP" <register> <comma> <register>
+<int>           ::= "INT" <interrupt>
+<jmp>           ::= "JMP" <value>
+<cmp>           ::= "CMP" <register> <comma> <register>
+<je>            ::= "JE" <value>
+<jne>           ::= "JNE" <value>
+<param>         ::= "PARAM" (<value> | <value> <comma> <value> | <value> <comma> <value> <comma> <value>)
+<push>          ::= "PUSH" <register>
+<pop>           ::= "POP" <register>
+<empty>         ::= ""
