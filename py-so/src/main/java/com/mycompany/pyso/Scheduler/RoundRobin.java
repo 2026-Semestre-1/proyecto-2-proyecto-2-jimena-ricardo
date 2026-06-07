@@ -11,10 +11,12 @@ import java.util.List;
  *
  * @author jimen
  */
+
 public class RoundRobin implements SchedulerStrategy {
 
     private final int quantum;
     private int ticksUsed = 0;
+    private OSProcess currentProcess = null;
 
     public RoundRobin(int quantum) {
         this.quantum = quantum;
@@ -23,7 +25,7 @@ public class RoundRobin implements SchedulerStrategy {
     @Override
     public OSProcess selectNext(List<OSProcess> readyQueue) {
         if (readyQueue.isEmpty()) return null;
-        ticksUsed = 0;
+        ticksUsed = 0; 
         return readyQueue.get(0);
     }
 
@@ -31,12 +33,17 @@ public class RoundRobin implements SchedulerStrategy {
     public void onTick(OSProcess running, List<OSProcess> readyQueue) {
         if (running != null) {
             ticksUsed++;
+            currentProcess = running;
         }
     }
 
     @Override
     public boolean shouldPreempt(OSProcess running, List<OSProcess> readyQueue) {
-        return ticksUsed >= quantum && !readyQueue.isEmpty();
+        if (running == null) return false;
+
+        if (readyQueue.isEmpty()) return false;
+
+        return ticksUsed >= quantum;
     }
 
     @Override
@@ -44,7 +51,7 @@ public class RoundRobin implements SchedulerStrategy {
         return "RR (q=" + quantum + ")"; 
     }
 
-    public int getQuantum()    { return quantum; }
-    public int getTicksUsed()  { return ticksUsed; }
-    public void resetTicks()   { ticksUsed = 0; }
+    public int getQuantum() { return quantum; }
+    public int getTicksUsed() { return ticksUsed; }
+    public void resetTicks() { ticksUsed = 0; }
 }

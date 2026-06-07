@@ -11,6 +11,7 @@ import com.mycompany.pyso.Classes.Process.ProcessState;
 import com.mycompany.pyso.Classes.Interrupts.InterruptHandler;
 import com.mycompany.pyso.Interface.UI;
 import com.mycompany.pyso.Scheduler.FCFS;
+import com.mycompany.pyso.Scheduler.RoundRobin;
 import com.mycompany.pyso.Scheduler.SchedulerStrategy;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,6 @@ public class OperatingSystem {
     private SchedulerStrategy strategy;
     private final List<InterruptHandler> interruptHandlers = new ArrayList<>();
 
-    // One single-thread executor per CPU — ticks never overlap within same CPU
     private final List<ScheduledExecutorService> cpuExecutors = new ArrayList<>();
     private final List<ScheduledFuture<?>>       cpuFutures   = new ArrayList<>();
 
@@ -41,7 +41,6 @@ public class OperatingSystem {
     private volatile int     globalClock = 0;
     private long simulatorStartMillis;
 
-    // Guards selectNext + remove atomicity across CPU threads
     private final Object scheduleLock = new Object();
 
     private final UI gui;
@@ -68,7 +67,6 @@ public class OperatingSystem {
         this.scheduler   = new Scheduler(memory, disk, simulatorStartMillis);
 
         cpus.clear(); dispatchers.clear(); interruptHandlers.clear();
-        // Shutdown old executors before replacing
         cpuExecutors.forEach(ScheduledExecutorService::shutdownNow);
         cpuExecutors.clear(); cpuFutures.clear();
 
@@ -105,7 +103,6 @@ public class OperatingSystem {
         return process;
     }
 
-    // Automatic: each CPU runs its own 1-second tick in its own thread
     public void run(boolean stepMode) {
         if (stepMode) { tickAll(); return; }
 
@@ -126,13 +123,6 @@ public class OperatingSystem {
         cpuFutures.clear();
     }
 
-    /**
-     * CORREGIDO: Orden correcto de operaciones para RR
-     * 1. Asignar proceso si la CPU está libre
-     * 2. Ejecutar una instrucción
-     * 3. Notificar onTick (solo si hay proceso)
-     * 4. Verificar shouldPreempt
-     */
     private void tickCPU(int idx) {
         if (!isRunning) return;
         try {
@@ -140,7 +130,6 @@ public class OperatingSystem {
             Dispatcher d   = dispatchers.get(idx);
             CPU        cpu = cpus.get(idx);
 
-            // PASO 1: Asignar nuevo proceso si la CPU está libre
             if (d.getCurrentProcess() == null) {
                 scheduler.tryLoadNewProcesses();
                 scheduler.loadFromSwap();
@@ -149,12 +138,10 @@ public class OperatingSystem {
 
             Integer pc = null;
             
-            // PASO 2: Ejecutar una instrucción (si hay proceso)
             if (d.getCurrentProcess() != null) {
                 pc = d.CPUcycle();
             }
 
-            // PASO 3 y 4: Notificar onTick y verificar preempt (solo si el proceso sigue vivo)
             if (d.getCurrentProcess() != null) {
                 List<OSProcess> snap = scheduler.getReadyQueue().getAll();
                 strategy.onTick(d.getCurrentProcess(), snap);
@@ -190,9 +177,6 @@ public class OperatingSystem {
         }
     }
 
-    /**
-     * CORREGIDO: Modo paso a paso - mismo orden que tickCPU
-     */
     private void tickAll() {
         scheduler.tryLoadNewProcesses();
         scheduler.loadFromSwap();
@@ -201,18 +185,15 @@ public class OperatingSystem {
             Dispatcher d   = dispatchers.get(i);
             CPU        cpu = cpus.get(i);
             
-            // PASO 1: Asignar proceso si la CPU está libre
             if (d.getCurrentProcess() == null) {
                 assignNext(d, cpu);
             }
             
-            // PASO 2: Ejecutar una instrucción (si hay proceso)
             if (d.getCurrentProcess() != null) {
                 Integer pc = d.CPUcycle();
                 if (pc != null && gui != null) gui.highlightRow(pc);
             }
             
-            // PASO 3 y 4: Notificar onTick y verificar preempt (solo si el proceso sigue vivo)
             if (d.getCurrentProcess() != null) {
                 List<OSProcess> snap = scheduler.getReadyQueue().getAll();
                 strategy.onTick(d.getCurrentProcess(), snap);
@@ -241,28 +222,37 @@ public class OperatingSystem {
         OSProcess next = null;
         synchronized (scheduleLock) {
             if (scheduler.hasProcessReady()) {
-                List<OSProcess> snap = scheduler.getReadyQueue().getAll();
+                List<OSProcess> snap = new ArrayList<>(scheduler.getReadyQueue().getAll());
                 next = strategy.selectNext(snap);
-                if (next != null) scheduler.getReadyQueue().remove(next);
+                if (next != null) {
+                    scheduler.getReadyQueue().remove(next);
+                }
             }
         }
+
         if (next != null) {
             next.setState(ProcessState.RUNNING);
-            next.markStarted(simulatorStartMillis);
             next.restoreIntoCPU(cpu);
-            cpu.setPC(next.getBaseAddress());
             d.setCurrentProcess(next);
+
+            System.out.println("[OS] CPU asignada: " + next.getName() + 
+                               " PC=" + cpu.getPC() + 
+                               " Base=" + next.getBaseAddress());
         }
     }
 
     private void preempt(Dispatcher d, CPU cpu) {
         OSProcess p = d.getCurrentProcess();
         if (p == null) return;
+
         p.getBcp().saveFromCPU(cpu, cpu.getIR());
         p.setState(ProcessState.READY);
         scheduler.getReadyQueue().enqueue(p);
         d.setCurrentProcess(null);
-        System.out.println("[OS] Preempt: " + p.getName() + " → READY");
+
+        if (strategy instanceof RoundRobin) {
+            ((RoundRobin) strategy).resetTicks();
+        }
     }
 
     private void refreshKernel() {
