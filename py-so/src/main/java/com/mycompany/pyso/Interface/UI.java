@@ -13,6 +13,9 @@ import com.mycompany.pyso.Classes.Memory.DynamicPartitionManager;
 import com.mycompany.pyso.Classes.Memory.PagingManager;
 import com.mycompany.pyso.Scheduler.FCFS;
 import com.mycompany.pyso.Scheduler.RoundRobin;
+import com.mycompany.pyso.Scheduler.SRT;
+import com.mycompany.pyso.Scheduler.HRRN;
+import com.mycompany.pyso.Scheduler.Lottery;
 import com.mycompany.pyso.Scheduler.SchedulerStrategy;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -491,7 +494,7 @@ public class UI extends JFrame {
         gc.fill    = GridBagConstraints.HORIZONTAL;
 
         gc.gridy = 0; gc.gridx = 0; root.add(new JLabel("Algoritmo de CPU:"), gc);
-        cbAlgo = new JComboBox<>(new String[]{"FCFS","RR"});
+        cbAlgo = new JComboBox<>(new String[]{"FCFS","RR","SRT","HRRN","Lottery"});
         cbAlgo.setPreferredSize(new Dimension(150, 25));
         gc.gridx = 1; root.add(cbAlgo, gc);
 
@@ -753,12 +756,19 @@ public class UI extends JFrame {
     }
 
     private void doApplyConfig() {
-        String algo    = (String) cbAlgo.getSelectedItem();
-        int quantum    = (int) spQuantum.getValue();
-        int numCpus    = (int) spCPUs.getValue();
-        int ramSize    = (int) spRAM.getValue();
-        int diskSize   = (int) spDisk.getValue();
-        SchedulerStrategy strat = "RR".equals(algo) ? new RoundRobin(quantum) : new FCFS();
+        String algo   = (String) cbAlgo.getSelectedItem();
+        int quantum   = (int) spQuantum.getValue();
+        int numCpus   = (int) spCPUs.getValue();
+        int ramSize   = (int) spRAM.getValue();
+        int diskSize  = (int) spDisk.getValue();
+
+        SchedulerStrategy strat = switch (algo) {
+            case "RR"  -> new RoundRobin(quantum);
+            case "SRT"  -> new SRT();
+            case "HRRN"    -> new HRRN();
+            case "Lottery" -> new Lottery(quantum);
+            default         -> new FCFS();
+        };
         MemoryManager mm = createMemoryManager(ramSize);
 
         if (autoExecutionTimer != null) autoExecutionTimer.stop();
