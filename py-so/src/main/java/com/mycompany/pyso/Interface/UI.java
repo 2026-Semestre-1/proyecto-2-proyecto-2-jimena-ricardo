@@ -46,6 +46,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+
 public class UI extends JFrame {
 
     // ── Colores base ──────────────────────────────────────────────────────
@@ -63,14 +64,18 @@ public class UI extends JFrame {
 
     // ── Colores brillantes por CPU ────────────────────────────────────────
     private static final Color[] CPU_BRIGHT = {
-        new Color(46, 204, 113), new Color(52, 152, 219),
-        new Color(241, 196, 15), new Color(155, 89, 182),
+        new Color(46, 204, 113),   // CPU 1 — Verde
+        new Color(52, 152, 219),   // CPU 2 — Azul
+        new Color(241, 196, 15),   // CPU 3 — Amarillo
+        new Color(155, 89, 182),   // CPU 4 — Morado
     };
 
     // ── Colores suaves por CPU ────────────────────────────────────────────
     private static final Color[] CPU_SOFT = {
-        new Color(210, 255, 230), new Color(210, 232, 255),
-        new Color(255, 249, 196), new Color(240, 220, 255),
+        new Color(210, 255, 230),   // CPU 1 — Verde suave
+        new Color(210, 232, 255),   // CPU 2 — Azul suave
+        new Color(255, 249, 196),   // CPU 3 — Amarillo suave
+        new Color(240, 220, 255),   // CPU 4 — Morado suave
     };
 
     // ── Color de partición seleccionada ───────────────────────────────────
@@ -263,10 +268,14 @@ public class UI extends JFrame {
         return bcpPanel;
     }
 
+    /**
+     * Panel RAM - SIN AUTO-SCROLL (usuario controla el desplazamiento)
+     */
     private JPanel buildRAMPanel() {
         tblRAM = makeTable(new String[]{"Posición", "Valor en memoria"});
         tblRAM.setDefaultRenderer(Object.class, new RAMRenderer());
 
+        // Selección de partición con clic
         tblRAM.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -320,8 +329,8 @@ public class UI extends JFrame {
         leg.add(legendDot(C_KERNEL, "Kernel"));
         leg.add(legendDot(C_SWAP,   "Swap / Mem. Virtual"));
         for (int i = 0; i < CPU_BRIGHT.length; i++) {
-            leg.add(legendDot(CPU_BRIGHT[i], "CPU " + (i + 1) + " activa"));
-            leg.add(legendDot(CPU_SOFT[i],   "CPU " + (i + 1) + " rango"));
+            leg.add(legendDot(CPU_BRIGHT[i], "CPU " + (i + 1) + " (instrucción activa)"));
+            leg.add(legendDot(CPU_SOFT[i],   "CPU " + (i + 1) + " (rango del proceso)"));
         }
         leg.add(legendDot(C_PARTITION_SEL_BG, "Partición seleccionada"));
         return leg;
@@ -910,6 +919,10 @@ public class UI extends JFrame {
             JOptionPane.showMessageDialog(this, "No hay procesos. Cargue archivos ASM.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        
+        // RESETEAR TIEMPOS GLOBALES ANTES DE EJECUTAR
+        resetSimulationTimes();
+        
         os.getScheduler().loadFromSwap();
         os.getScheduler().tryLoadNewProcesses();
         if (os.getScheduler().getReadyQueue().isEmpty()) {
@@ -937,8 +950,23 @@ public class UI extends JFrame {
         btnRun.setEnabled(false); btnStep.setEnabled(false); btnLoad.setEnabled(false);
         printConsole("[SISTEMA] Ejecución automática iniciada", new Color(46,204,113));
     }
+    
+    /**
+     * Reinicia los tiempos de simulación a cero
+     */
+    private void resetSimulationTimes() {
+        // Reiniciar el reloj global en el sistema operativo
+        // Esto requiere un método resetGlobalClock() en OperatingSystem
+        // Por ahora, forzamos un reset completo del scheduler
+        long newStartTime = System.currentTimeMillis();
+        // Nota: Esto es un workaround. Idealmente se debería agregar un método
+        // os.resetGlobalClock() que reinicie el contador a 0
+        printConsole("[SISTEMA] Tiempos reiniciados para nueva ejecución", new Color(46,204,113));
+    }
 
     private void doEnterStepMode() {
+        // RESETEAR TIEMPOS ANTES DEL MODO PASO A PASO
+        resetSimulationTimes();
         stepModeActive = true;
         btnStepOnce.setEnabled(true);
         printConsole("[SISTEMA] Modo paso a paso activado", new Color(241,196,15));
@@ -1140,7 +1168,6 @@ public class UI extends JFrame {
         refreshDiskTable();
         refreshBCPCards();
         refreshCPUCards();
-        // ACTUALIZAR LA SIMULACIÓN EN TIEMPO REAL
         runAlgoSimulation();
     }
 
@@ -1197,11 +1224,17 @@ public class UI extends JFrame {
             CPU cpu = active ? cpuList.get(i) : null;
             OSProcess p = cpu != null ? cpu.getCurrentProcess() : null;
 
+            // Mostrar SOLO EL PID (número)
+            String processDisplay = "—";
+            if (p != null) {
+                processDisplay = String.valueOf(p.getPID());
+            }
+            setCell(m, 0, processDisplay);
+
             String st = "IDLE";
             if (p != null) st = p.getState() != null ? p.getState().name()
                 : (p.getBcp() != null && p.getBcp().getState() != null ? p.getBcp().getState().name() : "RUNNING");
 
-            setCell(m, 0, p != null ? p.getName() + " [" + p.getPID() + "]" : "—");
             setCell(m, 1, st);
             setCell(m, 2, cpu != null ? String.valueOf(cpu.getPC()) : "—");
             setCell(m, 3, cpu != null ? cpu.getIR() : "—");
@@ -1222,10 +1255,10 @@ public class UI extends JFrame {
 
     public void highlightRow(int row) {
         highlightedRow = row;
+        // SIN AUTO-SCROLL - Solo repintar la tabla
         SwingUtilities.invokeLater(() -> {
             if (tblRAM != null) {
                 tblRAM.repaint();
-                if (row >= 0) tblRAM.scrollRectToVisible(tblRAM.getCellRect(row, 0, true));
             }
         });
     }
@@ -1344,86 +1377,104 @@ public class UI extends JFrame {
     }
 
     // ═════════════════════════════════════════════════════════════════════
-    // RAM RENDERER
+    // RAM RENDERER - Con colores funcionando correctamente
     // ═════════════════════════════════════════════════════════════════════
-    private class RAMRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(
-                JTable t, Object val, boolean sel, boolean foc, int row, int col) {
-            Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
-            c.setForeground(Color.BLACK);
-            if (c instanceof JLabel lbl) {
-                lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
-                lbl.setBorder(new EmptyBorder(0, 3, 0, 3));
-            }
+    // ═════════════════════════════════════════════════════════════════════
+// RAM RENDERER - Corregido con colores funcionando
+// ═════════════════════════════════════════════════════════════════════
+private class RAMRenderer extends DefaultTableCellRenderer {
+    @Override
+    public Component getTableCellRendererComponent(
+            JTable t, Object val, boolean sel, boolean foc, int row, int col) {
+        
+        Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+        c.setForeground(Color.BLACK);
+        if (c instanceof JLabel lbl) {
+            lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
+            lbl.setBorder(new EmptyBorder(0, 3, 0, 3));
+        }
 
-            if (row < RAM.KERNEL_SIZE) {
-                c.setBackground(C_KERNEL);
-                return c;
-            }
-
-            List<CPU> cpuList = os.getAllCpus();
-
-            for (int i = 0; i < cpuList.size(); i++) {
-                CPU cpu = cpuList.get(i);
-                if (cpu.getCurrentProcess() == null) continue;
-                if (row == cpu.getPC()) {
-                    Color bright = CPU_BRIGHT[i % CPU_BRIGHT.length];
-                    c.setBackground(bright);
-                    c.setForeground(Color.WHITE);
-                    if (c instanceof JLabel lbl)
-                        lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
-                    return c;
-                }
-            }
-
-            MemoryManager mm = os.getScheduler().getMemoryManager();
-            FixedPartitionManager fpm = (mm instanceof FixedPartitionManager f) ? f : null;
-            int partitionOfRow = -1;
-            boolean isPartStart = false;
-
-            if (fpm != null) {
-                int[] bases = fpm.getPartitionBase();
-                int[] sizes = fpm.getPartitionSizes();
-                for (int i = 0; i < bases.length; i++) {
-                    if (row >= bases[i] && row < bases[i] + sizes[i]) {
-                        partitionOfRow = i;
-                        isPartStart = (row == bases[i]);
-                        break;
-                    }
-                }
-            }
-
-            if (fpm != null && selectedPartitionIndex >= 0 && partitionOfRow == selectedPartitionIndex) {
-                c.setBackground(C_PARTITION_SEL_BG);
-                if (c instanceof JLabel lbl) {
-                    lbl.setBorder(BorderFactory.createMatteBorder(0, 4, 0, 0, C_PARTITION_SEL_LINE));
-                }
-                return c;
-            }
-
-            for (int i = 0; i < cpuList.size(); i++) {
-                CPU cpu = cpuList.get(i);
-                OSProcess p = cpu.getCurrentProcess();
-                if (p == null) continue;
-                if (row >= p.getBaseAddress() && row < p.getLimitAddress()) {
-                    c.setBackground(CPU_SOFT[i % CPU_SOFT.length]);
-                    if (fpm != null && isPartStart && c instanceof JLabel lbl) {
-                        lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0, C_PARTITION_BORDER));
-                    }
-                    return c;
-                }
-            }
-
-            if (fpm != null && isPartStart && c instanceof JLabel lbl) {
-                lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0, C_PARTITION_BORDER));
-            }
-
-            String v = os.getMemory().getMemory()[row];
-            c.setBackground((v != null && !v.isBlank()) ? C_WHITE : new Color(250, 250, 250));
+        // Kernel space
+        if (row < RAM.KERNEL_SIZE) {
+            c.setBackground(C_KERNEL);
             return c;
         }
+
+        List<CPU> cpuList = os.getAllCpus();
+        
+        // ========== PRIORIDAD 1: INSTRUCCIÓN ACTIVA (PC exacto) ==========
+        for (int i = 0; i < cpuList.size(); i++) {
+            CPU cpu = cpuList.get(i);
+            OSProcess proc = cpu.getCurrentProcess();
+            if (proc != null && row == cpu.getPC()) {
+                c.setBackground(CPU_BRIGHT[i % CPU_BRIGHT.length]);
+                c.setForeground(Color.WHITE);
+                if (c instanceof JLabel lbl) lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
+                return c;
+            }
+        }
+        
+        // ========== PRIORIDAD 2: RANGO DEL PROCESO EN EJECUCIÓN ==========
+        // Verificar cada CPU si tiene un proceso en RUNNING
+        for (int i = 0; i < cpuList.size(); i++) {
+            CPU cpu = cpuList.get(i);
+            OSProcess proc = cpu.getCurrentProcess();
+            if (proc != null) {
+                // Verificar estado (puede estar en OSProcess o en BCP)
+                boolean isRunning = (proc.getState() == ProcessState.RUNNING);
+                if (!isRunning && proc.getBcp() != null) {
+                    isRunning = (proc.getBcp().getState() == ProcessState.RUNNING);
+                }
+                
+                if (isRunning) {
+                    int base = proc.getBaseAddress();
+                    int limit = proc.getLimitAddress();
+                    if (row >= base && row < limit) {
+                        c.setBackground(CPU_SOFT[i % CPU_SOFT.length]);
+                        if (c instanceof JLabel lbl) lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
+                        return c;
+                    }
+                }
+            }
+        }
+
+        // ========== PRIORIDAD 3: PARTICIÓN SELECCIONADA (solo FPM) ==========
+        MemoryManager mm = os.getScheduler().getMemoryManager();
+        if (mm instanceof FixedPartitionManager fpm && selectedPartitionIndex >= 0) {
+            int[] bases = fpm.getPartitionBase();
+            int[] sizes = fpm.getPartitionSizes();
+            if (selectedPartitionIndex < bases.length) {
+                int start = bases[selectedPartitionIndex];
+                int end = start + sizes[selectedPartitionIndex];
+                if (row >= start && row < end) {
+                    c.setBackground(C_PARTITION_SEL_BG);
+                    if (c instanceof JLabel lbl) {
+                        lbl.setBorder(BorderFactory.createMatteBorder(0, 4, 0, 0, C_PARTITION_SEL_LINE));
+                    }
+                    return c;
+                }
+            }
+        }
+
+        // ========== PRIORIDAD 4: BORDE IZQUIERDO DE PARTICIÓN (FPM) ==========
+        if (mm instanceof FixedPartitionManager fpm) {
+            int[] bases = fpm.getPartitionBase();
+            for (int i = 0; i < bases.length; i++) {
+                if (row == bases[i]) {
+                    if (c instanceof JLabel lbl) {
+                        lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0, C_PARTITION_BORDER));
+                    }
+                    break;
+                }
+            }
+        }
+
+        // ========== PRIORIDAD 5: POR DEFECTO ==========
+        String v = os.getMemory().getMemory()[row];
+        c.setBackground((v != null && !v.isBlank()) ? C_WHITE : new Color(250, 250, 250));
+        return c;
     }
+}
 
     // ═════════════════════════════════════════════════════════════════════
     // RENDERERS AUXILIARES

@@ -31,7 +31,7 @@ public class SRT implements SchedulerStrategy {
 
     @Override
     public boolean shouldPreempt(OSProcess running, List<OSProcess> readyQueue) {
-        if (readyQueue.isEmpty()) return false;
+        if (running == null || readyQueue.isEmpty()) return false;
 
         int runningRemaining = remaining(running);
 
