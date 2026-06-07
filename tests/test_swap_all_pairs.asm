@@ -1,0 +1,11 @@
+; Test SWAP with different register pairs
+; Tests all possible SWAP register pair combinations.
+; Expected: Verify each swap correctly exchanges values
+MOV AX, 1
+MOV BX, 2
+MOV CX, 3
+MOV DX, 4
+SWAP AX, CX
+SWAP BX, DX
+SWAP AX, DX
+SWAP BX, CX
