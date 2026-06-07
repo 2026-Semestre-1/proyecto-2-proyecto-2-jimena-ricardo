@@ -9,6 +9,10 @@ import com.mycompany.pyso.Classes.Process.ProcessState;
 import com.mycompany.pyso.Classes.Process.ReadyQueue;
 import com.mycompany.pyso.Classes.Process.WaitingQueue;
 import com.mycompany.pyso.Classes.FileHandler.LoadASM;
+import com.mycompany.pyso.Classes.Memory.DynamicPartitionManager;
+import com.mycompany.pyso.Classes.Memory.FixedPartitionManager;
+import com.mycompany.pyso.Classes.Memory.MemoryBlock;
+import com.mycompany.pyso.Classes.Memory.MemoryManager;
 import java.util.List;
 
 public class Scheduler {
@@ -24,8 +28,10 @@ public class Scheduler {
     private int nextFreeAddr;
 
     private static final int KERNEL_SIZE = 150;
-
     private final Object ramLock = new Object();
+    
+    // Memory Manager para estrategias de asignación
+    private MemoryManager memoryManager;
 
     public Scheduler(RAM ram, Disk disk, long simulatorStartMillis) {
         this.ram                  = ram;
@@ -35,6 +41,9 @@ public class Scheduler {
         this.readyQueue           = new ReadyQueue();  
         this.waitingQueue         = new WaitingQueue();
         this.nextFreeAddr         = KERNEL_SIZE;
+        
+        // MemoryManager por defecto: Particiones Fijas (4 particiones de 256 bytes)
+        this.memoryManager = new FixedPartitionManager(4, 256, true);
     }
 
     public OSProcess loadProcess(String path) {
@@ -82,29 +91,26 @@ public class Scheduler {
         synchronized (ramLock) {
             if (p.getState() != ProcessState.NEW && p.getState() != ProcessState.WAITING)
                 return false;
-
-            int size = p.getInstructions().size();
-            int base = findFreeBlock(size);
-
+            
+            // Usar el MemoryManager para asignar memoria
+            int base = memoryManager.allocate(p, ram.getMemory());
+            
             if (base == -1) {
                 if (!disk.isInSwap(p.getPID())) disk.swapOut(p);
                 p.setState(ProcessState.WAITING);
                 return false;
             }
-
+            
+            int size = p.getInstructions().size();
             int limit = base + size;
             if (limit > nextFreeAddr) nextFreeAddr = limit;
-
+            
             p.setBaseAddress(base);
             p.setLimitAddress(limit);
             p.getBcp().setBaseAddress(base);
             p.getBcp().setLimitAddress(limit);
             p.getBcp().setPC(base);
-
-            String[] mem = ram.getMemory();
-            for (int i = 0; i < size; i++)
-                mem[base + i] = p.getName() + " - " + p.getInstructions().get(i).getInstruction();
-
+            
             p.setState(ProcessState.READY);
             readyQueue.enqueue(p);
             return true;
@@ -114,29 +120,28 @@ public class Scheduler {
     public void terminateProcess(OSProcess p) {
         p.getBcp().markTerminated(simulatorStartMillis);
         p.setState(ProcessState.TERMINATED);
-
-        synchronized (ramLock) {
-            int base  = p.getBaseAddress();
-            int limit = p.getLimitAddress();
-            String[] mem = ram.getMemory();
-            for (int i = base; i < limit && i < mem.length; i++) mem[i] = "";
-
-            // Reclaim nextFreeAddr if this was at the top
-            if (limit >= nextFreeAddr) {
-                nextFreeAddr = base;
-                for (int i = base - 1; i >= KERNEL_SIZE; i--) {
-                    if (mem[i] == null || mem[i].isEmpty()) nextFreeAddr = i;
-                    else break;
+        
+        // Liberar memoria usando el MemoryManager
+        memoryManager.free(p, ram.getMemory());
+        
+        // Si es dinámico y necesita compactación
+        if (memoryManager instanceof DynamicPartitionManager) {
+            DynamicPartitionManager dm = (DynamicPartitionManager) memoryManager;
+            if (dm.needsCompaction()) {
+                memoryManager.compact(ram.getMemory());
+                // Recalcular nextFreeAddr después de compactar
+                nextFreeAddr = KERNEL_SIZE;
+                for (MemoryBlock block : dm.getAllocatedBlocks()) {
+                    nextFreeAddr = Math.max(nextFreeAddr, block.getEndAddress());
                 }
             }
         }
-
-        // Try loading waiting processes now that RAM has space
+        
+        // Intentar cargar procesos en espera
         loadFromSwap();
         tryLoadNewProcesses();
     }
 
-    /** Loads as many swap processes into RAM as space allows. */
     public void loadFromSwap() {
         while (!disk.isSwapEmpty()) {
             Disk.SwapEntry entry = disk.swapInNext();
@@ -151,7 +156,6 @@ public class Scheduler {
             p.setState(ProcessState.NEW);
             boolean loaded = admitToRAM(p);
             if (!loaded) {
-                // Still no space — put back at front of swap
                 disk.swapOut(p);
                 break;
             }
@@ -177,8 +181,8 @@ public class Scheduler {
     }
 
     public boolean allTerminated() {
-        return !jobQueue.isEmpty() &&
-               jobQueue.getAll().stream().allMatch(p -> p.getState() == ProcessState.TERMINATED);
+        if (jobQueue.isEmpty()) return false;
+        return jobQueue.getAll().stream().allMatch(p -> p.getState() == ProcessState.TERMINATED);
     }
 
     private int findFreeBlock(int size) {
@@ -199,6 +203,7 @@ public class Scheduler {
         return dot > 0 ? n.substring(0, dot) : n;
     }
 
+    // Getters y Setters
     public JobQueue     getJobQueue()               { return jobQueue; }
     public ReadyQueue   getReadyQueue()             { return readyQueue; }
     public WaitingQueue getWaitingQueue()           { return waitingQueue; }
@@ -207,4 +212,7 @@ public class Scheduler {
     public long         getSimulatorStartMillis()   { return simulatorStartMillis; }
     public int          getPidCounter()             { return pidCounter; }
     public static int   getKERNEL_SIZE()            { return KERNEL_SIZE; }
+    
+    public MemoryManager getMemoryManager()         { return memoryManager; }
+    public void setMemoryManager(MemoryManager mm)  { this.memoryManager = mm; }
 }
