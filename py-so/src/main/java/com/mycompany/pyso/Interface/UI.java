@@ -10,6 +10,7 @@ import com.mycompany.pyso.Classes.Memory.RAM;
 import com.mycompany.pyso.Classes.Memory.Disk;
 import com.mycompany.pyso.Scheduler.FCFS;
 import com.mycompany.pyso.Scheduler.RoundRobin;
+import com.mycompany.pyso.Scheduler.SRT;
 import com.mycompany.pyso.Scheduler.SchedulerStrategy;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -422,7 +423,7 @@ public class UI extends JFrame {
         gc.insets = new Insets(10, 20, 10, 20);
         gc.anchor = GridBagConstraints.EAST;
 
-        cbAlgo    = new JComboBox<>(new String[]{"FCFS", "RR"});
+        cbAlgo    = new JComboBox<>(new String[]{"FCFS", "RR", "SRT"});
         spQuantum = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
         spCPUs    = new JSpinner(new SpinnerNumberModel(2, 1, 4, 1));
         spRAM     = new JSpinner(new SpinnerNumberModel(512, 256, 2048, 64));
@@ -587,6 +588,7 @@ public class UI extends JFrame {
 
         SchedulerStrategy strat = switch (algo) {
             case "RR"  -> new RoundRobin(quantum);
+            case "SRT" -> new SRT();
             default    -> new FCFS();
         };
 
