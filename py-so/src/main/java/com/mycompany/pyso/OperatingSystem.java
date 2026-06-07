@@ -87,6 +87,39 @@ public class OperatingSystem {
         }
     }
 
+    public void resetGlobalClock() {
+        this.globalClock = 0;
+        this.simulatorStartMillis = System.currentTimeMillis();
+    }
+
+    public void resetProcessTimes() {
+        long now = System.currentTimeMillis();
+        this.simulatorStartMillis = now;
+
+        for (OSProcess p : scheduler.getJobQueue().getAll()) {
+            BCP bcp = p.getBcp();
+            if (bcp == null) continue;
+
+            bcp.setArrivalMillis(-1);
+            bcp.setStartMillis(-1);
+            bcp.setEndMillis(-1);
+            bcp.setCpuCyclesUsed(0);
+
+            bcp.markArrival(simulatorStartMillis);
+
+            if (p.getState() == ProcessState.TERMINATED) {
+            } else if (p.getState() == ProcessState.RUNNING) {
+                p.setState(ProcessState.READY);
+            }
+        }
+
+        for (int i = 0; i < dispatchers.size(); i++) {
+            dispatchers.get(i).setCurrentProcess(null);
+            cpus.get(i).setIR("");
+        }
+    }
+
+
     public OSProcess loadProcess(String path) {
         OSProcess process = scheduler.loadProcess(path);
         if (process == null) {
@@ -137,8 +170,9 @@ public class OperatingSystem {
             }
 
             Integer pc = null;
-            
             if (d.getCurrentProcess() != null) {
+                OSProcess running = d.getCurrentProcess();
+                running.getBcp().markStarted(simulatorStartMillis);
                 pc = d.CPUcycle();
             }
 
@@ -178,22 +212,24 @@ public class OperatingSystem {
     }
 
     private void tickAll() {
+        globalClock++;
         scheduler.tryLoadNewProcesses();
         scheduler.loadFromSwap();
-        
+
         for (int i = 0; i < dispatchers.size(); i++) {
             Dispatcher d   = dispatchers.get(i);
             CPU        cpu = cpus.get(i);
-            
+
             if (d.getCurrentProcess() == null) {
                 assignNext(d, cpu);
             }
-            
+
             if (d.getCurrentProcess() != null) {
+                d.getCurrentProcess().getBcp().markStarted(simulatorStartMillis);
                 Integer pc = d.CPUcycle();
                 if (pc != null && gui != null) gui.highlightRow(pc);
             }
-            
+
             if (d.getCurrentProcess() != null) {
                 List<OSProcess> snap = scheduler.getReadyQueue().getAll();
                 strategy.onTick(d.getCurrentProcess(), snap);
@@ -202,10 +238,10 @@ public class OperatingSystem {
                 }
             }
         }
-        
+
         refreshKernel();
         if (gui != null) gui.refreshAll();
-        
+
         if (scheduler.allTerminated()) {
             stop();
             refreshKernel();
@@ -233,11 +269,12 @@ public class OperatingSystem {
         if (next != null) {
             next.setState(ProcessState.RUNNING);
             next.restoreIntoCPU(cpu);
+            if (cpu.getPC() < next.getBaseAddress() || cpu.getPC() >= next.getLimitAddress()) {
+                cpu.setPC(next.getBaseAddress());
+                next.getBcp().setPC(next.getBaseAddress());
+            }
+            cpu.setCurrentProcess(next);
             d.setCurrentProcess(next);
-
-            System.out.println("[OS] CPU asignada: " + next.getName() + 
-                               " PC=" + cpu.getPC() + 
-                               " Base=" + next.getBaseAddress());
         }
     }
 
@@ -248,6 +285,7 @@ public class OperatingSystem {
         p.getBcp().saveFromCPU(cpu, cpu.getIR());
         p.setState(ProcessState.READY);
         scheduler.getReadyQueue().enqueue(p);
+        cpu.setCurrentProcess(null);
         d.setCurrentProcess(null);
 
         if (strategy instanceof RoundRobin) {

@@ -11,6 +11,7 @@ import com.mycompany.pyso.Classes.Memory.MemoryManager;
 import com.mycompany.pyso.Classes.Memory.FixedPartitionManager;
 import com.mycompany.pyso.Classes.Memory.DynamicPartitionManager;
 import com.mycompany.pyso.Classes.Memory.PagingManager;
+import com.mycompany.pyso.Classes.Process.Dispatcher;
 import com.mycompany.pyso.Scheduler.FCFS;
 import com.mycompany.pyso.Scheduler.RoundRobin;
 import com.mycompany.pyso.Scheduler.SRT;
@@ -1218,33 +1219,55 @@ public class UI extends JFrame {
 
     private void refreshCPUCards() {
         List<CPU> cpuList = os.getAllCpus();
+        List<Dispatcher> dispList = os.getDispatchers();   // ← fuente de verdad
+ 
         for (int i = 0; i < cpuModels.size(); i++) {
             DefaultTableModel m = cpuModels.get(i);
-            boolean active = i < cpuList.size();
-            CPU cpu = active ? cpuList.get(i) : null;
-            OSProcess p = cpu != null ? cpu.getCurrentProcess() : null;
-
-            // Mostrar SOLO EL PID (número)
-            String processDisplay = "—";
-            if (p != null) {
-                processDisplay = String.valueOf(p.getPID());
+            boolean hasCPU = i < cpuList.size();
+            CPU cpu = hasCPU ? cpuList.get(i) : null;
+ 
+            // FIX: leer el proceso del Dispatcher, NO de cpu.getCurrentProcess()
+            OSProcess p = null;
+            if (i < dispList.size()) {
+                p = dispList.get(i).getCurrentProcess();
             }
-            setCell(m, 0, processDisplay);
-
-            String st = "IDLE";
-            if (p != null) st = p.getState() != null ? p.getState().name()
-                : (p.getBcp() != null && p.getBcp().getState() != null ? p.getBcp().getState().name() : "RUNNING");
-
-            setCell(m, 1, st);
-            setCell(m, 2, cpu != null ? String.valueOf(cpu.getPC()) : "—");
-            setCell(m, 3, cpu != null ? cpu.getIR() : "—");
-            setCell(m, 4, cpu != null ? String.valueOf(cpu.getAC()) : "—");
-            setCell(m, 5, cpu != null ? String.valueOf(cpu.getAX()) : "—");
-            setCell(m, 6, cpu != null ? String.valueOf(cpu.getBX()) : "—");
-            setCell(m, 7, cpu != null ? String.valueOf(cpu.getCX()) : "—");
-            setCell(m, 8, cpu != null ? String.valueOf(cpu.getDX()) : "—");
-            int burst = p != null ? p.getBurstTime() : 0;
-            int cycles = p != null && p.getBcp() != null ? p.getBcp().getCpuCyclesUsed() : 0;
+            // Fallback por si el Dispatcher no tiene proceso pero la CPU sí
+            if (p == null && cpu != null) {
+                p = cpu.getCurrentProcess();
+            }
+ 
+            // Fila 0 — PID del proceso (SOLO el número entero)
+            if (p != null && p.getPID() >= 0) {
+                setCell(m, 0, p.getPID());                 // número puro, sin texto extra
+            } else {
+                setCell(m, 0, "—");
+            }
+ 
+            // Fila 1 — Estado
+            String estado = "IDLE";
+            if (p != null) {
+                if (p.getState() != null) {
+                    estado = p.getState().name();
+                } else if (p.getBcp() != null && p.getBcp().getState() != null) {
+                    estado = p.getBcp().getState().name();
+                } else {
+                    estado = "RUNNING";
+                }
+            }
+            setCell(m, 1, estado);
+ 
+            // Filas 2-8 — Registros de CPU
+            setCell(m, 2, cpu != null ? cpu.getPC()  : "—");
+            setCell(m, 3, cpu != null ? cpu.getIR()  : "—");
+            setCell(m, 4, cpu != null ? cpu.getAC()  : "—");
+            setCell(m, 5, cpu != null ? cpu.getAX()  : "—");
+            setCell(m, 6, cpu != null ? cpu.getBX()  : "—");
+            setCell(m, 7, cpu != null ? cpu.getCX()  : "—");
+            setCell(m, 8, cpu != null ? cpu.getDX()  : "—");
+ 
+            // Fila 9 — Progreso (ciclosUsados / ráfagaTotal)
+            int burst  = (p != null) ? p.getBurstTime() : 0;
+            int cycles = (p != null && p.getBcp() != null) ? p.getBcp().getCpuCyclesUsed() : 0;
             setCell(m, 9, burst > 0 ? cycles + "/" + burst : "—");
         }
     }
@@ -1379,102 +1402,124 @@ public class UI extends JFrame {
     // ═════════════════════════════════════════════════════════════════════
     // RAM RENDERER - Con colores funcionando correctamente
     // ═════════════════════════════════════════════════════════════════════
-    // ═════════════════════════════════════════════════════════════════════
-// RAM RENDERER - Corregido con colores funcionando
-// ═════════════════════════════════════════════════════════════════════
-private class RAMRenderer extends DefaultTableCellRenderer {
-    @Override
-    public Component getTableCellRendererComponent(
-            JTable t, Object val, boolean sel, boolean foc, int row, int col) {
-        
-        Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
-        c.setForeground(Color.BLACK);
-        if (c instanceof JLabel lbl) {
-            lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
-            lbl.setBorder(new EmptyBorder(0, 3, 0, 3));
-        }
-
-        // Kernel space
-        if (row < RAM.KERNEL_SIZE) {
-            c.setBackground(C_KERNEL);
-            return c;
-        }
-
-        List<CPU> cpuList = os.getAllCpus();
-        
-        // ========== PRIORIDAD 1: INSTRUCCIÓN ACTIVA (PC exacto) ==========
-        for (int i = 0; i < cpuList.size(); i++) {
-            CPU cpu = cpuList.get(i);
-            OSProcess proc = cpu.getCurrentProcess();
-            if (proc != null && row == cpu.getPC()) {
-                c.setBackground(CPU_BRIGHT[i % CPU_BRIGHT.length]);
-                c.setForeground(Color.WHITE);
-                if (c instanceof JLabel lbl) lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
+    private class RAMRenderer extends DefaultTableCellRenderer {
+ 
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable t, Object val, boolean sel, boolean foc, int row, int col) {
+ 
+            Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+            c.setForeground(Color.BLACK);
+            if (c instanceof JLabel lbl) {
+                lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
+                lbl.setBorder(new EmptyBorder(0, 3, 0, 3));
+            }
+ 
+            // ── Kernel: siempre azul-gris ──────────────────────────────
+            if (row < RAM.KERNEL_SIZE) {
+                c.setBackground(C_KERNEL);
                 return c;
             }
-        }
-        
-        // ========== PRIORIDAD 2: RANGO DEL PROCESO EN EJECUCIÓN ==========
-        // Verificar cada CPU si tiene un proceso en RUNNING
-        for (int i = 0; i < cpuList.size(); i++) {
-            CPU cpu = cpuList.get(i);
-            OSProcess proc = cpu.getCurrentProcess();
-            if (proc != null) {
-                // Verificar estado (puede estar en OSProcess o en BCP)
+ 
+            // ── Recolectar procesos activos una sola vez ───────────────
+            List<CPU>        cpuList  = os.getAllCpus();
+            List<Dispatcher> dispList = os.getDispatchers();
+ 
+            // Helper para obtener el proceso activo de un índice de CPU
+            // (Dispatcher es la fuente de verdad; CPU como fallback)
+            OSProcess[] active = new OSProcess[Math.max(cpuList.size(), dispList.size())];
+            for (int i = 0; i < active.length; i++) {
+                if (i < dispList.size() && dispList.get(i).getCurrentProcess() != null) {
+                    active[i] = dispList.get(i).getCurrentProcess();
+                } else if (i < cpuList.size()) {
+                    active[i] = cpuList.get(i).getCurrentProcess();
+                }
+            }
+ 
+            // ── Prioridad 1: instrucción activa (PC exacto de algún CPU) ─
+            for (int i = 0; i < cpuList.size(); i++) {
+                CPU cpu = cpuList.get(i);
+                OSProcess proc = active[i];
+                if (proc == null) continue;
+                // FIX: verificar que el PC esté dentro de un rango válido
+                int base  = proc.getBaseAddress();
+                int limit = proc.getLimitAddress();
+                if (base < 0 || limit < 0) continue;   // proceso en SWAP, saltar
+                if (row == cpu.getPC() && cpu.getPC() >= base && cpu.getPC() < limit) {
+                    c.setBackground(CPU_BRIGHT[i % CPU_BRIGHT.length]);
+                    c.setForeground(Color.WHITE);
+                    if (c instanceof JLabel lbl) lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
+                    return c;
+                }
+            }
+ 
+            // ── Prioridad 2: rango del proceso en RUNNING ─────────────
+            for (int i = 0; i < active.length; i++) {
+                OSProcess proc = active[i];
+                if (proc == null) continue;
+ 
+                // FIX: verificar baseAddress y limitAddress > 0
+                int base  = proc.getBaseAddress();
+                int limit = proc.getLimitAddress();
+                if (base < 0 || limit <= 0 || limit <= base) continue;
+ 
+                // FIX: aceptar RUNNING desde OSProcess O desde BCP
                 boolean isRunning = (proc.getState() == ProcessState.RUNNING);
                 if (!isRunning && proc.getBcp() != null) {
                     isRunning = (proc.getBcp().getState() == ProcessState.RUNNING);
                 }
-                
-                if (isRunning) {
-                    int base = proc.getBaseAddress();
-                    int limit = proc.getLimitAddress();
-                    if (row >= base && row < limit) {
-                        c.setBackground(CPU_SOFT[i % CPU_SOFT.length]);
-                        if (c instanceof JLabel lbl) lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
+                // También considerar el proceso activo aunque su estado no sea RUNNING todavía
+                // (puede haberse asignado en este tick pero el estado aún no se propagó)
+                if (!isRunning) {
+                    // Si el Dispatcher lo tiene como currentProcess, lo consideramos activo
+                    if (i < dispList.size() && proc == dispList.get(i).getCurrentProcess()) {
+                        isRunning = true;
+                    }
+                }
+ 
+                if (isRunning && row >= base && row < limit) {
+                    c.setBackground(CPU_SOFT[i % CPU_SOFT.length]);
+                    return c;
+                }
+            }
+ 
+            // ── Prioridad 3: partición seleccionada (FPM) ─────────────
+            MemoryManager mm = os.getScheduler().getMemoryManager();
+            if (mm instanceof FixedPartitionManager fpm && selectedPartitionIndex >= 0) {
+                int[] bases = fpm.getPartitionBase();
+                int[] sizes = fpm.getPartitionSizes();
+                if (selectedPartitionIndex < bases.length) {
+                    int start = bases[selectedPartitionIndex];
+                    int end   = start + sizes[selectedPartitionIndex];
+                    if (row >= start && row < end) {
+                        c.setBackground(C_PARTITION_SEL_BG);
+                        if (c instanceof JLabel lbl)
+                            lbl.setBorder(BorderFactory.createMatteBorder(0, 4, 0, 0,
+                                C_PARTITION_SEL_LINE));
                         return c;
                     }
                 }
             }
-        }
-
-        // ========== PRIORIDAD 3: PARTICIÓN SELECCIONADA (solo FPM) ==========
-        MemoryManager mm = os.getScheduler().getMemoryManager();
-        if (mm instanceof FixedPartitionManager fpm && selectedPartitionIndex >= 0) {
-            int[] bases = fpm.getPartitionBase();
-            int[] sizes = fpm.getPartitionSizes();
-            if (selectedPartitionIndex < bases.length) {
-                int start = bases[selectedPartitionIndex];
-                int end = start + sizes[selectedPartitionIndex];
-                if (row >= start && row < end) {
-                    c.setBackground(C_PARTITION_SEL_BG);
-                    if (c instanceof JLabel lbl) {
-                        lbl.setBorder(BorderFactory.createMatteBorder(0, 4, 0, 0, C_PARTITION_SEL_LINE));
+ 
+            // ── Prioridad 4: borde izquierdo delimitador de partición ──
+            if (mm instanceof FixedPartitionManager fpm) {
+                int[] bases = fpm.getPartitionBase();
+                for (int base : bases) {
+                    if (row == base) {
+                        if (c instanceof JLabel lbl)
+                            lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0,
+                                C_PARTITION_BORDER));
+                        break;
                     }
-                    return c;
                 }
             }
+ 
+            // ── Prioridad 5: por defecto ───────────────────────────────
+            String v = os.getMemory().getMemory()[row];
+            c.setBackground((v != null && !v.isBlank()) ? C_WHITE : new Color(250, 250, 250));
+            return c;
         }
-
-        // ========== PRIORIDAD 4: BORDE IZQUIERDO DE PARTICIÓN (FPM) ==========
-        if (mm instanceof FixedPartitionManager fpm) {
-            int[] bases = fpm.getPartitionBase();
-            for (int i = 0; i < bases.length; i++) {
-                if (row == bases[i]) {
-                    if (c instanceof JLabel lbl) {
-                        lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0, C_PARTITION_BORDER));
-                    }
-                    break;
-                }
-            }
-        }
-
-        // ========== PRIORIDAD 5: POR DEFECTO ==========
-        String v = os.getMemory().getMemory()[row];
-        c.setBackground((v != null && !v.isBlank()) ? C_WHITE : new Color(250, 250, 250));
-        return c;
     }
-}
 
     // ═════════════════════════════════════════════════════════════════════
     // RENDERERS AUXILIARES

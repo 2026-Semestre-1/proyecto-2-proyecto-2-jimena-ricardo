@@ -11,12 +11,12 @@ import java.util.List;
  *
  * @author jimen
  */
-
 public class RoundRobin implements SchedulerStrategy {
 
     private final int quantum;
-    private int ticksUsed = 0;
-    private OSProcess currentProcess = null;
+
+    private final java.util.concurrent.ConcurrentHashMap<Integer, Integer> ticksMap =
+        new java.util.concurrent.ConcurrentHashMap<>();
 
     public RoundRobin(int quantum) {
         this.quantum = quantum;
@@ -25,33 +25,35 @@ public class RoundRobin implements SchedulerStrategy {
     @Override
     public OSProcess selectNext(List<OSProcess> readyQueue) {
         if (readyQueue.isEmpty()) return null;
-        ticksUsed = 0; 
-        return readyQueue.get(0);
+        OSProcess next = readyQueue.remove(0);
+        if (next != null) ticksMap.put(next.getPID(), 0);
+        return next;
     }
 
     @Override
     public void onTick(OSProcess running, List<OSProcess> readyQueue) {
-        if (running != null) {
-            ticksUsed++;
-            currentProcess = running;
-        }
+        if (running == null) return;
+        ticksMap.merge(running.getPID(), 1, Integer::sum);
     }
 
     @Override
     public boolean shouldPreempt(OSProcess running, List<OSProcess> readyQueue) {
-        if (running == null) return false;
+        if (running == null || readyQueue.isEmpty()) return false;
+        int used = ticksMap.getOrDefault(running.getPID(), 0);
+        return used >= quantum;
+    }
 
-        if (readyQueue.isEmpty()) return false;
+    public void resetTicks() {
+        ticksMap.clear();
+    }
 
-        return ticksUsed >= quantum;
+    public void resetTicks(int pid) {
+        ticksMap.put(pid, 0);
     }
 
     @Override
-    public String getName() { 
-        return "RR (q=" + quantum + ")"; 
-    }
+    public String getName() { return "RR (q=" + quantum + ")"; }
 
-    public int getQuantum() { return quantum; }
-    public int getTicksUsed() { return ticksUsed; }
-    public void resetTicks() { ticksUsed = 0; }
+    public int getQuantum()          { return quantum; }
+    public int getTicksUsed(int pid) { return ticksMap.getOrDefault(pid, 0); }
 }
