@@ -30,7 +30,6 @@ public class Scheduler {
     private static final int KERNEL_SIZE = 150;
     private final Object ramLock = new Object();
     
-    // Memory Manager para estrategias de asignación
     private MemoryManager memoryManager;
 
     public Scheduler(RAM ram, Disk disk, long simulatorStartMillis) {
@@ -42,8 +41,7 @@ public class Scheduler {
         this.waitingQueue         = new WaitingQueue();
         this.nextFreeAddr         = KERNEL_SIZE;
         
-        // MemoryManager por defecto: Particiones Fijas (4 particiones de 256 bytes)
-        this.memoryManager = new FixedPartitionManager(4, 256, true);
+        this.memoryManager = new DynamicPartitionManager(ram.getMemory().length, true, 30);
     }
 
     public OSProcess loadProcess(String path) {
@@ -92,7 +90,6 @@ public class Scheduler {
             if (p.getState() != ProcessState.NEW && p.getState() != ProcessState.WAITING)
                 return false;
             
-            // Usar el MemoryManager para asignar memoria
             int base = memoryManager.allocate(p, ram.getMemory());
             
             if (base == -1) {
@@ -121,15 +118,12 @@ public class Scheduler {
         p.getBcp().markTerminated(simulatorStartMillis);
         p.setState(ProcessState.TERMINATED);
         
-        // Liberar memoria usando el MemoryManager
         memoryManager.free(p, ram.getMemory());
         
-        // Si es dinámico y necesita compactación
         if (memoryManager instanceof DynamicPartitionManager) {
             DynamicPartitionManager dm = (DynamicPartitionManager) memoryManager;
             if (dm.needsCompaction()) {
                 memoryManager.compact(ram.getMemory());
-                // Recalcular nextFreeAddr después de compactar
                 nextFreeAddr = KERNEL_SIZE;
                 for (MemoryBlock block : dm.getAllocatedBlocks()) {
                     nextFreeAddr = Math.max(nextFreeAddr, block.getEndAddress());
@@ -137,7 +131,6 @@ public class Scheduler {
             }
         }
         
-        // Intentar cargar procesos en espera
         loadFromSwap();
         tryLoadNewProcesses();
     }
@@ -203,7 +196,6 @@ public class Scheduler {
         return dot > 0 ? n.substring(0, dot) : n;
     }
 
-    // Getters y Setters
     public JobQueue     getJobQueue()               { return jobQueue; }
     public ReadyQueue   getReadyQueue()             { return readyQueue; }
     public WaitingQueue getWaitingQueue()           { return waitingQueue; }

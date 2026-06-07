@@ -107,7 +107,6 @@ public class OperatingSystem {
 
     // Automatic: each CPU runs its own 1-second tick in its own thread
     public void run(boolean stepMode) {
-
         if (stepMode) { tickAll(); return; }
 
         isRunning = true;
@@ -127,7 +126,13 @@ public class OperatingSystem {
         cpuFutures.clear();
     }
 
-    // Runs inside CPU-idx's dedicated thread every second
+    /**
+     * CORREGIDO: Orden correcto de operaciones para RR
+     * 1. Asignar proceso si la CPU está libre
+     * 2. Ejecutar una instrucción
+     * 3. Notificar onTick (solo si hay proceso)
+     * 4. Verificar shouldPreempt
+     */
     private void tickCPU(int idx) {
         if (!isRunning) return;
         try {
@@ -135,6 +140,7 @@ public class OperatingSystem {
             Dispatcher d   = dispatchers.get(idx);
             CPU        cpu = cpus.get(idx);
 
+            // PASO 1: Asignar nuevo proceso si la CPU está libre
             if (d.getCurrentProcess() == null) {
                 scheduler.tryLoadNewProcesses();
                 scheduler.loadFromSwap();
@@ -142,12 +148,18 @@ public class OperatingSystem {
             }
 
             Integer pc = null;
+            
+            // PASO 2: Ejecutar una instrucción (si hay proceso)
             if (d.getCurrentProcess() != null) {
                 pc = d.CPUcycle();
-                if (d.getCurrentProcess() != null) {
-                    List<OSProcess> snap = scheduler.getReadyQueue().getAll();
-                    strategy.onTick(d.getCurrentProcess(), snap);
-                    if (strategy.shouldPreempt(d.getCurrentProcess(), snap)) preempt(d, cpu);
+            }
+
+            // PASO 3 y 4: Notificar onTick y verificar preempt (solo si el proceso sigue vivo)
+            if (d.getCurrentProcess() != null) {
+                List<OSProcess> snap = scheduler.getReadyQueue().getAll();
+                strategy.onTick(d.getCurrentProcess(), snap);
+                if (strategy.shouldPreempt(d.getCurrentProcess(), snap)) {
+                    preempt(d, cpu);
                 }
             }
 
@@ -178,26 +190,41 @@ public class OperatingSystem {
         }
     }
 
-    // Step mode: one instruction per CPU, called on EDT
+    /**
+     * CORREGIDO: Modo paso a paso - mismo orden que tickCPU
+     */
     private void tickAll() {
         scheduler.tryLoadNewProcesses();
         scheduler.loadFromSwap();
+        
         for (int i = 0; i < dispatchers.size(); i++) {
             Dispatcher d   = dispatchers.get(i);
             CPU        cpu = cpus.get(i);
-            if (d.getCurrentProcess() == null) assignNext(d, cpu);
+            
+            // PASO 1: Asignar proceso si la CPU está libre
+            if (d.getCurrentProcess() == null) {
+                assignNext(d, cpu);
+            }
+            
+            // PASO 2: Ejecutar una instrucción (si hay proceso)
             if (d.getCurrentProcess() != null) {
                 Integer pc = d.CPUcycle();
-                if (d.getCurrentProcess() != null) {
-                    List<OSProcess> snap = scheduler.getReadyQueue().getAll();
-                    strategy.onTick(d.getCurrentProcess(), snap);
-                    if (strategy.shouldPreempt(d.getCurrentProcess(), snap)) preempt(d, cpu);
-                }
                 if (pc != null && gui != null) gui.highlightRow(pc);
             }
+            
+            // PASO 3 y 4: Notificar onTick y verificar preempt (solo si el proceso sigue vivo)
+            if (d.getCurrentProcess() != null) {
+                List<OSProcess> snap = scheduler.getReadyQueue().getAll();
+                strategy.onTick(d.getCurrentProcess(), snap);
+                if (strategy.shouldPreempt(d.getCurrentProcess(), snap)) {
+                    preempt(d, cpu);
+                }
+            }
         }
+        
         refreshKernel();
         if (gui != null) gui.refreshAll();
+        
         if (scheduler.allTerminated()) {
             stop();
             refreshKernel();
@@ -235,6 +262,7 @@ public class OperatingSystem {
         p.setState(ProcessState.READY);
         scheduler.getReadyQueue().enqueue(p);
         d.setCurrentProcess(null);
+        System.out.println("[OS] Preempt: " + p.getName() + " → READY");
     }
 
     private void refreshKernel() {
@@ -245,6 +273,7 @@ public class OperatingSystem {
         memory.updateAllBCPsInKernel(all);
     }
 
+    // Getters
     public CPU getCpu()                            { return cpus.isEmpty() ? null : cpus.get(0); }
     public CPU getCpu(int i)                       { return (i >= 0 && i < cpus.size()) ? cpus.get(i) : null; }
     public List<CPU> getAllCpus()                  { return cpus; }

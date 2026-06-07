@@ -16,6 +16,8 @@ import com.mycompany.pyso.Scheduler.RoundRobin;
 import com.mycompany.pyso.Scheduler.SRT;
 import com.mycompany.pyso.Scheduler.HRRN;
 import com.mycompany.pyso.Scheduler.Lottery;
+import com.mycompany.pyso.Scheduler.SJF;
+import com.mycompany.pyso.Scheduler.SchedulerSimulation;
 import com.mycompany.pyso.Scheduler.SchedulerStrategy;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -59,32 +61,27 @@ public class UI extends JFrame {
     private static final Color C_INDEX     = new Color(230, 230, 230);
     private static final Color C_SWAP      = new Color(255, 235, 180);
 
-    // ── Colores brillantes por CPU (instrucción activa) ────────────────────
-    // CPU1=Verde  CPU2=Azul  CPU3=Amarillo  CPU4=Morado
+    // ── Colores brillantes por CPU ────────────────────────────────────────
     private static final Color[] CPU_BRIGHT = {
-        new Color(46,  204, 113),   // CPU 1 — Verde
-        new Color(52,  152, 219),   // CPU 2 — Azul
-        new Color(241, 196, 15),    // CPU 3 — Amarillo
-        new Color(155, 89,  182),   // CPU 4 — Morado
+        new Color(46, 204, 113), new Color(52, 152, 219),
+        new Color(241, 196, 15), new Color(155, 89, 182),
     };
 
-    // ── Colores suaves por CPU (rango del proceso en RAM) ─────────────────
+    // ── Colores suaves por CPU ────────────────────────────────────────────
     private static final Color[] CPU_SOFT = {
-        new Color(210, 255, 230),   // CPU 1 — Verde suave
-        new Color(210, 232, 255),   // CPU 2 — Azul suave
-        new Color(255, 249, 196),   // CPU 3 — Amarillo suave
-        new Color(240, 220, 255),   // CPU 4 — Morado suave
+        new Color(210, 255, 230), new Color(210, 232, 255),
+        new Color(255, 249, 196), new Color(240, 220, 255),
     };
 
     // ── Color de partición seleccionada ───────────────────────────────────
     private static final Color C_PARTITION_SEL_BG   = new Color(255, 200, 200);
     private static final Color C_PARTITION_BORDER    = new Color(180, 180, 180);
-    private static final Color C_PARTITION_SEL_LINE  = new Color(200, 40,  40);
+    private static final Color C_PARTITION_SEL_LINE  = new Color(200, 40, 40);
 
     // ── Estado ────────────────────────────────────────────────────────────
     private OperatingSystem os;
     private int  highlightedRow     = -1;
-    private int  selectedPartitionIndex = -1;   // ← partición seleccionada con clic
+    private int  selectedPartitionIndex = -1;
     private boolean stepModeActive  = false;
     private Timer autoExecutionTimer;
 
@@ -111,10 +108,16 @@ public class UI extends JFrame {
     private final List<DefaultTableModel>    cpuModels = new ArrayList<>();
 
     // ── Tab Algoritmos ────────────────────────────────────────────────────
-    private JLabel  lblAlgoName;
-    private JTable  tblAlgoHeader;
-    private JPanel  ganttPanel;
-    private JTable  tblStats;
+    private JLabel              lblAlgoName;
+    private JTable              tblProcessData;
+    private DefaultTableModel   processDataModel;
+    private JTable              tblExecutionMatrix;
+    private DefaultTableModel   executionMatrixModel;
+    private JTable              tblCircularMatrix;
+    private DefaultTableModel   circularMatrixModel;
+    private JPanel              circularMatrixPanel;
+    private JTable              tblStats;
+    private DefaultTableModel   statsModel;
 
     // ── Tab Consola ───────────────────────────────────────────────────────
     private JTextPane  consoleOutput;
@@ -159,8 +162,8 @@ public class UI extends JFrame {
         setMinimumSize(new Dimension(1500, 850));
         getContentPane().setBackground(C_BG);
         setLayout(new BorderLayout(0, 0));
-        add(buildToolBar(),     BorderLayout.NORTH);
-        add(buildTabbedPane(),  BorderLayout.CENTER);
+        add(buildToolBar(), BorderLayout.NORTH);
+        add(buildTabbedPane(), BorderLayout.CENTER);
         pack();
         setLocationRelativeTo(null);
     }
@@ -260,15 +263,10 @@ public class UI extends JFrame {
         return bcpPanel;
     }
 
-    /**
-     * Panel RAM con MouseListener para selección de partición.
-     * El renderer se encarga de pintar, el listener guarda la partición clicada.
-     */
     private JPanel buildRAMPanel() {
         tblRAM = makeTable(new String[]{"Posición", "Valor en memoria"});
         tblRAM.setDefaultRenderer(Object.class, new RAMRenderer());
 
-        // ── Selección de partición con clic (requisito 3) ─────────────────
         tblRAM.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -321,7 +319,6 @@ public class UI extends JFrame {
         leg.setOpaque(false);
         leg.add(legendDot(C_KERNEL, "Kernel"));
         leg.add(legendDot(C_SWAP,   "Swap / Mem. Virtual"));
-        // Leyenda dinámica para CPUs activas
         for (int i = 0; i < CPU_BRIGHT.length; i++) {
             leg.add(legendDot(CPU_BRIGHT[i], "CPU " + (i + 1) + " activa"));
             leg.add(legendDot(CPU_SOFT[i],   "CPU " + (i + 1) + " rango"));
@@ -372,7 +369,7 @@ public class UI extends JFrame {
         DefaultTableModel model = new DefaultTableModel(new String[]{"", ""}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
-        String[] fields = {"Proceso","Estado","PC","IR","AC","AX","BX","CX","DX","Progreso"};
+        String[] fields = {"Proceso", "Estado", "PC", "IR", "AC", "AX", "BX", "CX", "DX", "Progreso"};
         for (String f : fields) model.addRow(new Object[]{f, "—"});
         cpuModels.add(model);
 
@@ -385,13 +382,11 @@ public class UI extends JFrame {
         tbl.setGridColor(new Color(220, 220, 220));
         tbl.getTableHeader().setVisible(false);
 
-        // Colorear la cabecera de la tarjeta con el color del CPU
         Color cpuColor = CPU_BRIGHT[(cpuId - 1) % CPU_BRIGHT.length];
 
         JPanel card = new JPanel(new BorderLayout(0, 4));
         card.setBackground(C_WHITE);
 
-        // Borde titulado coloreado
         TitledBorder border = BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(cpuColor, 2),
             "CPU " + cpuId, TitledBorder.LEFT, TitledBorder.TOP,
@@ -407,39 +402,281 @@ public class UI extends JFrame {
     private JPanel buildAlgoritmosTab() {
         JPanel root = new JPanel(new BorderLayout(10, 10));
         root.setBackground(C_BG);
-        root.setBorder(new EmptyBorder(14, 14, 14, 14));
+        root.setBorder(new EmptyBorder(10, 14, 10, 14));
 
-        lblAlgoName = new JLabel("FCFS", SwingConstants.CENTER);
+        JPanel north = new JPanel(new BorderLayout(10, 0));
+        north.setOpaque(false);
+        lblAlgoName = new JLabel("—", SwingConstants.CENTER);
         lblAlgoName.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        root.add(lblAlgoName, BorderLayout.NORTH);
+        north.add(lblAlgoName, BorderLayout.CENTER);
+        JButton btnSim = toolBtn("▶  Simular");
+        btnSim.addActionListener(e -> runAlgoSimulation());
+        north.add(btnSim, BorderLayout.EAST);
+        root.add(north, BorderLayout.NORTH);
 
-        JPanel center = new JPanel(new BorderLayout(0, 10));
-        center.setOpaque(false);
+        JPanel col = new JPanel();
+        col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+        col.setBackground(C_BG);
 
-        tblAlgoHeader = makeTable(new String[]{"","1","2","3","4","5","6","7","8","9","10"});
-        tblAlgoHeader.setRowHeight(28);
-        DefaultTableModel hModel = (DefaultTableModel) tblAlgoHeader.getModel();
-        hModel.addRow(new Object[]{"Proceso","","","","","","","","","",""});
-        hModel.addRow(new Object[]{"Arrivo", "","","","","","","","","",""});
-        hModel.addRow(new Object[]{"Ráfaga", "","","","","","","","","",""});
-        center.add(new JScrollPane(tblAlgoHeader), BorderLayout.NORTH);
+        processDataModel = new DefaultTableModel(new String[]{"Proceso", "Llegada", "Ráfaga"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        tblProcessData = algoTable(processDataModel, null);
+        JPanel p1 = algoPanel("Datos de Procesos", tblProcessData, 100);
+        col.add(p1);
+        col.add(Box.createVerticalStrut(8));
 
-        ganttPanel = new JPanel();
-        ganttPanel.setBackground(new Color(200, 210, 230));
-        ganttPanel.setPreferredSize(new Dimension(0, 200));
-        ganttPanel.setBorder(titledBorder("Ejecución"));
-        center.add(ganttPanel, BorderLayout.CENTER);
+        executionMatrixModel = new DefaultTableModel() {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override public Class<?> getColumnClass(int c) { return String.class; }
+        };
+        tblExecutionMatrix = algoTable(executionMatrixModel, new ExecutionMatrixRenderer());
+        JPanel p2 = algoPanel("Ejecución (Gantt)", tblExecutionMatrix, 250);
+        col.add(p2);
+        col.add(Box.createVerticalStrut(8));
 
-        root.add(center, BorderLayout.CENTER);
+        circularMatrixModel = new DefaultTableModel() {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override public Class<?> getColumnClass(int c) { return String.class; }
+        };
+        tblCircularMatrix = algoTable(circularMatrixModel, new CircularMatrixRenderer());
+        circularMatrixPanel = algoPanel("Cola Circular (solo RR)", tblCircularMatrix, 200);
+        circularMatrixPanel.setVisible(false);
+        col.add(circularMatrixPanel);
 
-        tblStats = makeTable(new String[]{"Tf","Tr","Tr/Ts"});
-        tblStats.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tblStats.setRowHeight(24);
+        JScrollPane outerScroll = new JScrollPane(col);
+        outerScroll.getVerticalScrollBar().setUnitIncrement(16);
+        outerScroll.setBorder(BorderFactory.createEmptyBorder());
+        root.add(outerScroll, BorderLayout.CENTER);
+
+        statsModel = new DefaultTableModel(new String[]{"Proceso", "Tf", "Tr", "Tr/Ts"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        tblStats = new JTable(statsModel);
+        tblStats.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tblStats.setRowHeight(22);
         JPanel statsWrap = titled("Estadísticas", scroll(tblStats));
-        statsWrap.setPreferredSize(new Dimension(220, 0));
+        statsWrap.setPreferredSize(new Dimension(230, 0));
         root.add(statsWrap, BorderLayout.EAST);
 
         return root;
+    }
+
+    private JTable algoTable(DefaultTableModel model, TableCellRenderer renderer) {
+        JTable t = new JTable(model);
+        t.setRowHeight(24);
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        t.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+        t.setShowGrid(true);
+        t.setGridColor(new Color(220, 220, 220));
+        t.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        if (renderer != null) t.setDefaultRenderer(Object.class, renderer);
+        return t;
+    }
+
+    private JPanel algoPanel(String title, JTable table, int height) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(C_WHITE);
+        panel.setBorder(titledBorder(title));
+        panel.setPreferredSize(new Dimension(900, height));
+        JScrollPane sp = new JScrollPane(table,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        panel.add(sp, BorderLayout.CENTER);
+        return panel;
+    }
+
+    // ── Process colors shared between Gantt and circular renderers ────────
+    private static final Color[] PROC_COLORS = {
+        new Color(46, 204, 113), new Color(52, 152, 219),
+        new Color(241, 196, 15), new Color(230, 126, 34),
+        new Color(231, 76, 60),  new Color(155, 89, 182),
+    };
+    private static final Color C_COL_HEADER = new Color(230, 230, 235);
+
+    private class ExecutionMatrixRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable t, Object val, boolean sel, boolean foc, int row, int col) {
+            Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+            c.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            setHorizontalAlignment(CENTER);
+            if (col == 0) {
+                c.setBackground(C_COL_HEADER);
+                c.setForeground(Color.BLACK);
+                c.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            } else if ("1".equals(val)) {
+                c.setBackground(PROC_COLORS[row % PROC_COLORS.length]);
+                c.setForeground(Color.WHITE);
+            } else {
+                c.setBackground(Color.WHITE);
+                c.setForeground(Color.BLACK);
+            }
+            return c;
+        }
+    }
+
+    private class CircularMatrixRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable t, Object val, boolean sel, boolean foc, int row, int col) {
+            Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+            c.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            setHorizontalAlignment(CENTER);
+            if (col == 0) {
+                c.setBackground(C_COL_HEADER);
+                c.setForeground(Color.BLACK);
+                c.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            } else if (val != null && !val.toString().isEmpty()) {
+                try {
+                    int pid = Integer.parseInt(val.toString());
+                    int idx = pid - 1;
+                    c.setBackground(PROC_COLORS[idx % PROC_COLORS.length]);
+                    c.setForeground(Color.WHITE);
+                    c.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                } catch (NumberFormatException ignored) {
+                    c.setBackground(Color.WHITE);
+                    c.setForeground(Color.BLACK);
+                }
+            } else {
+                c.setBackground(Color.WHITE);
+                c.setForeground(Color.BLACK);
+            }
+            return c;
+        }
+    }
+
+    // ── Simulation runner ─────────────────────────────────────────────────
+    private void runAlgoSimulation() {
+        List<OSProcess> processes = os.getScheduler().getJobQueue().getAll();
+        if (processes.isEmpty()) {
+            return;
+        }
+
+        List<Integer> arrivals = new ArrayList<>();
+        List<Integer> bursts = new ArrayList<>();
+        for (OSProcess p : processes) {
+            arrivals.add((int) Math.max(0, p.getBcp().getArrivalMillis() / 1000));
+            bursts.add(p.getBurstTime());
+        }
+
+        String stratName = os.getStrategy().getName();
+        int quantum = 1;
+        String algoKey;
+        if (stratName.startsWith("FCFS"))    algoKey = "FCFS";
+        else if (stratName.startsWith("SJF")) algoKey = "SJF";
+        else if (stratName.startsWith("SRT")) algoKey = "SRT";
+        else if (stratName.startsWith("RR")) {
+            algoKey = "RR";
+            try {
+                quantum = Integer.parseInt(
+                    stratName.substring(stratName.indexOf("q=") + 2, stratName.indexOf(")")));
+            } catch (Exception ignored) { quantum = 3; }
+        } else algoKey = "FCFS";
+
+        lblAlgoName.setText(stratName);
+
+        SchedulerSimulation sim = new SchedulerSimulation(arrivals, bursts, algoKey, quantum);
+        sim.simulate();
+
+        updateProcessTable(processes, arrivals, bursts);
+        updateExecutionMatrix(sim);
+        updateStatsTable(sim, processes);
+
+        if (sim.isCircularAlgorithm()) {
+            updateCircularMatrix(sim);
+            circularMatrixPanel.setVisible(true);
+        } else {
+            circularMatrixPanel.setVisible(false);
+        }
+        circularMatrixPanel.getParent().revalidate();
+    }
+
+    private void updateProcessTable(List<OSProcess> processes,
+                                    List<Integer> arrivals, List<Integer> bursts) {
+        processDataModel.setRowCount(0);
+        for (int i = 0; i < processes.size(); i++) {
+            processDataModel.addRow(new Object[]{
+                "P" + processes.get(i).getPID(),
+                arrivals.get(i),
+                bursts.get(i)
+            });
+        }
+    }
+
+    private void updateExecutionMatrix(SchedulerSimulation sim) {
+        int totalTime = sim.getTotalTime();
+        int numProcesses = sim.getProcessIds().size();
+        int[][] matrix = sim.getExecutionMatrix();
+
+        String[] cols = new String[totalTime + 1];
+        cols[0] = "P \\ t";
+        for (int t = 1; t <= totalTime; t++) cols[t] = String.valueOf(t);
+
+        executionMatrixModel.setColumnIdentifiers(cols);
+        executionMatrixModel.setRowCount(0);
+
+        for (int i = 0; i < numProcesses; i++) {
+            Object[] row = new Object[totalTime + 1];
+            row[0] = "P" + sim.getProcessIds().get(i);
+            for (int t = 0; t < totalTime; t++) {
+                row[t + 1] = (matrix[i][t] == 1) ? "1" : "";
+            }
+            executionMatrixModel.addRow(row);
+        }
+
+        if (tblExecutionMatrix.getColumnCount() > 0) {
+            tblExecutionMatrix.getColumnModel().getColumn(0).setPreferredWidth(55);
+            for (int c = 1; c < tblExecutionMatrix.getColumnCount() && c < 50; c++) {
+                tblExecutionMatrix.getColumnModel().getColumn(c).setPreferredWidth(35);
+            }
+        }
+    }
+
+    private void updateCircularMatrix(SchedulerSimulation sim) {
+        int totalTime = sim.getTotalTime();
+        int maxRows = sim.getMaxCircularRows();
+        int[][] matrix = sim.getCircularMatrix();
+        if (matrix == null || maxRows == 0) return;
+
+        String[] cols = new String[totalTime + 1];
+        cols[0] = "Cola \\ t";
+        for (int t = 1; t <= totalTime; t++) cols[t] = String.valueOf(t);
+
+        circularMatrixModel.setColumnIdentifiers(cols);
+        circularMatrixModel.setRowCount(0);
+
+        for (int r = 0; r < maxRows; r++) {
+            Object[] row = new Object[totalTime + 1];
+            row[0] = "F" + (r + 1);
+            for (int t = 0; t < totalTime; t++) {
+                int proc = matrix[r][t];
+                row[t + 1] = (proc != -1) ? String.valueOf(proc + 1) : "";
+            }
+            circularMatrixModel.addRow(row);
+        }
+
+        if (tblCircularMatrix.getColumnCount() > 0) {
+            tblCircularMatrix.getColumnModel().getColumn(0).setPreferredWidth(60);
+            for (int c = 1; c < tblCircularMatrix.getColumnCount() && c < 50; c++) {
+                tblCircularMatrix.getColumnModel().getColumn(c).setPreferredWidth(35);
+            }
+        }
+    }
+
+    private void updateStatsTable(SchedulerSimulation sim, List<OSProcess> processes) {
+        statsModel.setRowCount(0);
+        int[] tf = sim.getCompletionTimes();
+        int[] tr = sim.getTurnaroundTimes();
+        double[] ratio = sim.getResponseRatios();
+        for (int i = 0; i < processes.size(); i++) {
+            statsModel.addRow(new Object[]{
+                "P" + processes.get(i).getPID(),
+                tf[i],
+                tr[i],
+                String.format("%.2f", ratio[i])
+            });
+        }
     }
 
     // ═════════════════════════════════════════════════════════════════════
@@ -470,7 +707,7 @@ public class UI extends JFrame {
         btnConsoleSend.addActionListener(e -> doConsoleSend());
         consoleInput.addActionListener(e -> doConsoleSend());
 
-        inputRow.add(lbl,          BorderLayout.WEST);
+        inputRow.add(lbl, BorderLayout.WEST);
         inputRow.add(consoleInput, BorderLayout.CENTER);
         inputRow.add(btnConsoleSend, BorderLayout.EAST);
 
@@ -489,12 +726,12 @@ public class UI extends JFrame {
         JPanel root = new JPanel(new GridBagLayout());
         root.setBackground(C_BG);
         GridBagConstraints gc = new GridBagConstraints();
-        gc.insets  = new Insets(10, 20, 10, 20);
-        gc.anchor  = GridBagConstraints.WEST;
-        gc.fill    = GridBagConstraints.HORIZONTAL;
+        gc.insets = new Insets(10, 20, 10, 20);
+        gc.anchor = GridBagConstraints.WEST;
+        gc.fill = GridBagConstraints.HORIZONTAL;
 
         gc.gridy = 0; gc.gridx = 0; root.add(new JLabel("Algoritmo de CPU:"), gc);
-        cbAlgo = new JComboBox<>(new String[]{"FCFS","RR","SRT","HRRN","Lottery"});
+        cbAlgo = new JComboBox<>(new String[]{"FCFS", "RR", "SJF", "SRT", "HRRN", "Lottery"});
         cbAlgo.setPreferredSize(new Dimension(150, 25));
         gc.gridx = 1; root.add(cbAlgo, gc);
 
@@ -528,11 +765,11 @@ public class UI extends JFrame {
 
         gc.gridy = 5; gc.gridx = 0; gc.gridwidth = 2; gc.fill = GridBagConstraints.BOTH;
         memoryParamsLayout = new CardLayout();
-        memoryParamsPanel  = new JPanel(memoryParamsLayout);
-        memoryParamsPanel.add(buildFixedEqualPanel(),     "FIXED_EQUAL");
+        memoryParamsPanel = new JPanel(memoryParamsLayout);
+        memoryParamsPanel.add(buildFixedEqualPanel(), "FIXED_EQUAL");
         memoryParamsPanel.add(buildFixedDifferentPanel(), "FIXED_DIFFERENT");
-        memoryParamsPanel.add(buildDynamicPanel(),        "DYNAMIC");
-        memoryParamsPanel.add(buildPagingPanel(),         "PAGING");
+        memoryParamsPanel.add(buildDynamicPanel(), "DYNAMIC");
+        memoryParamsPanel.add(buildPagingPanel(), "PAGING");
         root.add(memoryParamsPanel, gc);
 
         gc.gridy = 6; gc.gridwidth = 1; gc.fill = GridBagConstraints.HORIZONTAL; gc.gridx = 0;
@@ -559,40 +796,30 @@ public class UI extends JFrame {
     private JPanel buildFixedEqualPanel() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         p.setBackground(C_BG);
-
         p.add(new JLabel("Tamaño de cada partición (bytes):"));
         fixedEqualSizeSpinner = new JSpinner(new SpinnerNumberModel(64, 4, 1024, 4));
         fixedEqualSizeSpinner.setPreferredSize(new Dimension(100, 25));
         p.add(fixedEqualSizeSpinner);
-
         p.add(Box.createHorizontalStrut(20));
         p.add(new JLabel("(Los procesos grandes ocuparán varias particiones consecutivas)"));
-
         fixedEqualSingleQueueCheck = new JCheckBox("Cola única (multibloque)", true);
         p.add(fixedEqualSingleQueueCheck);
-
-        p.setToolTipText("Ejemplo: Un proceso de 150 bytes en particiones de 64 bytes ocupará 3 particiones consecutivas");
-
         return p;
     }
 
     private JPanel buildFixedDifferentPanel() {
         JPanel p = new JPanel(new BorderLayout(10, 5));
         p.setBackground(C_BG);
-
         partitionListModel = new DefaultListModel<>();
         partitionList = new JList<>(partitionListModel);
         partitionList.setPreferredSize(new Dimension(200, 100));
-
         int[] defaults = {32, 64, 128, 256};
         for (int s : defaults) partitionListModel.addElement(s + " bytes");
-
         JPanel ctrl = new JPanel(new FlowLayout(FlowLayout.LEFT));
         ctrl.add(new JLabel("Tamaño de bloque:"));
         partitionSizeSpinner = new JSpinner(new SpinnerNumberModel(64, 4, 1024, 4));
         ctrl.add(partitionSizeSpinner);
         ctrl.add(new JLabel("bytes"));
-
         JButton add = new JButton("Agregar bloque");
         JButton rem = new JButton("Remover bloque");
         add.addActionListener(e -> {
@@ -606,15 +833,10 @@ public class UI extends JFrame {
         });
         ctrl.add(add);
         ctrl.add(rem);
-
         fixedDifferentSingleQueueCheck = new JCheckBox("Cola única (multibloque)", true);
         ctrl.add(fixedDifferentSingleQueueCheck);
-
         p.add(new JScrollPane(partitionList), BorderLayout.CENTER);
         p.add(ctrl, BorderLayout.SOUTH);
-
-        p.setToolTipText("Los procesos grandes ocuparán varios bloques consecutivos");
-
         return p;
     }
 
@@ -647,7 +869,7 @@ public class UI extends JFrame {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         p.setBackground(C_BG);
         p.add(new JLabel("Tamaño de página/frame:"));
-        Integer[] sizes = {8,16,32,64,128,256,512,1024,2048,4096};
+        Integer[] sizes = {8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
         pageSizeCombo = new JComboBox<>(sizes);
         pageSizeCombo.setSelectedItem(64);
         p.add(pageSizeCombo);
@@ -657,10 +879,10 @@ public class UI extends JFrame {
 
     private void updateMemoryParamsPanel() {
         String sel = (String) memoryStrategyCombo.getSelectedItem();
-        if      (sel.startsWith("Particiones Fijas (iguales)"))    memoryParamsLayout.show(memoryParamsPanel, "FIXED_EQUAL");
+        if (sel.startsWith("Particiones Fijas (iguales)")) memoryParamsLayout.show(memoryParamsPanel, "FIXED_EQUAL");
         else if (sel.startsWith("Particiones Fijas (diferentes)")) memoryParamsLayout.show(memoryParamsPanel, "FIXED_DIFFERENT");
-        else if (sel.startsWith("Particiones Dinámicas"))          memoryParamsLayout.show(memoryParamsPanel, "DYNAMIC");
-        else if (sel.startsWith("Paginación"))                     memoryParamsLayout.show(memoryParamsPanel, "PAGING");
+        else if (sel.startsWith("Particiones Dinámicas")) memoryParamsLayout.show(memoryParamsPanel, "DYNAMIC");
+        else if (sel.startsWith("Paginación")) memoryParamsLayout.show(memoryParamsPanel, "PAGING");
     }
 
     // ═════════════════════════════════════════════════════════════════════
@@ -712,7 +934,7 @@ public class UI extends JFrame {
             refreshAll();
         });
         autoExecutionTimer.start();
-        btnRun.setEnabled(false); btnStep.setEnabled(false);btnLoad.setEnabled(false);
+        btnRun.setEnabled(false); btnStep.setEnabled(false); btnLoad.setEnabled(false);
         printConsole("[SISTEMA] Ejecución automática iniciada", new Color(46,204,113));
     }
 
@@ -756,18 +978,19 @@ public class UI extends JFrame {
     }
 
     private void doApplyConfig() {
-        String algo   = (String) cbAlgo.getSelectedItem();
-        int quantum   = (int) spQuantum.getValue();
-        int numCpus   = (int) spCPUs.getValue();
-        int ramSize   = (int) spRAM.getValue();
-        int diskSize  = (int) spDisk.getValue();
+        String algo = (String) cbAlgo.getSelectedItem();
+        int quantum = (int) spQuantum.getValue();
+        int numCpus = (int) spCPUs.getValue();
+        int ramSize = (int) spRAM.getValue();
+        int diskSize = (int) spDisk.getValue();
 
         SchedulerStrategy strat = switch (algo) {
-            case "RR"  -> new RoundRobin(quantum);
-            case "SRT"  -> new SRT();
-            case "HRRN"    -> new HRRN();
+            case "RR" -> new RoundRobin(quantum);
+            case "SJF" -> new SJF();
+            case "SRT" -> new SRT();
+            case "HRRN" -> new HRRN();
             case "Lottery" -> new Lottery(quantum);
-            default         -> new FCFS();
+            default -> new FCFS();
         };
         MemoryManager mm = createMemoryManager(ramSize);
 
@@ -801,7 +1024,6 @@ public class UI extends JFrame {
             case "Particiones Fijas (diferentes)" -> {
                 int[] sizes = new int[partitionListModel.size()];
                 for (int i = 0; i < sizes.length; i++) {
-                    // Cambiar: ahora los valores están en "bytes", no "KB"
                     String item = partitionListModel.get(i);
                     sizes[i] = Integer.parseInt(item.replace(" bytes", "").trim());
                 }
@@ -826,7 +1048,7 @@ public class UI extends JFrame {
         int pid = process.getBcp().getPID();
         if (bcpModels.containsKey(pid)) return;
 
-        DefaultTableModel model = new DefaultTableModel(new String[]{"Campo","Valor"}, 0) {
+        DefaultTableModel model = new DefaultTableModel(new String[]{"Campo", "Valor"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         fillBCPModel(model, process.getBcp());
@@ -862,16 +1084,16 @@ public class UI extends JFrame {
 
     private void fillBCPModel(DefaultTableModel m, BCP bcp) {
         m.setRowCount(0);
-        m.addRow(new Object[]{"PID",      bcp.getPID()});
-        m.addRow(new Object[]{"Estado",   bcp.getState() != null ? bcp.getState().name() : "NEW"});
-        m.addRow(new Object[]{"PC",       bcp.getPC()});
-        m.addRow(new Object[]{"Limit",    bcp.getLimitAddress()});
-        m.addRow(new Object[]{"IR",       bcp.getIR() != null ? bcp.getIR() : ""});
-        m.addRow(new Object[]{"AX",       bcp.getAX()});
-        m.addRow(new Object[]{"BX",       bcp.getBX()});
-        m.addRow(new Object[]{"CX",       bcp.getCX()});
-        m.addRow(new Object[]{"DX",       bcp.getDX()});
-        m.addRow(new Object[]{"Stack",    stackStr(bcp)});
+        m.addRow(new Object[]{"PID", bcp.getPID()});
+        m.addRow(new Object[]{"Estado", bcp.getState() != null ? bcp.getState().name() : "NEW"});
+        m.addRow(new Object[]{"PC", bcp.getPC()});
+        m.addRow(new Object[]{"Limit", bcp.getLimitAddress()});
+        m.addRow(new Object[]{"IR", bcp.getIR() != null ? bcp.getIR() : ""});
+        m.addRow(new Object[]{"AX", bcp.getAX()});
+        m.addRow(new Object[]{"BX", bcp.getBX()});
+        m.addRow(new Object[]{"CX", bcp.getCX()});
+        m.addRow(new Object[]{"DX", bcp.getDX()});
+        m.addRow(new Object[]{"Stack", stackStr(bcp)});
         m.addRow(new Object[]{"Next BCP", bcp.getNextBCP() != null
                 ? "Addr[" + bcp.getNextBCP().getBaseAddress() + "]" : "(ninguno)"});
     }
@@ -880,7 +1102,10 @@ public class UI extends JFrame {
         if (bcp.getStack() == null || bcp.getStack().isEmpty()) return "[]";
         int[] v = bcp.getStack().getValues();
         StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < v.length; i++) { sb.append(v[i]); if (i < v.length-1) sb.append(","); }
+        for (int i = 0; i < v.length; i++) {
+            sb.append(v[i]);
+            if (i < v.length - 1) sb.append(",");
+        }
         return sb.append("]").toString();
     }
 
@@ -896,9 +1121,13 @@ public class UI extends JFrame {
     }
 
     private void clearBCPCards() {
-        bcpModels.clear(); bcpCards.clear(); pidOrder.clear(); currentBCPIndex = 0;
+        bcpModels.clear();
+        bcpCards.clear();
+        pidOrder.clear();
+        currentBCPIndex = 0;
         bcpContentPanel.removeAll();
-        bcpContentPanel.revalidate(); bcpContentPanel.repaint();
+        bcpContentPanel.revalidate();
+        bcpContentPanel.repaint();
     }
 
     // ═════════════════════════════════════════════════════════════════════
@@ -911,6 +1140,8 @@ public class UI extends JFrame {
         refreshDiskTable();
         refreshBCPCards();
         refreshCPUCards();
+        // ACTUALIZAR LA SIMULACIÓN EN TIEMPO REAL
+        runAlgoSimulation();
     }
 
     private void refreshProcessTable() {
@@ -970,16 +1201,16 @@ public class UI extends JFrame {
             if (p != null) st = p.getState() != null ? p.getState().name()
                 : (p.getBcp() != null && p.getBcp().getState() != null ? p.getBcp().getState().name() : "RUNNING");
 
-            setCell(m, 0, p   != null ? p.getName() + " [" + p.getPID() + "]" : "—");
+            setCell(m, 0, p != null ? p.getName() + " [" + p.getPID() + "]" : "—");
             setCell(m, 1, st);
             setCell(m, 2, cpu != null ? String.valueOf(cpu.getPC()) : "—");
-            setCell(m, 3, cpu != null ? cpu.getIR()  : "—");
+            setCell(m, 3, cpu != null ? cpu.getIR() : "—");
             setCell(m, 4, cpu != null ? String.valueOf(cpu.getAC()) : "—");
             setCell(m, 5, cpu != null ? String.valueOf(cpu.getAX()) : "—");
             setCell(m, 6, cpu != null ? String.valueOf(cpu.getBX()) : "—");
             setCell(m, 7, cpu != null ? String.valueOf(cpu.getCX()) : "—");
             setCell(m, 8, cpu != null ? String.valueOf(cpu.getDX()) : "—");
-            int burst  = p != null ? p.getBurstTime() : 0;
+            int burst = p != null ? p.getBurstTime() : 0;
             int cycles = p != null && p.getBcp() != null ? p.getBcp().getCpuCyclesUsed() : 0;
             setCell(m, 9, burst > 0 ? cycles + "/" + burst : "—");
         }
@@ -999,7 +1230,10 @@ public class UI extends JFrame {
         });
     }
 
-    public void printConsole(String msg)              { printConsole(msg, C_WHITE); }
+    public void printConsole(String msg) {
+        printConsole(msg, C_WHITE);
+    }
+
     public void printConsole(String msg, Color color) {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -1008,14 +1242,15 @@ public class UI extends JFrame {
                 StyleConstants.setForeground(style, color);
                 doc.insertString(doc.getLength(), msg + "\n", style);
                 consoleOutput.setCaretPosition(doc.getLength());
-            } catch (BadLocationException ignored) {}
+            } catch (BadLocationException ignored) {
+            }
         });
     }
 
     private void showStatistics() {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("%-6s %-15s %-12s %-12s %-12s %-10s%n",
-            "PID","Nombre","Llegada","Inicio","Fin","Dur(s)"));
+            "PID", "Nombre", "Llegada", "Inicio", "Fin", "Dur(s)"));
         sb.append("—".repeat(70)).append("\n");
         for (OSProcess p : os.getScheduler().getJobQueue().getAll()) {
             BCP b = p.getBcp();
@@ -1065,9 +1300,9 @@ public class UI extends JFrame {
 
     private TitledBorder titledBorder(String title) {
         return BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(200,200,210), 1),
+            BorderFactory.createLineBorder(new Color(200, 200, 210), 1),
             title, TitledBorder.LEFT, TitledBorder.TOP,
-            new Font("Segoe UI", Font.BOLD, 13), new Color(60,60,70));
+            new Font("Segoe UI", Font.BOLD, 13), new Color(60, 60, 70));
     }
 
     private JButton navBtn(String text) {
@@ -1087,17 +1322,18 @@ public class UI extends JFrame {
         if (st == null && list.get(row).getBcp() != null) st = list.get(row).getBcp().getState();
         if (st == null) return C_WHITE;
         return switch (st) {
-            case RUNNING    -> C_RUNNING;
-            case READY      -> C_READY;
-            case WAITING    -> C_WAITING;
+            case RUNNING -> C_RUNNING;
+            case READY -> C_READY;
+            case WAITING -> C_WAITING;
             case TERMINATED -> C_TERM;
-            default         -> C_WHITE;
+            default -> C_WHITE;
         };
     }
 
     private void colorRows(JTable tbl, java.util.function.IntFunction<Color> fn) {
         tbl.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override public Component getTableCellRendererComponent(
+            @Override
+            public Component getTableCellRendererComponent(
                     JTable t, Object val, boolean sel, boolean foc, int row, int col) {
                 Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
                 c.setBackground(fn.apply(row));
@@ -1108,44 +1344,26 @@ public class UI extends JFrame {
     }
 
     // ═════════════════════════════════════════════════════════════════════
-    // RAM RENDERER  ← pieza central de los 4 requisitos
+    // RAM RENDERER
     // ═════════════════════════════════════════════════════════════════════
-    /**
-     * Lógica de color por celda de la tabla RAM:
-     *
-     *  PRIORIDAD  CONDICIÓN                               RESULTADO
-     *  ─────────  ──────────────────────────────────────  ──────────────────────────────────────
-     *  1 (alta)   row < KERNEL_SIZE                       Fondo azul-gris (espacio kernel)
-     *  2          row == cpu.getPC() para algún CPU i     Fondo BRILLANTE del CPU i, texto BLANCO NEGRITA
-     *  3          Partición seleccionada (FPM)            Fondo rojo claro, borde izq. rojo 4px
-     *  4          row en rango del proceso en CPU i       Fondo SUAVE del CPU i
-     *  5          Primera dir. de una partición (FPM)     Borde izq. gris 2px (delimita partición)
-     *  6 (baja)   Sin categoría                           Blanco / gris alternado
-     */
     private class RAMRenderer extends DefaultTableCellRenderer {
-
         @Override
         public Component getTableCellRendererComponent(
                 JTable t, Object val, boolean sel, boolean foc, int row, int col) {
-
-            // Llamada base: texto, alineación, etc.
             Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
             c.setForeground(Color.BLACK);
             if (c instanceof JLabel lbl) {
                 lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
-                lbl.setBorder(new EmptyBorder(0, 3, 0, 3)); // padding por defecto
+                lbl.setBorder(new EmptyBorder(0, 3, 0, 3));
             }
 
-            // ── Prioridad 1: Kernel ───────────────────────────────────────────
             if (row < RAM.KERNEL_SIZE) {
                 c.setBackground(C_KERNEL);
                 return c;
             }
 
-            // ── Reunir datos de CPUs una sola vez ─────────────────────────────
             List<CPU> cpuList = os.getAllCpus();
 
-            // ── Prioridad 2: Instrucción activa (PC de algún CPU) ─────────────
             for (int i = 0; i < cpuList.size(); i++) {
                 CPU cpu = cpuList.get(i);
                 if (cpu.getCurrentProcess() == null) continue;
@@ -1159,11 +1377,10 @@ public class UI extends JFrame {
                 }
             }
 
-            // ── Resolver si se usa FixedPartitionManager ──────────────────────
             MemoryManager mm = os.getScheduler().getMemoryManager();
             FixedPartitionManager fpm = (mm instanceof FixedPartitionManager f) ? f : null;
-            int partitionOfRow  = -1;   // qué partición contiene esta fila
-            boolean isPartStart = false; // ¿es la primera celda de su partición?
+            int partitionOfRow = -1;
+            boolean isPartStart = false;
 
             if (fpm != null) {
                 int[] bases = fpm.getPartitionBase();
@@ -1171,51 +1388,37 @@ public class UI extends JFrame {
                 for (int i = 0; i < bases.length; i++) {
                     if (row >= bases[i] && row < bases[i] + sizes[i]) {
                         partitionOfRow = i;
-                        isPartStart    = (row == bases[i]);
+                        isPartStart = (row == bases[i]);
                         break;
                     }
                 }
             }
 
-            // ── Prioridad 3: Partición seleccionada ───────────────────────────
-            if (fpm != null && selectedPartitionIndex >= 0
-                    && partitionOfRow == selectedPartitionIndex) {
+            if (fpm != null && selectedPartitionIndex >= 0 && partitionOfRow == selectedPartitionIndex) {
                 c.setBackground(C_PARTITION_SEL_BG);
                 if (c instanceof JLabel lbl) {
-                    // Borde rojo de 4px en el lado izquierdo
-                    lbl.setBorder(BorderFactory.createMatteBorder(0, 4, 0, 0,
-                        C_PARTITION_SEL_LINE));
+                    lbl.setBorder(BorderFactory.createMatteBorder(0, 4, 0, 0, C_PARTITION_SEL_LINE));
                 }
                 return c;
             }
 
-            // ── Prioridad 4: Rango del proceso en ejecución ───────────────────
             for (int i = 0; i < cpuList.size(); i++) {
                 CPU cpu = cpuList.get(i);
                 OSProcess p = cpu.getCurrentProcess();
                 if (p == null) continue;
                 if (row >= p.getBaseAddress() && row < p.getLimitAddress()) {
                     c.setBackground(CPU_SOFT[i % CPU_SOFT.length]);
-                    // Mantener borde de partición si aplica (se combina visualmente)
-                    if (fpm != null && isPartStart) {
-                        if (c instanceof JLabel lbl) {
-                            lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0,
-                                C_PARTITION_BORDER));
-                        }
+                    if (fpm != null && isPartStart && c instanceof JLabel lbl) {
+                        lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0, C_PARTITION_BORDER));
                     }
                     return c;
                 }
             }
 
-            // ── Prioridad 5: Borde izquierdo delimitador de partición ─────────
-            if (fpm != null && isPartStart) {
-                if (c instanceof JLabel lbl) {
-                    lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0,
-                        C_PARTITION_BORDER));
-                }
+            if (fpm != null && isPartStart && c instanceof JLabel lbl) {
+                lbl.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0, C_PARTITION_BORDER));
             }
 
-            // ── Prioridad 6: Sin categoría ────────────────────────────────────
             String v = os.getMemory().getMemory()[row];
             c.setBackground((v != null && !v.isBlank()) ? C_WHITE : new Color(250, 250, 250));
             return c;
@@ -1226,7 +1429,8 @@ public class UI extends JFrame {
     // RENDERERS AUXILIARES
     // ═════════════════════════════════════════════════════════════════════
     private class VirtualMemoryRenderer extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(
+        @Override
+        public Component getTableCellRendererComponent(
                 JTable t, Object val, boolean sel, boolean foc, int row, int col) {
             Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
             c.setForeground(Color.BLACK);
@@ -1237,45 +1441,48 @@ public class UI extends JFrame {
     }
 
     private class DiskRenderer extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(
+        @Override
+        public Component getTableCellRendererComponent(
                 JTable t, Object val, boolean sel, boolean foc, int row, int col) {
             Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
             c.setForeground(Color.BLACK);
-            int idxRes   = os.getDisk().getIndexReserved();
-            int swapS    = os.getDisk().getSwapStartPosition();
-            int swapE    = swapS + os.getDisk().getSwapSize();
+            int idxRes = os.getDisk().getIndexReserved();
+            int swapS = os.getDisk().getSwapStartPosition();
+            int swapE = swapS + os.getDisk().getSwapSize();
             if (row < idxRes) {
                 c.setBackground(C_INDEX);
                 if (c instanceof JLabel l) l.setFont(l.getFont().deriveFont(Font.ITALIC));
             } else if (row >= swapS && row < swapE) {
                 c.setBackground(C_SWAP);
             } else {
-                c.setBackground(row % 2 == 0 ? C_WHITE : new Color(248,248,255));
+                c.setBackground(row % 2 == 0 ? C_WHITE : new Color(248, 248, 255));
             }
             return c;
         }
     }
 
     private static class BCPRenderer extends DefaultTableCellRenderer {
-        private static final Color R = new Color(123,245,184);
-        private static final Color Y = new Color(255,255,180);
-        private static final Color O = new Color(255,200,130);
-        private static final Color G = new Color(210,210,210);
-        @Override public Component getTableCellRendererComponent(
+        private static final Color R = new Color(123, 245, 184);
+        private static final Color Y = new Color(255, 255, 180);
+        private static final Color O = new Color(255, 200, 130);
+        private static final Color G = new Color(210, 210, 210);
+
+        @Override
+        public Component getTableCellRendererComponent(
                 JTable t, Object val, boolean sel, boolean foc, int row, int col) {
             Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
             c.setForeground(Color.BLACK);
             if (row == 1 && col == 1) {
                 String txt = val == null ? "" : val.toString();
                 c.setBackground(switch (txt) {
-                    case "RUNNING"    -> R;
-                    case "READY"      -> Y;
-                    case "WAITING"    -> O;
+                    case "RUNNING" -> R;
+                    case "READY" -> Y;
+                    case "WAITING" -> O;
                     case "TERMINATED" -> G;
-                    default           -> Color.WHITE;
+                    default -> Color.WHITE;
                 });
             } else {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248,248,252));
+                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 252));
             }
             return c;
         }
@@ -1286,15 +1493,23 @@ public class UI extends JFrame {
     // ═════════════════════════════════════════════════════════════════════
     private static class RoundedBorder extends AbstractBorder {
         private final int radius;
-        RoundedBorder(int r) { this.radius = r; }
-        @Override public void paintBorder(Component c, Graphics g, int x, int y, int w, int h) {
+        RoundedBorder(int r) {
+            this.radius = r;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int w, int h) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(new Color(180,180,185));
-            g2.drawRoundRect(x, y, w-1, h-1, radius, radius);
+            g2.setColor(new Color(180, 180, 185));
+            g2.drawRoundRect(x, y, w - 1, h - 1, radius, radius);
             g2.dispose();
         }
-        @Override public Insets getBorderInsets(Component c) { return new Insets(4,10,4,10); }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(4, 10, 4, 10);
+        }
     }
 
     // ═════════════════════════════════════════════════════════════════════
@@ -1303,8 +1518,12 @@ public class UI extends JFrame {
     public static void main(String[] args) {
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
-                if ("Nimbus".equals(info.getName())) { UIManager.setLookAndFeel(info.getClassName()); break; }
-        } catch (Exception ignored) {}
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+        } catch (Exception ignored) {
+        }
         SwingUtilities.invokeLater(() -> new UI().setVisible(true));
     }
 }
