@@ -1,6 +1,3 @@
-; Test CMP then JE and JNE in sequence
-; Tests both JE and JNE after a single CMP.
-; Expected: Since AX=BX, JE jumps (AX becomes 100), JNE does not jump (BX becomes 200)
 MOV AX, 10
 MOV BX, 10
 CMP AX, BX
