@@ -11,8 +11,11 @@ import com.mycompany.pyso.Classes.Process.OSProcess;
  * @author jimen
  */
 
+
 public interface MemoryManager {
     int allocate(OSProcess process, String[] ram);
     void free(OSProcess process, String[] ram);
+    default void compact(String[] ram) {}
     String getStrategyName();
+    default String getFragmentationInfo() { return ""; }
 }
