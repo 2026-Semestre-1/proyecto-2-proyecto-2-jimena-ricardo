@@ -5,43 +5,39 @@
 package com.mycompany.pyso.Scheduler;
 
 import com.mycompany.pyso.Classes.Process.OSProcess;
+import java.util.Comparator;
 import java.util.List;
 
 /**
  *
  * @author jimen
  */
-
-public class RoundRobin implements SchedulerStrategy {
-
-    private final int quantum;
-    private int ticksUsed = 0;
-
-    public RoundRobin(int quantum) {
-        this.quantum = quantum;
-    }
+public class SJF implements SchedulerStrategy {
 
     @Override
     public OSProcess selectNext(List<OSProcess> readyQueue) {
         if (readyQueue.isEmpty()) return null;
-        ticksUsed = 0;           // reset counter whenever a new process is selected
-        return readyQueue.get(0); // caller removes it; FIFO within each quantum
+
+        OSProcess chosen = readyQueue.stream()
+            .min(Comparator
+                .comparingInt(OSProcess::getBurstTime)
+                .thenComparingLong(p -> p.getBcp().getArrivalMillis()))
+            .orElse(null);
+
+        if (chosen != null) readyQueue.remove(chosen);
+        return chosen;
     }
 
     @Override
     public void onTick(OSProcess running, List<OSProcess> readyQueue) {
-        ticksUsed++;
+        // Non-preemptive — nothing to track per tick
     }
 
     @Override
     public boolean shouldPreempt(OSProcess running, List<OSProcess> readyQueue) {
-        return ticksUsed >= quantum && !readyQueue.isEmpty();
+        return false; // never preempts
     }
 
     @Override
-    public String getName() { return "RR (q=" + quantum + ")"; }
-
-    public int getQuantum()    { return quantum; }
-    public int getTicksUsed()  { return ticksUsed; }
-    public void resetTicks()   { ticksUsed = 0; }
+    public String getName() { return "SJF"; }
 }
