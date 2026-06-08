@@ -2,7 +2,7 @@
 # [NOMBRE DEL PROYECTO]
 ## Integrantes:
 ### 2023113347 Jimena Méndez Morales
-### 2023------ Ricardo Arce Aguilar
+### 2023215990 Ricardo Arce Aguilar
 
 ### Estado del proyecto: 4
 ### Enlace del video: (Si esto fue solicitado): 
