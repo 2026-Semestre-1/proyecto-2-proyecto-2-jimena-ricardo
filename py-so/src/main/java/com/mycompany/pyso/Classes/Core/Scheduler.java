@@ -63,14 +63,15 @@ public class Scheduler {
         p.setPID(pid);
         p.setName(name);
         p.setBcp(bcp);
-        p.setState(ProcessState.NEW);
+        p.setState(ProcessState.NEW);  // ← Se queda en NEW, NO se carga a RAM aún
         p.setInstructions(instructions);
         p.setDiskAddress(diskAddr);
         p.setDiskSize(instructions.size());
 
         jobQueue.add(p);
         linkBCP(p);
-        admitToRAM(p);
+        // IMPORTANTE: NO llamar a admitToRAM aquí
+        
         return p;
     }
 
@@ -118,6 +119,9 @@ public class Scheduler {
         p.getBcp().markTerminated(simulatorStartMillis);
         p.setState(ProcessState.TERMINATED);
         
+        // Registrar tick de finalización
+        p.getBcp().setEndTick(simulatorStartMillis > 0 ? (int)((System.currentTimeMillis() - simulatorStartMillis) / 1000) : 0);
+        
         memoryManager.free(p, ram.getMemory());
         
         if (memoryManager instanceof DynamicPartitionManager) {
@@ -158,6 +162,20 @@ public class Scheduler {
     public void tryLoadNewProcesses() {
         for (OSProcess p : jobQueue.getAll()) {
             if (p.getState() == ProcessState.NEW) admitToRAM(p);
+        }
+    }
+
+    // REQUISITO 6: Cargar procesos que ya han llegado según su arrivalTick
+    public void tryLoadProcessesReadyAt(int currentTick) {
+        for (OSProcess p : jobQueue.getAll()) {
+            if (p.getState() == ProcessState.NEW && p.getArrivalTick() <= currentTick) {
+                boolean loaded = admitToRAM(p);
+                if (loaded) {
+                    System.out.println("[SCHEDULER] Proceso " + p.getName() + 
+                                       " cargado a RAM en tick " + currentTick + 
+                                       " (llegada=" + p.getArrivalTick() + ")");
+                }
+            }
         }
     }
 

@@ -26,12 +26,16 @@ public class BCP {
     private ProcessStack stack; 
     private int stackPointer;  
     private long arrivalMillis;
-    private long startMillis; // Milliseconds from simulator start when process got CPU
-    private long endMillis;// Milliseconds from simulator start when process terminated
+    private long startMillis;
+    private long endMillis;
     private int cpuCyclesUsed;  
     private java.util.List<String> openFiles;
     private int priority;  
     private BCP nextBCP;  
+    
+    private int arrivalTick;
+    private int startTick;
+    private int endTick;
 
     public BCP(int PID, String processName, int baseAddress, int limitAddress, int priority) {
         this.PID = PID;
@@ -48,14 +52,18 @@ public class BCP {
         this.limitAddress = limitAddress;
         this.stack = new ProcessStack(PID);
         this.stackPointer = -1; 
-        this.arrivalMillis = -1;// Assigned by Scheduler right after construction
+        this.arrivalMillis = -1;
         this.startMillis = -1; 
         this.endMillis = -1; 
         this.cpuCyclesUsed = 0;
         this.openFiles = new java.util.ArrayList<>();
         this.priority = priority;
         this.nextBCP = null;
+        this.arrivalTick = 0;
+        this.startTick = -1;
+        this.endTick = -1;
     }
+    
     public void saveFromCPU(CPU cpu, String currentIR) {
         this.PC = cpu.getPC();
         this.IR = currentIR;
@@ -66,7 +74,7 @@ public class BCP {
         this.DX = cpu.getDX();
     }
     
-       public void restoreIntoCPU(CPU cpu) {
+    public void restoreIntoCPU(CPU cpu) {
         cpu.setPC(this.PC);
         cpu.setIR(this.IR);
         cpu.setAC(this.AC);
@@ -76,7 +84,7 @@ public class BCP {
         cpu.setDX(this.DX);
     }
     
-    private long simulatorStartMillis;    // System.currentTimeMillis() when simulator started
+    private long simulatorStartMillis;
 
     public void start() {
         this.simulatorStartMillis = System.currentTimeMillis();
@@ -102,7 +110,6 @@ public class BCP {
         return (endMillis - startMillis) / 1000;
     }
 
-    /** Converts elapsed milliseconds to HH:mm:ss format */
     public String formatElapsed(long millis) {
         if (millis == -1) return "--:--:--";
         long totalSeconds = millis / 1000;
@@ -110,6 +117,30 @@ public class BCP {
         long minutes = (totalSeconds % 3600) / 60;
         long seconds = totalSeconds % 60;
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    public int getArrivalTick() {
+        return arrivalTick;
+    }
+
+    public void setArrivalTick(int arrivalTick) {
+        this.arrivalTick = arrivalTick;
+    }
+
+    public int getStartTick() {
+        return startTick;
+    }
+
+    public void setStartTick(int startTick) {
+        this.startTick = startTick;
+    }
+
+    public int getEndTick() {
+        return endTick;
+    }
+
+    public void setEndTick(int endTick) {
+        this.endTick = endTick;
     }
 
     public int getMemory_limit() {
@@ -321,6 +352,4 @@ public class BCP {
     public void setSimulatorStartMillis(long simulatorStartMillis) {
         this.simulatorStartMillis = simulatorStartMillis;
     }
-
-    
 }

@@ -27,6 +27,8 @@ public class OSProcess {
     private long endTime;   
     private int cpuCyclesUsed; 
     private List<String> openFiles; 
+    
+    private int arrivalTick;
 
     public OSProcess() {
         this.state = ProcessState.NEW;
@@ -42,7 +44,9 @@ public class OSProcess {
         this.endTime = 0;
         this.cpuCyclesUsed = 0;
         this.openFiles = new ArrayList<>();
+        this.arrivalTick = 0;
     }
+    
     public void markStarted(long simulatorStartMillis) {
         this.startTime = System.currentTimeMillis() - simulatorStartMillis;
         if (bcp != null) {
@@ -143,6 +147,17 @@ public class OSProcess {
  
     public int getBurstTime() {
         return instructions != null ? instructions.size() : 0;
+    }
+
+    public int getArrivalTick() {
+        return arrivalTick;
+    }
+
+    public void setArrivalTick(int arrivalTick) {
+        this.arrivalTick = arrivalTick;
+        if (bcp != null) {
+            bcp.setArrivalTick(arrivalTick);
+        }
     }
 
     public int getPID() {

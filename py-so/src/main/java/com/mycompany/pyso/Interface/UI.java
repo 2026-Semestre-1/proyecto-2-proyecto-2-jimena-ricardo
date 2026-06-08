@@ -65,32 +65,38 @@ public class UI extends JFrame {
 
     // ── Colores brillantes por CPU ────────────────────────────────────────
     private static final Color[] CPU_BRIGHT = {
-        new Color(46, 204, 113),   // CPU 1 — Verde
-        new Color(52, 152, 219),   // CPU 2 — Azul
-        new Color(241, 196, 15),   // CPU 3 — Amarillo
-        new Color(155, 89, 182),   // CPU 4 — Morado
+        new Color(46, 204, 113), new Color(52, 152, 219),
+        new Color(241, 196, 15), new Color(155, 89, 182),
     };
 
     // ── Colores suaves por CPU ────────────────────────────────────────────
     private static final Color[] CPU_SOFT = {
-        new Color(210, 255, 230),   // CPU 1 — Verde suave
-        new Color(210, 232, 255),   // CPU 2 — Azul suave
-        new Color(255, 249, 196),   // CPU 3 — Amarillo suave
-        new Color(240, 220, 255),   // CPU 4 — Morado suave
+        new Color(210, 255, 230), new Color(210, 232, 255),
+        new Color(255, 249, 196), new Color(240, 220, 255),
     };
 
-    // ── Color de partición seleccionada ───────────────────────────────────
+    // ── Colores para matrices ─────────────────────────────────────────────
+    private static final Color[] PROC_COLORS = {
+        new Color(46, 204, 113), new Color(52, 152, 219),
+        new Color(241, 196, 15), new Color(230, 126, 34),
+        new Color(231, 76, 60),  new Color(155, 89, 182),
+    };
+    private static final Color C_COL_HEADER = new Color(230, 230, 235);
     private static final Color C_PARTITION_SEL_BG   = new Color(255, 200, 200);
-    private static final Color C_PARTITION_BORDER    = new Color(180, 180, 180);
-    private static final Color C_PARTITION_SEL_LINE  = new Color(200, 40, 40);
+    private static final Color C_PARTITION_BORDER   = new Color(180, 180, 180);
+    private static final Color C_PARTITION_SEL_LINE = new Color(200, 40, 40);
 
     // ── Estado ────────────────────────────────────────────────────────────
     private OperatingSystem os;
     private int  highlightedRow     = -1;
-    private int[] lastExecutedPC    = new int[4]; // per-CPU last executed instruction address
     private int  selectedPartitionIndex = -1;
     private boolean stepModeActive  = false;
     private Timer autoExecutionTimer;
+
+    // Real-time execution log
+    private final Map<Integer, List<Integer>> executionLog = new LinkedHashMap<>();
+    private final Map<Integer, List<Integer>> circularLog = new LinkedHashMap<>();
+    private int algoMaxTick = 0;
 
     // BCP navigation
     private final Map<Integer, DefaultTableModel> bcpModels  = new LinkedHashMap<>();
@@ -152,6 +158,8 @@ public class UI extends JFrame {
     private JSpinner  fragmentationThresholdSpinner;
 
     private JComboBox<Integer> pageSizeCombo;
+    
+    private Timer algorithmRefreshTimer; 
 
     // ─────────────────────────────────────────────────────────────────────
     public UI() {
@@ -270,14 +278,10 @@ public class UI extends JFrame {
         return bcpPanel;
     }
 
-    /**
-     * Panel RAM - SIN AUTO-SCROLL (usuario controla el desplazamiento)
-     */
     private JPanel buildRAMPanel() {
         tblRAM = makeTable(new String[]{"Posición", "Valor en memoria"});
         tblRAM.setDefaultRenderer(Object.class, new RAMRenderer());
 
-        // Selección de partición con clic
         tblRAM.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -380,7 +384,7 @@ public class UI extends JFrame {
         DefaultTableModel model = new DefaultTableModel(new String[]{"", ""}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
-        String[] fields = {"Proceso", "Estado", "PC", "IR", "AC", "AX", "BX", "CX", "DX", "Progreso"};
+        String[] fields = {"Proceso", "Estado", "PC", "IR", "AC", "AX", "BX", "CX", "DX", "Progreso", "Proc. ejecutados"};
         for (String f : fields) model.addRow(new Object[]{f, "—"});
         cpuModels.add(model);
 
@@ -425,86 +429,80 @@ public class UI extends JFrame {
         north.add(btnSim, BorderLayout.EAST);
         root.add(north, BorderLayout.NORTH);
 
-        JPanel col = new JPanel();
-        col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
-        col.setBackground(C_BG);
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        mainSplit.setResizeWeight(0.65);
+        mainSplit.setBorder(null);
 
-        processDataModel = new DefaultTableModel(new String[]{"Proceso", "Llegada", "Ráfaga"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        tblProcessData = algoTable(processDataModel, null);
-        JPanel p1 = algoPanel("Datos de Procesos", tblProcessData, 100);
-        col.add(p1);
-        col.add(Box.createVerticalStrut(8));
+        JPanel leftColumn = new JPanel(new BorderLayout(0, 10));
+        leftColumn.setBackground(C_BG);
 
         executionMatrixModel = new DefaultTableModel() {
             @Override public boolean isCellEditable(int r, int c) { return false; }
             @Override public Class<?> getColumnClass(int c) { return String.class; }
         };
-        tblExecutionMatrix = algoTable(executionMatrixModel, new ExecutionMatrixRenderer());
-        JPanel p2 = algoPanel("Ejecución (Gantt)", tblExecutionMatrix, 250);
-        col.add(p2);
-        col.add(Box.createVerticalStrut(8));
+        tblExecutionMatrix = new JTable(executionMatrixModel);
+        tblExecutionMatrix.setRowHeight(24);
+        tblExecutionMatrix.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        tblExecutionMatrix.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+        tblExecutionMatrix.setDefaultRenderer(Object.class, new ExecutionMatrixRenderer());
+        tblExecutionMatrix.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        
+        JScrollPane execScroll = new JScrollPane(tblExecutionMatrix);
+        execScroll.setBorder(BorderFactory.createTitledBorder("Ejecución (Gantt)"));
+        execScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        leftColumn.add(execScroll, BorderLayout.CENTER);
 
         circularMatrixModel = new DefaultTableModel() {
             @Override public boolean isCellEditable(int r, int c) { return false; }
             @Override public Class<?> getColumnClass(int c) { return String.class; }
         };
-        tblCircularMatrix = algoTable(circularMatrixModel, new CircularMatrixRenderer());
-        circularMatrixPanel = algoPanel("Cola Circular (solo RR)", tblCircularMatrix, 200);
+        tblCircularMatrix = new JTable(circularMatrixModel);
+        tblCircularMatrix.setRowHeight(24);
+        tblCircularMatrix.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        tblCircularMatrix.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+        tblCircularMatrix.setDefaultRenderer(Object.class, new CircularMatrixRenderer());
+        tblCircularMatrix.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        
+        circularMatrixPanel = new JPanel(new BorderLayout());
+        circularMatrixPanel.setBorder(BorderFactory.createTitledBorder("Cola Circular (solo RR)"));
+        circularMatrixPanel.add(new JScrollPane(tblCircularMatrix), BorderLayout.CENTER);
         circularMatrixPanel.setVisible(false);
-        col.add(circularMatrixPanel);
+        leftColumn.add(circularMatrixPanel, BorderLayout.SOUTH);
 
-        JScrollPane outerScroll = new JScrollPane(col);
-        outerScroll.getVerticalScrollBar().setUnitIncrement(16);
-        outerScroll.setBorder(BorderFactory.createEmptyBorder());
-        root.add(outerScroll, BorderLayout.CENTER);
+        JPanel rightColumn = new JPanel(new BorderLayout(0, 10));
+        rightColumn.setBackground(C_BG);
+
+        processDataModel = new DefaultTableModel(new String[]{"Proceso", "Arrivo", "Ráfaga"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        tblProcessData = new JTable(processDataModel);
+        tblProcessData.setRowHeight(24);
+        tblProcessData.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        JScrollPane dataScroll = new JScrollPane(tblProcessData);
+        dataScroll.setBorder(BorderFactory.createTitledBorder("Datos de Procesos"));
+        dataScroll.setPreferredSize(new Dimension(0, 200));
+        rightColumn.add(dataScroll, BorderLayout.CENTER);
 
         statsModel = new DefaultTableModel(new String[]{"Proceso", "Tf", "Tr", "Tr/Ts"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         tblStats = new JTable(statsModel);
+        tblStats.setRowHeight(24);
         tblStats.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        tblStats.setRowHeight(22);
-        JPanel statsWrap = titled("Estadísticas", scroll(tblStats));
-        statsWrap.setPreferredSize(new Dimension(230, 0));
-        root.add(statsWrap, BorderLayout.EAST);
+        JScrollPane statsScroll = new JScrollPane(tblStats);
+        statsScroll.setBorder(BorderFactory.createTitledBorder("Estadísticas"));
+        rightColumn.add(statsScroll, BorderLayout.SOUTH);
 
+        mainSplit.setLeftComponent(leftColumn);
+        mainSplit.setRightComponent(rightColumn);
+        root.add(mainSplit, BorderLayout.CENTER);
+        
         return root;
     }
 
-    private JTable algoTable(DefaultTableModel model, TableCellRenderer renderer) {
-        JTable t = new JTable(model);
-        t.setRowHeight(24);
-        t.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        t.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
-        t.setShowGrid(true);
-        t.setGridColor(new Color(220, 220, 220));
-        t.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        if (renderer != null) t.setDefaultRenderer(Object.class, renderer);
-        return t;
-    }
-
-    private JPanel algoPanel(String title, JTable table, int height) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(C_WHITE);
-        panel.setBorder(titledBorder(title));
-        panel.setPreferredSize(new Dimension(900, height));
-        JScrollPane sp = new JScrollPane(table,
-            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-            JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        panel.add(sp, BorderLayout.CENTER);
-        return panel;
-    }
-
-    // ── Process colors shared between Gantt and circular renderers ────────
-    private static final Color[] PROC_COLORS = {
-        new Color(46, 204, 113), new Color(52, 152, 219),
-        new Color(241, 196, 15), new Color(230, 126, 34),
-        new Color(231, 76, 60),  new Color(155, 89, 182),
-    };
-    private static final Color C_COL_HEADER = new Color(230, 230, 235);
-
+    // ═════════════════════════════════════════════════════════════════════
+    // ALGORITMOS - RENDERERS
+    // ═════════════════════════════════════════════════════════════════════
     private class ExecutionMatrixRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(
@@ -516,7 +514,7 @@ public class UI extends JFrame {
                 c.setBackground(C_COL_HEADER);
                 c.setForeground(Color.BLACK);
                 c.setFont(new Font("Segoe UI", Font.BOLD, 11));
-            } else if ("1".equals(val)) {
+            } else if ("x".equals(val)) {
                 c.setBackground(PROC_COLORS[row % PROC_COLORS.length]);
                 c.setForeground(Color.WHITE);
             } else {
@@ -557,24 +555,173 @@ public class UI extends JFrame {
         }
     }
 
-    // ── Simulation runner ─────────────────────────────────────────────────
-    private void runAlgoSimulation() {
+    // ═════════════════════════════════════════════════════════════════════
+    // ALGO TAB — Real-time execution log
+    // ═════════════════════════════════════════════════════════════════════
+
+    public void resetAlgoLog() {
+        executionLog.clear();
+        circularLog.clear();
+        algoMaxTick = 0;
+        for (OSProcess p : os.getScheduler().getJobQueue().getAll()) {
+            executionLog.put(p.getPID(), new ArrayList<>());
+        }
+        if (processDataModel != null) updateProcessTableData();
+        if (lblAlgoName != null) lblAlgoName.setText(os.getStrategy().getName());
+    }
+
+    public void recordExecutionTick() {
+    int tick = os.getGlobalClock();
+    if (tick <= 0) return;
+    
+    if (tick > algoMaxTick) algoMaxTick = tick;
+    
+    // Registrar qué procesos se ejecutaron en este tick
+    boolean hasRunning = false;
+    for (CPU cpu : os.getAllCpus()) {
+        OSProcess p = cpu.getCurrentProcess();
+        if (p != null && p.getPID() >= 0 && p.getState() == ProcessState.RUNNING) {
+            hasRunning = true;
+            List<Integer> ticks = executionLog.get(p.getPID());
+            if (ticks == null) {
+                ticks = new ArrayList<>();
+                executionLog.put(p.getPID(), ticks);
+            }
+            if (!ticks.contains(tick)) {
+                ticks.add(tick);
+                System.out.println("[LOG] Tick " + tick + ": P" + p.getPID() + " ejecutando");
+            }
+        }
+    }
+    
+    // Si ningún proceso ejecutó, registrar tick vacío (opcional)
+    if (!hasRunning && tick > 1) {
+        System.out.println("[LOG] Tick " + tick + ": IDLE");
+    }
+    
+    // Cola circular para RR
+    if (os.getStrategy().getName().startsWith("RR")) {
+        List<Integer> queueSnapshot = new ArrayList<>();
+        for (CPU cpu : os.getAllCpus()) {
+            OSProcess p = cpu.getCurrentProcess();
+            if (p != null && !queueSnapshot.contains(p.getPID())) {
+                queueSnapshot.add(p.getPID());
+            }
+        }
+        for (OSProcess p : os.getScheduler().getReadyQueue().getAll()) {
+            if (!queueSnapshot.contains(p.getPID())) {
+                queueSnapshot.add(p.getPID());
+            }
+        }
+        circularLog.put(tick, queueSnapshot);
+    }
+}
+
+    private void refreshAlgoritmosTab() {
         List<OSProcess> processes = os.getScheduler().getJobQueue().getAll();
         if (processes.isEmpty()) {
+            // Mostrar mensaje en la tabla
+            executionMatrixModel.setRowCount(0);
+            if (processDataModel != null) processDataModel.setRowCount(0);
+            lblAlgoName.setText(os.getStrategy().getName() + " (sin procesos)");
+            return;
+        }
+
+        // Actualizar datos de procesos
+        updateProcessTableData();
+        lblAlgoName.setText(os.getStrategy().getName() + " - Tick: " + os.getGlobalClock());
+
+        // Si no hay ejecución activa, mostrar solo los datos
+        if (algoMaxTick == 0 && !os.isRunning() && !stepModeActive) {
+            return;
+        }
+
+        // Construir matriz de ejecución actualizada
+        int currentTick = os.getGlobalClock();
+        if (currentTick > algoMaxTick) {
+            algoMaxTick = currentTick;
+
+            // Reconstruir matriz con el nuevo tamaño
+            String[] cols = new String[algoMaxTick + 1];
+            cols[0] = "P \\ t";
+            for (int t = 1; t <= algoMaxTick; t++) cols[t] = String.valueOf(t);
+            executionMatrixModel.setColumnIdentifiers(cols);
+            executionMatrixModel.setRowCount(0);
+
+            // Llenar matriz con datos actuales
+            for (OSProcess p : processes) {
+                List<Integer> ticks = executionLog.getOrDefault(p.getPID(), new ArrayList<>());
+                Object[] row = new Object[algoMaxTick + 1];
+                row[0] = "P" + p.getPID();
+                for (int t = 1; t <= algoMaxTick; t++) {
+                    if (ticks.contains(t)) {
+                        row[t] = "x";
+                    } else if (t == currentTick && p.getState() == ProcessState.RUNNING) {
+                        row[t] = "►";  // Indicar proceso actual
+                    } else {
+                        row[t] = "";
+                    }
+                }
+                executionMatrixModel.addRow(row);
+            }
+
+            // Ajustar ancho de columnas
+            if (tblExecutionMatrix.getColumnCount() > 0) {
+                tblExecutionMatrix.getColumnModel().getColumn(0).setPreferredWidth(50);
+                for (int c = 1; c < tblExecutionMatrix.getColumnCount() && c <= 30; c++) {
+                    tblExecutionMatrix.getColumnModel().getColumn(c).setPreferredWidth(35);
+                }
+            }
+
+            // Actualizar estadísticas
+            statsModel.setRowCount(0);
+            for (OSProcess p : processes) {
+                BCP bcp = p.getBcp();
+                int end = bcp.getEndTick();
+                int arrival = bcp.getArrivalTick();
+                int turnaround = (end > 0 && arrival >= 0) ? (end - arrival) : 0;
+                double ratio = p.getBurstTime() > 0 ? (double) turnaround / p.getBurstTime() : 0;
+                statsModel.addRow(new Object[]{
+                    "P" + p.getPID(),
+                    end > 0 ? String.valueOf(end) : (p.getState() == ProcessState.RUNNING ? "..." : "—"),
+                    turnaround > 0 ? String.valueOf(turnaround) : (p.getState() == ProcessState.RUNNING ? "..." : "—"),
+                    String.format("%.2f", ratio)
+                });
+            }
+        }
+    }
+
+    private void updateProcessTableData() {
+        processDataModel.setRowCount(0);
+        for (OSProcess p : os.getScheduler().getJobQueue().getAll()) {
+            processDataModel.addRow(new Object[]{
+                "P" + p.getPID(), 
+                p.getArrivalTick(), 
+                p.getBurstTime()
+            });
+        }
+    }
+
+    private void runAlgoSimulation() {
+        List<OSProcess> processes = os.getScheduler().getJobQueue().getAll();
+        if (processes.isEmpty()) return;
+
+        if (os.isRunning() || algoMaxTick > 0) {
+            refreshAlgoritmosTab();
             return;
         }
 
         List<Integer> arrivals = new ArrayList<>();
         List<Integer> bursts = new ArrayList<>();
         for (OSProcess p : processes) {
-            arrivals.add((int) Math.max(0, p.getBcp().getArrivalMillis() / 1000));
+            arrivals.add(p.getArrivalTick());
             bursts.add(p.getBurstTime());
         }
 
         String stratName = os.getStrategy().getName();
-        int quantum = 1;
+        int quantum = 3;
         String algoKey;
-        if (stratName.startsWith("FCFS"))    algoKey = "FCFS";
+        if (stratName.startsWith("FCFS")) algoKey = "FCFS";
         else if (stratName.startsWith("SJF")) algoKey = "SJF";
         else if (stratName.startsWith("SRT")) algoKey = "SRT";
         else if (stratName.startsWith("RR")) {
@@ -582,109 +729,83 @@ public class UI extends JFrame {
             try {
                 quantum = Integer.parseInt(
                     stratName.substring(stratName.indexOf("q=") + 2, stratName.indexOf(")")));
-            } catch (Exception ignored) { quantum = 3; }
+            } catch (Exception ignored) {}
         } else algoKey = "FCFS";
 
         lblAlgoName.setText(stratName);
-
         SchedulerSimulation sim = new SchedulerSimulation(arrivals, bursts, algoKey, quantum);
         sim.simulate();
-
-        updateProcessTable(processes, arrivals, bursts);
-        updateExecutionMatrix(sim);
-        updateStatsTable(sim, processes);
-
+        
+        updateProcessTableData();
+        updateExecutionMatrixFromSim(sim, processes);
+        updateStatsFromSim(sim, processes);
         if (sim.isCircularAlgorithm()) {
-            updateCircularMatrix(sim);
+            updateCircularMatrixFromSim(sim);
             circularMatrixPanel.setVisible(true);
         } else {
             circularMatrixPanel.setVisible(false);
         }
-        circularMatrixPanel.getParent().revalidate();
     }
 
-    private void updateProcessTable(List<OSProcess> processes,
-                                    List<Integer> arrivals, List<Integer> bursts) {
-        processDataModel.setRowCount(0);
-        for (int i = 0; i < processes.size(); i++) {
-            processDataModel.addRow(new Object[]{
-                "P" + processes.get(i).getPID(),
-                arrivals.get(i),
-                bursts.get(i)
-            });
-        }
-    }
-
-    private void updateExecutionMatrix(SchedulerSimulation sim) {
+    private void updateExecutionMatrixFromSim(SchedulerSimulation sim, List<OSProcess> processes) {
         int totalTime = sim.getTotalTime();
-        int numProcesses = sim.getProcessIds().size();
         int[][] matrix = sim.getExecutionMatrix();
-
         String[] cols = new String[totalTime + 1];
         cols[0] = "P \\ t";
         for (int t = 1; t <= totalTime; t++) cols[t] = String.valueOf(t);
-
         executionMatrixModel.setColumnIdentifiers(cols);
         executionMatrixModel.setRowCount(0);
-
-        for (int i = 0; i < numProcesses; i++) {
+        for (int i = 0; i < processes.size() && i < matrix.length; i++) {
             Object[] row = new Object[totalTime + 1];
-            row[0] = "P" + sim.getProcessIds().get(i);
+            row[0] = "P" + processes.get(i).getPID();
             for (int t = 0; t < totalTime; t++) {
-                row[t + 1] = (matrix[i][t] == 1) ? "1" : "";
+                row[t + 1] = matrix[i][t] == 1 ? "x" : "";
             }
             executionMatrixModel.addRow(row);
         }
-
         if (tblExecutionMatrix.getColumnCount() > 0) {
-            tblExecutionMatrix.getColumnModel().getColumn(0).setPreferredWidth(55);
-            for (int c = 1; c < tblExecutionMatrix.getColumnCount() && c < 50; c++) {
+            tblExecutionMatrix.getColumnModel().getColumn(0).setPreferredWidth(50);
+            for (int c = 1; c < tblExecutionMatrix.getColumnCount() && c <= 30; c++) {
                 tblExecutionMatrix.getColumnModel().getColumn(c).setPreferredWidth(35);
             }
         }
     }
 
-    private void updateCircularMatrix(SchedulerSimulation sim) {
+    private void updateCircularMatrixFromSim(SchedulerSimulation sim) {
         int totalTime = sim.getTotalTime();
         int maxRows = sim.getMaxCircularRows();
         int[][] matrix = sim.getCircularMatrix();
         if (matrix == null || maxRows == 0) return;
-
         String[] cols = new String[totalTime + 1];
-        cols[0] = "Cola \\ t";
+        cols[0] = "Posición \\ t";
         for (int t = 1; t <= totalTime; t++) cols[t] = String.valueOf(t);
-
         circularMatrixModel.setColumnIdentifiers(cols);
         circularMatrixModel.setRowCount(0);
-
         for (int r = 0; r < maxRows; r++) {
             Object[] row = new Object[totalTime + 1];
-            row[0] = "F" + (r + 1);
+            row[0] = "Fila " + (r + 1);
             for (int t = 0; t < totalTime; t++) {
                 int proc = matrix[r][t];
-                row[t + 1] = (proc != -1) ? String.valueOf(proc + 1) : "";
+                row[t + 1] = proc != -1 ? String.valueOf(proc + 1) : "";
             }
             circularMatrixModel.addRow(row);
         }
-
         if (tblCircularMatrix.getColumnCount() > 0) {
-            tblCircularMatrix.getColumnModel().getColumn(0).setPreferredWidth(60);
-            for (int c = 1; c < tblCircularMatrix.getColumnCount() && c < 50; c++) {
+            tblCircularMatrix.getColumnModel().getColumn(0).setPreferredWidth(55);
+            for (int c = 1; c < tblCircularMatrix.getColumnCount() && c <= 30; c++) {
                 tblCircularMatrix.getColumnModel().getColumn(c).setPreferredWidth(35);
             }
         }
     }
 
-    private void updateStatsTable(SchedulerSimulation sim, List<OSProcess> processes) {
+    private void updateStatsFromSim(SchedulerSimulation sim, List<OSProcess> processes) {
         statsModel.setRowCount(0);
         int[] tf = sim.getCompletionTimes();
         int[] tr = sim.getTurnaroundTimes();
         double[] ratio = sim.getResponseRatios();
-        for (int i = 0; i < processes.size(); i++) {
+        for (int i = 0; i < processes.size() && i < tf.length; i++) {
             statsModel.addRow(new Object[]{
-                "P" + processes.get(i).getPID(),
-                tf[i],
-                tr[i],
+                "P" + processes.get(i).getPID(), tf[i], tr[i],
                 String.format("%.2f", ratio[i])
             });
         }
@@ -899,15 +1020,109 @@ public class UI extends JFrame {
     // ═════════════════════════════════════════════════════════════════════
     // ACCIONES
     // ═════════════════════════════════════════════════════════════════════
+    
+    private void showArrivalDialog(List<OSProcess> processes) {
+        String[] cols = {"Proceso", "PID", "Ráfaga (instr.)", "Tiempo de llegada (tick)"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return c == 3; }
+        };
+        for (int i = 0; i < processes.size(); i++) {
+            OSProcess p = processes.get(i);
+            model.addRow(new Object[]{p.getName(), p.getPID(), p.getBurstTime(), 0});
+        }
+
+        JTable tbl = new JTable(model);
+        tbl.setRowHeight(26);
+        tbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tbl.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        
+        tbl.getColumnModel().getColumn(3).setCellEditor(new SpinnerCellEditor());
+
+        JScrollPane sp = new JScrollPane(tbl);
+        sp.setPreferredSize(new Dimension(560, Math.min(300, 40 + processes.size() * 28)));
+
+        JPanel panel = new JPanel(new BorderLayout(0, 8));
+        panel.add(new JLabel("  Asigne el tiempo de llegada (tick) para cada proceso:"), BorderLayout.NORTH);
+        panel.add(sp, BorderLayout.CENTER);
+
+        int result = JOptionPane.showConfirmDialog(this, panel,
+            "Tiempos de Llegada", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result != JOptionPane.OK_OPTION) {
+            for (OSProcess p : processes) {
+                p.setArrivalTick(0);
+                p.getBcp().setArrivalTick(0);
+            }
+            printConsole("[SISTEMA] Tiempos de llegada establecidos a 0 por defecto", new Color(52, 152, 219));
+            return;
+        }
+
+        if (tbl.isEditing()) tbl.getCellEditor().stopCellEditing();
+
+        for (int i = 0; i < processes.size(); i++) {
+            try {
+                int tick = Integer.parseInt(model.getValueAt(i, 3).toString().trim());
+                if (tick < 0) tick = 0;
+                processes.get(i).setArrivalTick(tick);
+                processes.get(i).getBcp().setArrivalTick(tick);
+                System.out.println("[DEBUG] Proceso " + processes.get(i).getName() + 
+                                   " arrivalTick = " + tick);
+            } catch (NumberFormatException ignored) {
+                processes.get(i).setArrivalTick(i);
+                processes.get(i).getBcp().setArrivalTick(i);
+            }
+        }
+        printConsole("[SISTEMA] Tiempos de llegada asignados", new Color(52, 152, 219));
+    }
+
+    private class SpinnerCellEditor extends AbstractCellEditor implements TableCellEditor {
+        private JSpinner spinner;
+        private int currentValue;
+        
+        public SpinnerCellEditor() {
+            spinner = new JSpinner(new SpinnerNumberModel(0, 0, 1000, 1));
+            spinner.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        }
+        
+        @Override
+        public Object getCellEditorValue() {
+            return spinner.getValue().toString();
+        }
+        
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected, int row, int column) {
+            try {
+                currentValue = Integer.parseInt(value.toString());
+            } catch (NumberFormatException e) {
+                currentValue = 0;
+            }
+            spinner.setValue(currentValue);
+            return spinner;
+        }
+    }
+
     private void doLoad() {
         JFileChooser fc = new JFileChooser();
         fc.setMultiSelectionEnabled(true);
         fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("ASM files", "asm"));
         if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        List<OSProcess> loaded = new ArrayList<>();
         for (File f : fc.getSelectedFiles()) {
             OSProcess p = os.loadProcess(f.getAbsolutePath());
-            if (p != null) registerBCPCard(p);
+            if (p != null) {
+                registerBCPCard(p);
+                loaded.add(p);
+                System.out.println("[DEBUG] Proceso cargado: " + p.getName() + 
+                                   " estado=" + p.getState());
+            }
         }
+        
+        if (!loaded.isEmpty()) {
+            showArrivalDialog(loaded);
+        }
+        
         refreshAll();
     }
 
@@ -921,24 +1136,32 @@ public class UI extends JFrame {
             JOptionPane.showMessageDialog(this, "No hay procesos. Cargue archivos ASM.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
-        // RESETEAR TIEMPOS GLOBALES ANTES DE EJECUTAR
-        resetSimulationTimes();
-        
-        os.getScheduler().loadFromSwap();
-        os.getScheduler().tryLoadNewProcesses();
+
+        resetAlgoLog();
+        os.resetGlobalClock();
+
+        // IMPORTANTE: Cargar SOLO procesos con arrivalTick <= 0
+        os.getScheduler().tryLoadProcessesReadyAt(0);
+
         if (os.getScheduler().getReadyQueue().isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                "No hay procesos listos. Aumente el tamaño de RAM en Configuración.",
+                "No hay procesos listos. Verifique los tiempos de llegada o aumente la RAM.",
                 "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
         stepModeActive = false;
         btnStepOnce.setEnabled(false);
+
+        // Detener timers anteriores si existen
         if (autoExecutionTimer != null) autoExecutionTimer.stop();
+        if (algorithmRefreshTimer != null) algorithmRefreshTimer.stop();
+
+        // Timer para la ejecución de CPUs
         autoExecutionTimer = new Timer(1000, e -> {
             if (os.getScheduler().allTerminated()) {
                 autoExecutionTimer.stop();
+                algorithmRefreshTimer.stop();
                 btnRun.setEnabled(true); btnStep.setEnabled(true);
                 btnClear.setEnabled(true); btnLoad.setEnabled(true);
                 printConsole("[SISTEMA] Ejecución finalizada", new Color(241,196,15));
@@ -948,53 +1171,58 @@ public class UI extends JFrame {
             os.cpuCycle();
             refreshAll();
         });
+
+        // NUEVO: Timer para actualizar la pestaña Algoritmos cada segundo
+        algorithmRefreshTimer = new Timer(1000, e -> {
+            refreshAlgoritmosTab();
+        });
+
         autoExecutionTimer.start();
+        algorithmRefreshTimer.start();
+
         btnRun.setEnabled(false); btnStep.setEnabled(false); btnLoad.setEnabled(false);
-        printConsole("[SISTEMA] Ejecución automática iniciada", new Color(46,204,113));
-    }
-    
-    /**
-     * Reinicia los tiempos de simulación a cero
-     */
-    private void resetSimulationTimes() {
-        // Reiniciar el reloj global en el sistema operativo
-        // Esto requiere un método resetGlobalClock() en OperatingSystem
-        // Por ahora, forzamos un reset completo del scheduler
-        long newStartTime = System.currentTimeMillis();
-        // Nota: Esto es un workaround. Idealmente se debería agregar un método
-        // os.resetGlobalClock() que reinicie el contador a 0
-        printConsole("[SISTEMA] Tiempos reiniciados para nueva ejecución", new Color(46,204,113));
+        printConsole("[SISTEMA] Ejecución automática iniciada (tick 0)", new Color(46,204,113));
     }
 
     private void doEnterStepMode() {
-        // RESETEAR TIEMPOS ANTES DEL MODO PASO A PASO
-        resetSimulationTimes();
+        resetAlgoLog();
+        os.resetGlobalClock();
         stepModeActive = true;
         btnStepOnce.setEnabled(true);
-        printConsole("[SISTEMA] Modo paso a paso activado", new Color(241,196,15));
+        printConsole("[SISTEMA] Modo paso a paso activado (tick 0)", new Color(241,196,15));
     }
 
     private void doStepOnce() {
         if (!stepModeActive) return;
         if (os.getScheduler().allTerminated()) {
-            stepModeActive = false; btnStepOnce.setEnabled(false);
+            stepModeActive = false; 
+            btnStepOnce.setEnabled(false);
+            if (algorithmRefreshTimer != null) algorithmRefreshTimer.stop();
             printConsole("[SISTEMA] Todos los procesos terminaron", new Color(241,196,15));
             showStatistics();
             return;
         }
         os.cpuCycle();
         refreshAll();
-        printConsole("[SISTEMA] Paso ejecutado — Ciclo: " + os.getGlobalClock(), new Color(52,152,219));
+        refreshAlgoritmosTab();  // ← Actualizar la pestaña Algoritmos
+        printConsole("[SISTEMA] Paso ejecutado — Tick: " + os.getGlobalClock(), new Color(52,152,219));
     }
 
     private void doClear() {
         if (autoExecutionTimer != null) autoExecutionTimer.stop();
+        if (algorithmRefreshTimer != null) algorithmRefreshTimer.stop();
         os.stop();
         os.reset(512);
         clearBCPCards();
+        executionLog.clear();
+        circularLog.clear();
+        algoMaxTick = 0;
+        if (executionMatrixModel != null) executionMatrixModel.setRowCount(0);
+        if (circularMatrixModel != null) circularMatrixModel.setRowCount(0);
+        if (statsModel != null) statsModel.setRowCount(0);
+        if (processDataModel != null) processDataModel.setRowCount(0);
         stepModeActive = false;
         highlightedRow = -1;
-        java.util.Arrays.fill(lastExecutedPC, -1);
         selectedPartitionIndex = -1;
         btnStepOnce.setEnabled(false);
         btnRun.setEnabled(true); btnStep.setEnabled(true);
@@ -1034,7 +1262,6 @@ public class UI extends JFrame {
         selectedPartitionIndex = -1;
         lblAlgoName.setText(algo + ("RR".equals(algo) ? " (q=" + quantum + ")" : ""));
         highlightedRow = -1;
-        java.util.Arrays.fill(lastExecutedPC, -1);
         refreshAll();
         printConsole("[SISTEMA] Config aplicada: " + numCpus + " CPUs, " + strat.getName()
             + ", Mem: " + mm.getStrategyName(), new Color(46,204,113));
@@ -1128,6 +1355,9 @@ public class UI extends JFrame {
         m.addRow(new Object[]{"Stack", stackStr(bcp)});
         m.addRow(new Object[]{"Next BCP", bcp.getNextBCP() != null
                 ? "Addr[" + bcp.getNextBCP().getBaseAddress() + "]" : "(ninguno)"});
+        m.addRow(new Object[]{"Arrival Tick", bcp.getArrivalTick()});
+        m.addRow(new Object[]{"Start Tick", bcp.getStartTick() != -1 ? bcp.getStartTick() : "--"});
+        m.addRow(new Object[]{"End Tick", bcp.getEndTick() != -1 ? bcp.getEndTick() : "--"});
     }
 
     private String stackStr(BCP bcp) {
@@ -1172,7 +1402,7 @@ public class UI extends JFrame {
         refreshDiskTable();
         refreshBCPCards();
         refreshCPUCards();
-        runAlgoSimulation();
+        refreshAlgoritmosTab();
     }
 
     private void refreshProcessTable() {
@@ -1222,44 +1452,26 @@ public class UI extends JFrame {
 
     private void refreshCPUCards() {
         List<CPU> cpuList = os.getAllCpus();
-        List<Dispatcher> dispList = os.getDispatchers();   // ← fuente de verdad
+        List<Dispatcher> dispList = os.getDispatchers();
  
         for (int i = 0; i < cpuModels.size(); i++) {
             DefaultTableModel m = cpuModels.get(i);
-            boolean hasCPU = i < cpuList.size();
-            CPU cpu = hasCPU ? cpuList.get(i) : null;
+            CPU cpu = i < cpuList.size() ? cpuList.get(i) : null;
  
-            // FIX: leer el proceso del Dispatcher, NO de cpu.getCurrentProcess()
             OSProcess p = null;
-            if (i < dispList.size()) {
-                p = dispList.get(i).getCurrentProcess();
-            }
-            // Fallback por si el Dispatcher no tiene proceso pero la CPU sí
-            if (p == null && cpu != null) {
-                p = cpu.getCurrentProcess();
-            }
+            if (i < dispList.size()) p = dispList.get(i).getCurrentProcess();
+            if (p == null && cpu != null) p = cpu.getCurrentProcess();
  
-            // Fila 0 — PID del proceso (SOLO el número entero)
-            if (p != null && p.getPID() >= 0) {
-                setCell(m, 0, p.getPID());                 // número puro, sin texto extra
-            } else {
-                setCell(m, 0, "—");
-            }
+            setCell(m, 0, (p != null && p.getPID() >= 0) ? p.getPID() : "—");
  
-            // Fila 1 — Estado
             String estado = "IDLE";
             if (p != null) {
-                if (p.getState() != null) {
-                    estado = p.getState().name();
-                } else if (p.getBcp() != null && p.getBcp().getState() != null) {
-                    estado = p.getBcp().getState().name();
-                } else {
-                    estado = "RUNNING";
-                }
+                if (p.getState() != null) estado = p.getState().name();
+                else if (p.getBcp() != null && p.getBcp().getState() != null) estado = p.getBcp().getState().name();
+                else estado = "RUNNING";
             }
             setCell(m, 1, estado);
  
-            // Filas 2-8 — Registros de CPU
             setCell(m, 2, cpu != null ? cpu.getPC()  : "—");
             setCell(m, 3, cpu != null ? cpu.getIR()  : "—");
             setCell(m, 4, cpu != null ? cpu.getAC()  : "—");
@@ -1268,10 +1480,14 @@ public class UI extends JFrame {
             setCell(m, 7, cpu != null ? cpu.getCX()  : "—");
             setCell(m, 8, cpu != null ? cpu.getDX()  : "—");
  
-            // Fila 9 — Progreso (ciclosUsados / ráfagaTotal)
             int burst  = (p != null) ? p.getBurstTime() : 0;
             int cycles = (p != null && p.getBcp() != null) ? p.getBcp().getCpuCyclesUsed() : 0;
             setCell(m, 9, burst > 0 ? cycles + "/" + burst : "—");
+            if (cpu != null) {
+                setCell(m, 10, cpu.getProcessesExecuted() + " / " + CPU.MAX_PROCESSES);
+            } else {
+                setCell(m, 10, "— / " + CPU.MAX_PROCESSES);
+            }
         }
     }
 
@@ -1280,18 +1496,9 @@ public class UI extends JFrame {
     }
 
     public void highlightRow(int row) {
-        highlightRow(0, row);
-    }
-
-    public void highlightRow(int cpuIndex, int row) {
-        if (cpuIndex >= 0 && cpuIndex < lastExecutedPC.length) {
-            lastExecutedPC[cpuIndex] = row;
-        }
         highlightedRow = row;
         SwingUtilities.invokeLater(() -> {
-            if (tblRAM != null) {
-                tblRAM.repaint();
-            }
+            if (tblRAM != null) tblRAM.repaint();
         });
     }
 
@@ -1307,31 +1514,33 @@ public class UI extends JFrame {
                 StyleConstants.setForeground(style, color);
                 doc.insertString(doc.getLength(), msg + "\n", style);
                 consoleOutput.setCaretPosition(doc.getLength());
-            } catch (BadLocationException ignored) {
-            }
+            } catch (BadLocationException ignored) {}
         });
     }
 
     private void showStatistics() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%-6s %-15s %-12s %-12s %-12s %-10s%n",
-            "PID", "Nombre", "Llegada", "Inicio", "Fin", "Dur(s)"));
-        sb.append("—".repeat(70)).append("\n");
+        sb.append(String.format("%-6s %-15s %-10s %-10s%n",
+            "PID", "Nombre", "Duración", "Estado"));
+        sb.append("—".repeat(50)).append("\n");
+
         for (OSProcess p : os.getScheduler().getJobQueue().getAll()) {
             BCP b = p.getBcp();
-            sb.append(String.format("%-6d %-15s %-12s %-12s %-12s %-10d%n",
-                b.getPID(), b.getProcessName(),
-                b.formatElapsed(b.getArrivalMillis()),
-                b.formatElapsed(b.getStartMillis()),
-                b.formatElapsed(b.getEndMillis()),
-                b.getDurationSeconds()));
+            String estado = b.getState() != null ? b.getState().name() : "NEW";
+
+            sb.append(String.format("%-6d %-15s %-10d %-10s%n",
+                b.getPID(), 
+                b.getProcessName().length() > 15 ? b.getProcessName().substring(0, 12) + "..." : b.getProcessName(),
+                p.getBurstTime(),
+                estado));
         }
+
         JTextArea ta = new JTextArea(sb.toString());
         ta.setFont(new Font("Monospaced", Font.PLAIN, 12));
         ta.setEditable(false);
         JScrollPane sp = new JScrollPane(ta);
-        sp.setPreferredSize(new Dimension(640, 320));
-        JOptionPane.showMessageDialog(this, sp, "Estadísticas", JOptionPane.INFORMATION_MESSAGE);
+        sp.setPreferredSize(new Dimension(500, 320));
+        JOptionPane.showMessageDialog(this, sp, "Estadísticas de Procesos", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // ═════════════════════════════════════════════════════════════════════
@@ -1409,10 +1618,9 @@ public class UI extends JFrame {
     }
 
     // ═════════════════════════════════════════════════════════════════════
-    // RAM RENDERER - Con colores funcionando correctamente
+    // RAM RENDERER
     // ═════════════════════════════════════════════════════════════════════
     private class RAMRenderer extends DefaultTableCellRenderer {
- 
         @Override
         public Component getTableCellRendererComponent(
                 JTable t, Object val, boolean sel, boolean foc, int row, int col) {
@@ -1424,18 +1632,14 @@ public class UI extends JFrame {
                 lbl.setBorder(new EmptyBorder(0, 3, 0, 3));
             }
  
-            // ── Kernel: siempre azul-gris ──────────────────────────────
             if (row < RAM.KERNEL_SIZE) {
                 c.setBackground(C_KERNEL);
                 return c;
             }
  
-            // ── Recolectar procesos activos una sola vez ───────────────
-            List<CPU>        cpuList  = os.getAllCpus();
+            List<CPU> cpuList = os.getAllCpus();
             List<Dispatcher> dispList = os.getDispatchers();
  
-            // Helper para obtener el proceso activo de un índice de CPU
-            // (Dispatcher es la fuente de verdad; CPU como fallback)
             OSProcess[] active = new OSProcess[Math.max(cpuList.size(), dispList.size())];
             for (int i = 0; i < active.length; i++) {
                 if (i < dispList.size() && dispList.get(i).getCurrentProcess() != null) {
@@ -1445,16 +1649,14 @@ public class UI extends JFrame {
                 }
             }
  
-            // ── Prioridad 1: última instrucción ejecutada por algún CPU ─
             for (int i = 0; i < cpuList.size(); i++) {
                 CPU cpu = cpuList.get(i);
                 OSProcess proc = active[i];
                 if (proc == null) continue;
-                int base  = proc.getBaseAddress();
+                int base = proc.getBaseAddress();
                 int limit = proc.getLimitAddress();
                 if (base < 0 || limit < 0) continue;
-                int execPC = (i < lastExecutedPC.length) ? lastExecutedPC[i] : cpu.getPC();
-                if (execPC >= 0 && row == execPC && execPC >= base && execPC < limit) {
+                if (row == cpu.getPC() && cpu.getPC() >= base && cpu.getPC() < limit) {
                     c.setBackground(CPU_BRIGHT[i % CPU_BRIGHT.length]);
                     c.setForeground(Color.WHITE);
                     if (c instanceof JLabel lbl) lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
@@ -1462,25 +1664,19 @@ public class UI extends JFrame {
                 }
             }
  
-            // ── Prioridad 2: rango del proceso en RUNNING ─────────────
             for (int i = 0; i < active.length; i++) {
                 OSProcess proc = active[i];
                 if (proc == null) continue;
  
-                // FIX: verificar baseAddress y limitAddress > 0
-                int base  = proc.getBaseAddress();
+                int base = proc.getBaseAddress();
                 int limit = proc.getLimitAddress();
                 if (base < 0 || limit <= 0 || limit <= base) continue;
  
-                // FIX: aceptar RUNNING desde OSProcess O desde BCP
                 boolean isRunning = (proc.getState() == ProcessState.RUNNING);
                 if (!isRunning && proc.getBcp() != null) {
                     isRunning = (proc.getBcp().getState() == ProcessState.RUNNING);
                 }
-                // También considerar el proceso activo aunque su estado no sea RUNNING todavía
-                // (puede haberse asignado en este tick pero el estado aún no se propagó)
                 if (!isRunning) {
-                    // Si el Dispatcher lo tiene como currentProcess, lo consideramos activo
                     if (i < dispList.size() && proc == dispList.get(i).getCurrentProcess()) {
                         isRunning = true;
                     }
@@ -1492,14 +1688,13 @@ public class UI extends JFrame {
                 }
             }
  
-            // ── Prioridad 3: partición seleccionada (FPM) ─────────────
             MemoryManager mm = os.getScheduler().getMemoryManager();
             if (mm instanceof FixedPartitionManager fpm && selectedPartitionIndex >= 0) {
                 int[] bases = fpm.getPartitionBase();
                 int[] sizes = fpm.getPartitionSizes();
                 if (selectedPartitionIndex < bases.length) {
                     int start = bases[selectedPartitionIndex];
-                    int end   = start + sizes[selectedPartitionIndex];
+                    int end = start + sizes[selectedPartitionIndex];
                     if (row >= start && row < end) {
                         c.setBackground(C_PARTITION_SEL_BG);
                         if (c instanceof JLabel lbl)
@@ -1510,7 +1705,6 @@ public class UI extends JFrame {
                 }
             }
  
-            // ── Prioridad 4: borde izquierdo delimitador de partición ──
             if (mm instanceof FixedPartitionManager fpm) {
                 int[] bases = fpm.getPartitionBase();
                 for (int base : bases) {
@@ -1523,7 +1717,6 @@ public class UI extends JFrame {
                 }
             }
  
-            // ── Prioridad 5: por defecto ───────────────────────────────
             String v = os.getMemory().getMemory()[row];
             c.setBackground((v != null && !v.isBlank()) ? C_WHITE : new Color(250, 250, 250));
             return c;
@@ -1598,9 +1791,7 @@ public class UI extends JFrame {
     // ═════════════════════════════════════════════════════════════════════
     private static class RoundedBorder extends AbstractBorder {
         private final int radius;
-        RoundedBorder(int r) {
-            this.radius = r;
-        }
+        RoundedBorder(int r) { this.radius = r; }
 
         @Override
         public void paintBorder(Component c, Graphics g, int x, int y, int w, int h) {
@@ -1627,8 +1818,7 @@ public class UI extends JFrame {
                     UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         SwingUtilities.invokeLater(() -> new UI().setVisible(true));
     }
 }

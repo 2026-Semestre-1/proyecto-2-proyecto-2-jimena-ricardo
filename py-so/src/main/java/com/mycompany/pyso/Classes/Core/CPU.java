@@ -13,20 +13,30 @@ import com.mycompany.pyso.Classes.Process.OSProcess;
 public class CPU {
     private int id;
     private OSProcess currentProcess;
-    private int AC; // Accumulator
-    private int PC; // Program counter
-    private String IR; // Instruction register
+    private int AC;
+    private int PC;
+    private String IR;
     private int AX;
     private int BX;
     private int CX;
     private int DX;
     private boolean overflowFlag;
-    private boolean equalFlag; // Set by CMP, used by JE / JNE
+    private boolean equalFlag;
+    
+    private int processesExecuted = 0;
+    public static final int MAX_PROCESSES = 1000;
 
     public CPU() {
         this.AC = 0;
-        this.PC = 20; // Because the user instructions start at 20
+        this.PC = 20;
         this.IR = "";
+        this.AX = 0;
+        this.BX = 0;
+        this.CX = 0;
+        this.DX = 0;
+        this.overflowFlag = false;
+        this.equalFlag = false;
+        this.processesExecuted = 0;
     }
 
     public void execute(Instruction inst) {
@@ -241,7 +251,15 @@ public class CPU {
     
     public int getId()                        { return id; }
     public void setId(int id)                 { this.id = id; }
-    public OSProcess getCurrentProcess()        { return currentProcess; }
-    public void setCurrentProcess(OSProcess p) { this.currentProcess = p; }
     
+    public OSProcess getCurrentProcess()      { return currentProcess; }
+    public void setCurrentProcess(OSProcess p) { 
+        this.currentProcess = p;
+        if (p != null && p.getPID() >= 0) {
+            processesExecuted++;
+        }
+    }
+    
+    public int getProcessesExecuted()         { return processesExecuted; }
+    public void resetProcessesExecuted()      { this.processesExecuted = 0; }
 }
