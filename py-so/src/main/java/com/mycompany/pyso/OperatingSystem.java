@@ -185,11 +185,12 @@ public class OperatingSystem {
             }
 
             final Integer finalPc = pc;
+            final int cpuIdx = idx;
             SwingUtilities.invokeLater(() -> {
                 refreshKernel();
                 if (gui != null) {
                     gui.refreshAll();
-                    if (finalPc != null) gui.highlightRow(finalPc);
+                    if (finalPc != null) gui.highlightRow(cpuIdx, finalPc);
                 }
             });
 
@@ -227,7 +228,7 @@ public class OperatingSystem {
             if (d.getCurrentProcess() != null) {
                 d.getCurrentProcess().getBcp().markStarted(simulatorStartMillis);
                 Integer pc = d.CPUcycle();
-                if (pc != null && gui != null) gui.highlightRow(pc);
+                if (pc != null && gui != null) gui.highlightRow(i, pc);
             }
 
             if (d.getCurrentProcess() != null) {

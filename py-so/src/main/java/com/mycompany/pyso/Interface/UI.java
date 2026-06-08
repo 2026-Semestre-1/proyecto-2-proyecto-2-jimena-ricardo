@@ -87,6 +87,7 @@ public class UI extends JFrame {
     // ── Estado ────────────────────────────────────────────────────────────
     private OperatingSystem os;
     private int  highlightedRow     = -1;
+    private int[] lastExecutedPC    = new int[4]; // per-CPU last executed instruction address
     private int  selectedPartitionIndex = -1;
     private boolean stepModeActive  = false;
     private Timer autoExecutionTimer;
@@ -993,6 +994,7 @@ public class UI extends JFrame {
         clearBCPCards();
         stepModeActive = false;
         highlightedRow = -1;
+        java.util.Arrays.fill(lastExecutedPC, -1);
         selectedPartitionIndex = -1;
         btnStepOnce.setEnabled(false);
         btnRun.setEnabled(true); btnStep.setEnabled(true);
@@ -1032,6 +1034,7 @@ public class UI extends JFrame {
         selectedPartitionIndex = -1;
         lblAlgoName.setText(algo + ("RR".equals(algo) ? " (q=" + quantum + ")" : ""));
         highlightedRow = -1;
+        java.util.Arrays.fill(lastExecutedPC, -1);
         refreshAll();
         printConsole("[SISTEMA] Config aplicada: " + numCpus + " CPUs, " + strat.getName()
             + ", Mem: " + mm.getStrategyName(), new Color(46,204,113));
@@ -1277,8 +1280,14 @@ public class UI extends JFrame {
     }
 
     public void highlightRow(int row) {
+        highlightRow(0, row);
+    }
+
+    public void highlightRow(int cpuIndex, int row) {
+        if (cpuIndex >= 0 && cpuIndex < lastExecutedPC.length) {
+            lastExecutedPC[cpuIndex] = row;
+        }
         highlightedRow = row;
-        // SIN AUTO-SCROLL - Solo repintar la tabla
         SwingUtilities.invokeLater(() -> {
             if (tblRAM != null) {
                 tblRAM.repaint();
@@ -1436,16 +1445,16 @@ public class UI extends JFrame {
                 }
             }
  
-            // ── Prioridad 1: instrucción activa (PC exacto de algún CPU) ─
+            // ── Prioridad 1: última instrucción ejecutada por algún CPU ─
             for (int i = 0; i < cpuList.size(); i++) {
                 CPU cpu = cpuList.get(i);
                 OSProcess proc = active[i];
                 if (proc == null) continue;
-                // FIX: verificar que el PC esté dentro de un rango válido
                 int base  = proc.getBaseAddress();
                 int limit = proc.getLimitAddress();
-                if (base < 0 || limit < 0) continue;   // proceso en SWAP, saltar
-                if (row == cpu.getPC() && cpu.getPC() >= base && cpu.getPC() < limit) {
+                if (base < 0 || limit < 0) continue;
+                int execPC = (i < lastExecutedPC.length) ? lastExecutedPC[i] : cpu.getPC();
+                if (execPC >= 0 && row == execPC && execPC >= base && execPC < limit) {
                     c.setBackground(CPU_BRIGHT[i % CPU_BRIGHT.length]);
                     c.setForeground(Color.WHITE);
                     if (c instanceof JLabel lbl) lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
