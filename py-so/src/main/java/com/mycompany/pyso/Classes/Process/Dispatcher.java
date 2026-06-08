@@ -47,6 +47,7 @@ public class Dispatcher {
 
             case Instruction.TYPE_INT -> {
                 interruptHandler.handle(inst, p, this::terminate);
+                cpu.setLastExecutedPC(pc);
                 if (currentProcess != null) {
                     p.getBcp().saveFromCPU(cpu, inst.getInstruction());
                     p.getBcp().setCpuCyclesUsed(p.getBcp().getCpuCyclesUsed() + 1);
@@ -77,6 +78,8 @@ public class Dispatcher {
                 }
             }
         }
+
+        cpu.setLastExecutedPC(pc);
 
         p.getBcp().saveFromCPU(cpu, inst.getInstruction());
         p.getBcp().setCpuCyclesUsed(p.getBcp().getCpuCyclesUsed() + 1);

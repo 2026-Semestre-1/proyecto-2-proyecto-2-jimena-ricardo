@@ -22,6 +22,7 @@ public class CPU {
     private int DX;
     private boolean overflowFlag;
     private boolean equalFlag;
+    private int lastExecutedPC = -1;
     
     private int processesExecuted = 0;
     public static final int MAX_PROCESSES = 1000;
@@ -255,10 +256,14 @@ public class CPU {
     public OSProcess getCurrentProcess()      { return currentProcess; }
     public void setCurrentProcess(OSProcess p) { 
         this.currentProcess = p;
+        this.lastExecutedPC = -1;
         if (p != null && p.getPID() >= 0) {
             processesExecuted++;
         }
     }
+
+    public int getLastExecutedPC()             { return lastExecutedPC; }
+    public void setLastExecutedPC(int pc)      { this.lastExecutedPC = pc; }
     
     public int getProcessesExecuted()         { return processesExecuted; }
     public void resetProcessesExecuted()      { this.processesExecuted = 0; }

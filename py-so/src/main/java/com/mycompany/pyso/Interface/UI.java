@@ -1656,7 +1656,8 @@ public class UI extends JFrame {
                 int base = proc.getBaseAddress();
                 int limit = proc.getLimitAddress();
                 if (base < 0 || limit < 0) continue;
-                if (row == cpu.getPC() && cpu.getPC() >= base && cpu.getPC() < limit) {
+                int hl = cpu.getLastExecutedPC();
+                if (hl >= 0 && row == hl && hl >= base && hl < limit) {
                     c.setBackground(CPU_BRIGHT[i % CPU_BRIGHT.length]);
                     c.setForeground(Color.WHITE);
                     if (c instanceof JLabel lbl) lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
