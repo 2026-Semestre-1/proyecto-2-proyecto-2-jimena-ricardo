@@ -425,7 +425,7 @@ public class UI extends JFrame {
         lblAlgoName = new JLabel("—", SwingConstants.CENTER);
         lblAlgoName.setFont(new Font("Segoe UI", Font.BOLD, 16));
         north.add(lblAlgoName, BorderLayout.CENTER);
-        JButton btnSim = toolBtn("▶  Simular");
+        JButton btnSim = toolBtn("Simular");
         btnSim.addActionListener(e -> runAlgoSimulation());
         north.add(btnSim, BorderLayout.EAST);
         root.add(north, BorderLayout.NORTH);
