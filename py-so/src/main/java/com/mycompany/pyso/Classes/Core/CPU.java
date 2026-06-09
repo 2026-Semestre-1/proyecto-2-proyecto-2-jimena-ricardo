@@ -140,7 +140,7 @@ public class CPU {
     }
 
     private void execute_jmp(int offset) {
-        setPC(PC + offset);
+        setPC(PC - 1 + offset);
     }
 
     private void execute_cmp(int reg1, int reg2) {
@@ -149,13 +149,13 @@ public class CPU {
 
     private void execute_je(int offset) {
         if (equalFlag) {
-            setPC(PC + offset);
+            setPC(PC - 1 + offset);
         }
     }
 
     private void execute_jne(int offset) {
         if (!equalFlag) {
-            setPC(PC + offset);
+            setPC(PC - 1 + offset);
         }
     }
     

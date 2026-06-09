@@ -71,11 +71,7 @@ public class Dispatcher {
 
             default -> {
                 cpu.execute(inst);
-                if (inst.getType() != Instruction.TYPE_JMP &&
-                    inst.getType() != Instruction.TYPE_JE  &&
-                    inst.getType() != Instruction.TYPE_JNE) {
-                    cpu.setPC(pc + 1);
-                }
+                cpu.setPC(pc + 1);
             }
         }
 

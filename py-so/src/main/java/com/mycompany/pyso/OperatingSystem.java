@@ -265,11 +265,13 @@ public class OperatingSystem {
 
         p.getBcp().saveFromCPU(cpu, cpu.getIR());
         p.setState(ProcessState.READY);
-        scheduler.getReadyQueue().enqueue(p);
+        strategy.requeue(p, scheduler.getReadyQueue());
         d.setCurrentProcess(null);
 
-        if (strategy instanceof RoundRobin) {
-            ((RoundRobin) strategy).resetTicks();
+        if (strategy instanceof RoundRobin rr) {
+            rr.resetTicks();
+        } else if (strategy instanceof com.mycompany.pyso.Scheduler.SRR srr) {
+            srr.resetTicks();
         }
     }
 

@@ -5,6 +5,7 @@
 package com.mycompany.pyso.Scheduler;
 
 import com.mycompany.pyso.Classes.Process.OSProcess;
+import com.mycompany.pyso.Classes.Process.ReadyQueue;
 import java.util.List;
 
 public interface SchedulerStrategy {
@@ -13,4 +14,5 @@ public interface SchedulerStrategy {
     void onTick(OSProcess running, List<OSProcess> readyQueue);
     boolean shouldPreempt(OSProcess running, List<OSProcess> readyQueue);
     String getName();
+    default void requeue(OSProcess p, ReadyQueue readyQueue) { readyQueue.enqueue(p); }
 }

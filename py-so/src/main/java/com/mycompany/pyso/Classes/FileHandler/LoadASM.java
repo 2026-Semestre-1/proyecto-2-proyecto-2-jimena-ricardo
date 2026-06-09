@@ -20,6 +20,7 @@ public class LoadASM {
     private List<Instruction> instructions;
     private boolean formatError = false;
     private boolean extensionError = false;
+    private String fileName;
 
     public LoadASM() {
         this.instructions = new ArrayList<>();
@@ -31,6 +32,7 @@ public class LoadASM {
             JOptionPane.showMessageDialog(null, "Error in the file format", "Only allows .asm extension", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        this.fileName = new java.io.File(path).getName();
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             String line;
             int lineNumber = 1;
@@ -211,7 +213,7 @@ public class LoadASM {
         setFormatError(true);
         JOptionPane.showMessageDialog(
             null,
-            message + " en la línea " + lineNumber,
+            fileName + " — " + message + " en la línea " + lineNumber,
             "Error",
             JOptionPane.ERROR_MESSAGE
         );

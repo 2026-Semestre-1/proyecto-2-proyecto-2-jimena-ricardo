@@ -14,6 +14,7 @@ import com.mycompany.pyso.Classes.Memory.PagingManager;
 import com.mycompany.pyso.Classes.Process.Dispatcher;
 import com.mycompany.pyso.Scheduler.FCFS;
 import com.mycompany.pyso.Scheduler.RoundRobin;
+import com.mycompany.pyso.Scheduler.SRR;
 import com.mycompany.pyso.Scheduler.SRT;
 import com.mycompany.pyso.Scheduler.HRRN;
 import com.mycompany.pyso.Scheduler.Lottery;
@@ -863,11 +864,11 @@ public class UI extends JFrame {
         gc.fill = GridBagConstraints.HORIZONTAL;
 
         gc.gridy = 0; gc.gridx = 0; root.add(new JLabel("Algoritmo de CPU:"), gc);
-        cbAlgo = new JComboBox<>(new String[]{"FCFS", "RR", "SJF", "SRT", "HRRN", "Lottery"});
+        cbAlgo = new JComboBox<>(new String[]{"FCFS", "RR", "SRR", "SJF", "SRT", "HRRN", "Lottery"});
         cbAlgo.setPreferredSize(new Dimension(150, 25));
         gc.gridx = 1; root.add(cbAlgo, gc);
 
-        gc.gridy = 1; gc.gridx = 0; root.add(new JLabel("Quantum si es RR:"), gc);
+        gc.gridy = 1; gc.gridx = 0; root.add(new JLabel("Quantum si es RR/SRR:"), gc);
         spQuantum = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
         spQuantum.setPreferredSize(new Dimension(80, 25));
         gc.gridx = 1; root.add(spQuantum, gc);
@@ -1245,6 +1246,7 @@ public class UI extends JFrame {
 
         SchedulerStrategy strat = switch (algo) {
             case "RR" -> new RoundRobin(quantum);
+            case "SRR" -> new SRR(quantum);
             case "SJF" -> new SJF();
             case "SRT" -> new SRT();
             case "HRRN" -> new HRRN();
@@ -1260,7 +1262,7 @@ public class UI extends JFrame {
         clearBCPCards();
         rebuildCPUCards(numCpus);
         selectedPartitionIndex = -1;
-        lblAlgoName.setText(algo + ("RR".equals(algo) ? " (q=" + quantum + ")" : ""));
+        lblAlgoName.setText(algo + (("RR".equals(algo) || "SRR".equals(algo)) ? " (q=" + quantum + ")" : ""));
         highlightedRow = -1;
         refreshAll();
         printConsole("[SISTEMA] Config aplicada: " + numCpus + " CPUs, " + strat.getName()
