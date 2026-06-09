@@ -1,5 +1,6 @@
+MOV BX, 3
 MOV AX, 0
 INC AX
-CMP AX, 3
+CMP AX, BX
 JE 1
 JMP -3

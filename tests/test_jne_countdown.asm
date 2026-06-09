@@ -1,4 +1,5 @@
+MOV BX, 0
 MOV AX, 5
 DEC AX
-CMP AX, 0
+CMP AX, BX
 JNE -2
